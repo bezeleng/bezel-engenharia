@@ -37,5 +37,30 @@ export const paginaInicial = defineType({
       type: "string",
       initialValue: "/orcamento",
     }),
+    defineField({
+      name: "tituloCtaFinal",
+      title: "Título do CTA Final",
+      type: "string",
+      initialValue: "Pronto para começar seu projeto?",
+    }),
+    defineField({
+      name: "subtituloCtaFinal",
+      title: "Subtítulo do CTA Final",
+      type: "text",
+      rows: 2,
+      initialValue: "Entre em contato e transforme sua ideia em realidade.",
+    }),
+    defineField({
+      name: "textoBotaoCtaFinal",
+      title: "Texto do Botão (CTA Final)",
+      type: "string",
+      initialValue: "Fale Conosco",
+    }),
+    defineField({
+      name: "linkBotaoCtaFinal",
+      title: "Link do Botão (CTA Final)",
+      type: "string",
+      initialValue: "/contato",
+    }),
   ],
 });

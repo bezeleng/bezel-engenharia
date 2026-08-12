@@ -8,7 +8,7 @@ import { apiVersion, dataset, projectId } from './src/sanity/env'
 import { schema } from './src/sanity/schemaTypes'
 import { structure } from './src/sanity/structure'
 
-const SINGLETON_TYPES = new Set(['configuracaoSite', 'paginaInicial'])
+const SINGLETON_TYPES = new Set(['configuracaoSite', 'paginaInicial', 'paginaSobre'])
 
 export default defineConfig({
   basePath: '/studio',
