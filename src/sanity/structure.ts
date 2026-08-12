@@ -1,7 +1,6 @@
 import type { StructureResolver } from 'sanity/structure'
 
-const SINGLETON_TYPES = new Set(['configuracaoSite'])
-const SINGLETON_DOCUMENT_ID = '5095b446-13af-40d3-a948-d3554b7b415e'
+const SINGLETON_TYPES = new Set(['configuracaoSite', 'paginaInicial'])
 
 export const structure: StructureResolver = (S) =>
   S.list()
@@ -13,7 +12,15 @@ export const structure: StructureResolver = (S) =>
         .child(
           S.document()
             .schemaType('configuracaoSite')
-            .documentId(SINGLETON_DOCUMENT_ID)
+            .documentId('5095b446-13af-40d3-a948-d3554b7b415e')
+        ),
+      S.listItem()
+        .title('Página Inicial')
+        .id('paginaInicial')
+        .child(
+          S.document()
+            .schemaType('paginaInicial')
+            .documentId('paginaInicial')
         ),
       S.divider(),
       ...S.documentTypeListItems().filter(
