@@ -67,3 +67,12 @@ export const obraBySlugQuery = defineQuery(
 export const obraSlugsQuery = defineQuery(
   `*[_type == "obra"]{ "slug": slug.current }`
 );
+export const videosQuery = defineQuery(
+  `*[_type == "video"] | order(_createdAt desc)`
+);
+export const depoimentosQuery = defineQuery(
+  `*[_type == "depoimento"] | order(_createdAt desc)`
+);
+export const politicaPrivacidadeQuery = defineQuery(
+  `*[_type == "politicaPrivacidade"][0]`
+);
