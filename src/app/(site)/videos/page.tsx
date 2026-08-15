@@ -1,4 +1,3 @@
-// src/app/(site)/videos/page.tsx
 import type { Metadata } from "next";
 import { sanityFetch } from "@/sanity/lib/live";
 import { videosQuery } from "@/sanity/lib/queries";
@@ -7,8 +6,11 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { VideoCard } from "@/components/sections/VideoCard";
 
 export const metadata: Metadata = {
-  title: "Vídeos | BEZEL Engenharia",
+  title: "Vídeos",
   description: "Assista aos vídeos institucionais e de obras da BEZEL.",
+  alternates: {
+    canonical: "/videos",
+  },
 };
 
 export default async function VideosPage() {

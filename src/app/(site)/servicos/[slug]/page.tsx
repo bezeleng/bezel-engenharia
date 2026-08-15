@@ -31,8 +31,11 @@ export async function generateMetadata({
   if (!servico) return {};
 
   return {
-    title: servico.seo?.metaTitulo || `${servico.titulo} | BEZEL Engenharia`,
+    title: servico.seo?.metaTitulo || servico.titulo,
     description: servico.seo?.metaDescricao || servico.descricaoCurta,
+    alternates: {
+      canonical: `/servicos/${slug}`,
+    },
   };
 }
 

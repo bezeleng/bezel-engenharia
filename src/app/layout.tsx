@@ -26,8 +26,24 @@ const trajanPro = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "BEZEL Engenharia",
+  metadataBase: new URL("https://bezel.com.br"),
+  title: {
+    default: "BEZEL Engenharia | Arquitetura, Engenharia e Construção",
+    template: "%s | BEZEL Engenharia",
+  },
   description: "Arquitetura, engenharia e construção.",
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "BEZEL Engenharia",
+    title: "BEZEL Engenharia | Arquitetura, Engenharia e Construção",
+    description: "Arquitetura, engenharia e construção.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BEZEL Engenharia | Arquitetura, Engenharia e Construção",
+    description: "Arquitetura, engenharia e construção.",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

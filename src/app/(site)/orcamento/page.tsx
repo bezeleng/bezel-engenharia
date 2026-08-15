@@ -1,12 +1,14 @@
-// src/app/(site)/orcamento/page.tsx
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { OrcamentoForm } from "@/components/forms/OrcamentoForm";
 
 export const metadata: Metadata = {
-  title: "Solicitar Orçamento | BEZEL Engenharia",
+  title: "Solicitar Orçamento",
   description: "Solicite um orçamento para o seu projeto com a BEZEL Engenharia.",
+  alternates: {
+    canonical: "/orcamento",
+  },
 };
 
 export default function OrcamentoPage() {

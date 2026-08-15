@@ -1,4 +1,3 @@
-// src/app/(site)/projetos/page.tsx
 import type { Metadata } from "next";
 import { sanityFetch } from "@/sanity/lib/live";
 import { projetosQuery } from "@/sanity/lib/queries";
@@ -7,8 +6,11 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { ProjetoCard } from "@/components/sections/ProjetoCard";
 
 export const metadata: Metadata = {
-  title: "Projetos | BEZEL Engenharia",
+  title: "Projetos",
   description: "Confira nosso portfólio de projetos de arquitetura e engenharia.",
+  alternates: {
+    canonical: "/projetos",
+  },
 };
 
 export default async function ProjetosPage() {

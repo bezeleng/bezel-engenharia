@@ -1,4 +1,3 @@
-// src/app/(site)/projetos/[slug]/page.tsx
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { sanityFetch } from "@/sanity/lib/live";
@@ -35,8 +34,11 @@ export async function generateMetadata({
   if (!projeto) return {};
 
   return {
-    title: projeto.seo?.metaTitulo || `${projeto.titulo} | BEZEL Engenharia`,
+    title: projeto.seo?.metaTitulo || projeto.titulo,
     description: projeto.seo?.metaDescricao,
+    alternates: {
+      canonical: `/projetos/${slug}`,
+    },
   };
 }
 

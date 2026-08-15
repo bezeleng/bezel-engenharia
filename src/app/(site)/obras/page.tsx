@@ -1,4 +1,3 @@
-// src/app/(site)/obras/page.tsx
 import type { Metadata } from "next";
 import { sanityFetch } from "@/sanity/lib/live";
 import { obrasQuery } from "@/sanity/lib/queries";
@@ -7,8 +6,11 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { ObraCard } from "@/components/sections/ObraCard";
 
 export const metadata: Metadata = {
-  title: "Obras | BEZEL Engenharia",
+  title: "Obras",
   description: "Acompanhe as obras executadas e em andamento pela BEZEL.",
+  alternates: {
+    canonical: "/obras",
+  },
 };
 
 export default async function ObrasPage() {

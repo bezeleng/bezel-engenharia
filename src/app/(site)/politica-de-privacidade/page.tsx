@@ -1,4 +1,3 @@
-// src/app/(site)/politica-de-privacidade/page.tsx
 import type { Metadata } from "next";
 import { sanityFetch } from "@/sanity/lib/live";
 import { politicaPrivacidadeQuery } from "@/sanity/lib/queries";
@@ -6,7 +5,10 @@ import { Container } from "@/components/ui/Container";
 import { PortableTextContent } from "@/components/ui/PortableTextContent";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade | BEZEL Engenharia",
+  title: "Política de Privacidade",
+  alternates: {
+    canonical: "/politica-de-privacidade",
+  },
 };
 
 export default async function PoliticaPrivacidadePage() {

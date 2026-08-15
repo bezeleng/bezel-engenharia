@@ -1,4 +1,4 @@
-// src/app/(site)/sobre/page.tsx
+import type { Metadata } from "next";
 import Image from "next/image";
 import { sanityFetch } from "@/sanity/lib/live";
 import { paginaSobreQuery, membrosEquipeQuery } from "@/sanity/lib/queries";
@@ -7,6 +7,14 @@ import { Container } from "@/components/ui/Container";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { PortableTextContent } from "@/components/ui/PortableTextContent";
 import { MembroCard } from "@/components/sections/MembroCard";
+
+export const metadata: Metadata = {
+  title: "Sobre",
+  description: "Conheça a história, missão e valores da BEZEL Engenharia.",
+  alternates: {
+    canonical: "/sobre",
+  },
+};
 
 export default async function SobrePage() {
   const { data: pagina } = await sanityFetch({ query: paginaSobreQuery });

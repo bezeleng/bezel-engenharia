@@ -1,4 +1,3 @@
-// src/app/(site)/contato/page.tsx
 import type { Metadata } from "next";
 import { sanityFetch } from "@/sanity/lib/live";
 import { configuracaoSiteQuery } from "@/sanity/lib/queries";
@@ -7,8 +6,11 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { ContatoForm } from "@/components/forms/ContatoForm";
 
 export const metadata: Metadata = {
-  title: "Contato | BEZEL Engenharia",
+  title: "Contato",
   description: "Entre em contato com a BEZEL Engenharia.",
+  alternates: {
+    canonical: "/contato",
+  },
 };
 
 export default async function ContatoPage() {

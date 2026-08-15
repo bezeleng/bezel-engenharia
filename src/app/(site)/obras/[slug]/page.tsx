@@ -1,4 +1,3 @@
-// src/app/(site)/obras/[slug]/page.tsx
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -37,8 +36,11 @@ export async function generateMetadata({
   if (!obra) return {};
 
   return {
-    title: obra.seo?.metaTitulo || `${obra.titulo} | BEZEL Engenharia`,
+    title: obra.seo?.metaTitulo || obra.titulo,
     description: obra.seo?.metaDescricao,
+    alternates: {
+      canonical: `/obras/${slug}`,
+    },
   };
 }
 

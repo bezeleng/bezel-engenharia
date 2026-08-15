@@ -1,4 +1,3 @@
-// src/app/(site)/depoimentos/page.tsx
 import type { Metadata } from "next";
 import { sanityFetch } from "@/sanity/lib/live";
 import { depoimentosQuery } from "@/sanity/lib/queries";
@@ -7,8 +6,11 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { DepoimentoCard } from "@/components/sections/DepoimentoCard";
 
 export const metadata: Metadata = {
-  title: "Depoimentos | BEZEL Engenharia",
+  title: "Depoimentos",
   description: "Veja o que nossos clientes dizem sobre a BEZEL.",
+  alternates: {
+    canonical: "/depoimentos",
+  },
 };
 
 export default async function DepoimentosPage() {

@@ -1,4 +1,3 @@
-// src/app/(site)/servicos/page.tsx
 import type { Metadata } from "next";
 import { sanityFetch } from "@/sanity/lib/live";
 import { servicosQuery } from "@/sanity/lib/queries";
@@ -7,9 +6,12 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { ServicoCard } from "@/components/sections/ServicoCard";
 
 export const metadata: Metadata = {
-  title: "Serviços | BEZEL Engenharia",
+  title: "Serviços",
   description:
     "Conheça os serviços da BEZEL em arquitetura, engenharia e construção.",
+  alternates: {
+    canonical: "/servicos",
+  },
 };
 
 export default async function ServicosPage() {
