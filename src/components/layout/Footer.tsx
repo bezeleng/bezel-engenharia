@@ -9,8 +9,13 @@ export function Footer() {
       <Container className="flex flex-col gap-8 py-12 sm:flex-row sm:justify-between">
         <div>
           <span className="font-display text-xl">BEZEL</span>
-          <p className="mt-2 max-w-xs text-sm text-white/70">
-            Arquitetura, engenharia e construção.
+          <p className="mt-2 max-w-xs text-sm text-white/80">
+            Arquitetura • Engenharia • Construção
+          </p>
+          <p className="mt-1 max-w-xs text-sm text-white/50">
+            Jacareí • São José dos Campos 
+            <br />
+            Vale do Paraíba
           </p>
         </div>
 

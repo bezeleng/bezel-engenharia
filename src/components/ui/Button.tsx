@@ -24,7 +24,7 @@ interface ButtonAsLink extends BaseProps {
 
 interface ButtonAsButton
   extends BaseProps,
-    ButtonHTMLAttributes<HTMLButtonElement> {
+    Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   href?: undefined;
 }
 

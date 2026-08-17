@@ -51,7 +51,9 @@ export default async function ProjetoPage({ params }: ProjetoPageProps) {
 
   if (!projeto) notFound();
 
-  const capaUrl = urlFor(projeto.capa).width(1600).height(900).url();
+  const capaUrl = projeto.capa
+  ? urlFor(projeto.capa).width(1600).height(900).url()
+  : null;
 
   return (
     <>
@@ -67,14 +69,16 @@ export default async function ProjetoPage({ params }: ProjetoPageProps) {
               {projeto.titulo}
             </h1>
           </div>
-          <div className="relative aspect-video overflow-hidden rounded-lg">
-            <Image
-              src={capaUrl}
-              alt={projeto.titulo}
-              fill
-              className="object-cover"
-            />
-          </div>
+          {capaUrl && (
+  <div className="relative aspect-video overflow-hidden rounded-lg">
+    <Image
+      src={capaUrl}
+      alt={projeto.titulo ?? ""}
+      fill
+      className="object-cover"
+    />
+  </div>
+)}
           <FichaTecnica
             cliente={projeto.cliente}
             area={projeto.area}

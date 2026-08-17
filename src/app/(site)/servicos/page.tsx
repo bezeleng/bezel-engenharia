@@ -23,14 +23,14 @@ export default async function ServicosPage() {
         <SectionTitle
           eyebrow="O que fazemos"
           title="Nossos Serviços"
-          description="Soluções completas em arquitetura, engenharia e construção, do projeto à entrega."
+          description="Soluções completas para construir, reformar e gerenciar sua obra, do planejamento à entrega."
         />
         {servicos && servicos.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {servicos.map((servico) => (
               <ServicoCard
                 key={servico._id}
-                titulo={servico.titulo}
+                titulo={servico.titulo ?? ""}
                 slug={servico.slug?.current ?? ""}
                 descricaoCurta={servico.descricaoCurta ?? ""}
                 icone={servico.icone}

@@ -53,7 +53,9 @@ export default async function ObraPage({ params }: ObraPageProps) {
 
   if (!obra) notFound();
 
-  const capaUrl = urlFor(obra.capa).width(1600).height(900).url();
+  const capaUrl = obra.capa
+  ? urlFor(obra.capa).width(1600).height(900).url()
+  : null;
 
   return (
     <section className="py-16">
@@ -73,14 +75,16 @@ export default async function ObraPage({ params }: ObraPageProps) {
         <h1 className="font-display -mt-4 text-3xl text-navy sm:text-4xl">
           {obra.titulo}
         </h1>
-        <div className="relative aspect-video overflow-hidden rounded-lg">
-          <Image
-            src={capaUrl}
-            alt={obra.titulo}
-            fill
-            className="object-cover"
-          />
-        </div>
+        {capaUrl && (
+  <div className="relative aspect-video overflow-hidden rounded-lg">
+    <Image
+      src={capaUrl}
+      alt={obra.titulo ?? ""}
+      fill
+      className="object-cover"
+    />
+  </div>
+)}
         <FichaTecnica
           cliente={obra.cliente}
           area={obra.area}

@@ -32,7 +32,7 @@ export default async function SobrePage() {
       <section className="py-20">
         <Container className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
-            <SectionTitle eyebrow="Nossa história" title={pagina.titulo} />
+            <SectionTitle eyebrow="Nossa história" title={pagina.titulo ?? "Sobre"} />
             {pagina.textoIntroducao && (
               <div className="mt-6">
                 <PortableTextContent value={pagina.textoIntroducao} />
@@ -43,7 +43,7 @@ export default async function SobrePage() {
             <div className="relative aspect-[4/3] overflow-hidden rounded-lg">
               <Image
                 src={imagemUrl}
-                alt={pagina.titulo}
+                alt={pagina.titulo ?? ""}
                 fill
                 className="object-cover"
               />
@@ -97,16 +97,16 @@ export default async function SobrePage() {
               title="Nossa Equipe"
               align="center"
             />
-            <div className="grid gap-8 sm:grid-cols-3 lg:grid-cols-4">
-              {membros.map((membro) => (
-                <MembroCard
-                  key={membro._id}
-                  nome={membro.nome}
-                  cargo={membro.cargo}
-                  foto={membro.foto}
-                />
-              ))}
-            </div>
+            <div className="mx-auto grid w-full max-w-2xl gap-8 sm:grid-cols-2">
+  {membros.map((membro) => (
+    <MembroCard
+      key={membro._id}
+      nome={membro.nome ?? ""}
+      cargo={membro.cargo ?? ""}
+      foto={membro.foto}
+    />
+  ))}
+</div>
           </Container>
         </section>
       )}

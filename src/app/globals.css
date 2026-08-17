@@ -10,6 +10,7 @@
   --color-foreground: var(--foreground);
 
   --color-gold: #c3a06a;
+  --color-gold-text: #8a6a3a;
   --color-navy: #183451;
 
   --font-sans: var(--font-montserrat);

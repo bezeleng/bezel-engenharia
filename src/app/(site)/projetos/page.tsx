@@ -22,17 +22,17 @@ export default async function ProjetosPage() {
         <SectionTitle
           eyebrow="Portfólio"
           title="Nossos Projetos"
-          description="Trabalhos autorais de arquitetura e design, em diferentes segmentos."
+          description="Projetos desenvolvidos para diferentes necessidades, com soluções que unem arquitetura, técnica, funcionalidade e viabilidade de execução."
         />
         {projetos && projetos.length > 0 ? (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {projetos.map((projeto) => (
               <ProjetoCard
                 key={projeto._id}
-                titulo={projeto.titulo}
+                titulo={projeto.titulo ?? ""}
                 slug={projeto.slug?.current ?? ""}
-                categoriaNome={projeto.categoria?.nome}
-                capa={projeto.capa}
+                categoriaNome={projeto.categoria?.nome ?? undefined}
+                capa={projeto.capa ?? {}}
               />
             ))}
           </div>

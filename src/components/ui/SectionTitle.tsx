@@ -17,7 +17,7 @@ export function SectionTitle({
   return (
     <div className={`flex flex-col gap-3 ${alignClasses}`}>
       {eyebrow && (
-        <span className="text-sm font-medium uppercase tracking-widest text-gold">
+        <span className="text-sm font-medium uppercase tracking-widest text-gold-text">
           {eyebrow}
         </span>
       )}

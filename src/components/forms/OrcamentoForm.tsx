@@ -30,13 +30,13 @@ export function OrcamentoForm() {
   >("idle");
 
   const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<OrcamentoFormData>({
-    resolver: zodResolver(orcamentoSchema),
-  });
+  register,
+  handleSubmit,
+  reset,
+  formState: { errors },
+} = useForm<OrcamentoFormData>({
+  resolver: zodResolver(orcamentoSchema) as never,
+});
 
   async function onSubmit(dados: OrcamentoFormData) {
     setStatus("enviando");

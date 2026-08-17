@@ -43,7 +43,7 @@ export function ObraCard({
       </div>
       <div className="mt-4">
         {categoriaNome && (
-          <span className="text-xs font-medium uppercase tracking-widest text-gold">
+          <span className="text-xs font-medium uppercase tracking-widest text-gold-text">
             {categoriaNome}
           </span>
         )}

@@ -22,18 +22,18 @@ export default async function ObrasPage() {
         <SectionTitle
           eyebrow="Execução"
           title="Nossas Obras"
-          description="Construções que já saíram do papel, com nosso acompanhamento técnico."
+          description="Do planejamento à entrega, acompanhe algumas das obras que transformamos em realidade."
         />
         {obras && obras.length > 0 ? (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {obras.map((obra) => (
               <ObraCard
                 key={obra._id}
-                titulo={obra.titulo}
+                titulo={obra.titulo ?? ""}
                 slug={obra.slug?.current ?? ""}
-                status={obra.status}
-                categoriaNome={obra.categoria?.nome}
-                capa={obra.capa}
+                status={obra.status ?? undefined}
+                categoriaNome={obra.categoria?.nome ?? undefined}
+                capa={obra.capa ?? {}}
               />
             ))}
           </div>

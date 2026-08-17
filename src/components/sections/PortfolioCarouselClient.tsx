@@ -8,10 +8,10 @@ import { ProjetoCard } from "@/components/sections/ProjetoCard";
 
 interface Projeto {
   _id: string;
-  titulo: string;
-  slug: { current: string };
-  capa: NonNullable<unknown>;
-  categoria?: { nome: string };
+  titulo: string | null;
+  slug: { current?: string } | null;
+  capa: NonNullable<unknown> | null;
+  categoria?: { nome: string | null } | null;
 }
 
 interface PortfolioCarouselClientProps {
@@ -38,11 +38,11 @@ export function PortfolioCarouselClient({
       {projetos.map((projeto) => (
         <SwiperSlide key={projeto._id}>
           <ProjetoCard
-            titulo={projeto.titulo}
-            slug={projeto.slug.current}
-            categoriaNome={projeto.categoria?.nome}
-            capa={projeto.capa}
-          />
+  titulo={projeto.titulo ?? ""}
+  slug={projeto.slug?.current ?? ""}
+  categoriaNome={projeto.categoria?.nome ?? undefined}
+  capa={projeto.capa ?? {}}
+/>
         </SwiperSlide>
       ))}
     </Swiper>

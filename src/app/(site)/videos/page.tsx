@@ -21,16 +21,16 @@ export default async function VideosPage() {
       <Container className="flex flex-col gap-12">
         <SectionTitle
           eyebrow="Conteúdo"
-          title="Vídeos"
-          description="Acompanhe de perto nossos projetos e bastidores em vídeo."
+          title="Obras, Técnica e Conhecimento"
+          description="Acompanhe conteúdos sobre construção, gerenciamento de obras, materiais, processos executivos e bastidores dos nossos projetos."
         />
         {videos && videos.length > 0 ? (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {videos.map((video) => (
               <VideoCard
                 key={video._id}
-                titulo={video.titulo}
-                url={video.url}
+                titulo={video.titulo ?? ""}
+                url={video.url ?? ""}
                 thumbnail={video.thumbnail}
               />
             ))}

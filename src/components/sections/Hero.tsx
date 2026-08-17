@@ -31,7 +31,7 @@ export async function Hero() {
       <div className="absolute inset-0 bg-navy/60" />
       <Container className="relative z-10 py-24">
         <HeroContent
-          titulo={paginaInicial.tituloHero}
+          titulo={paginaInicial.tituloHero ?? ""}
           subtitulo={paginaInicial.subtituloHero}
           textoCta={paginaInicial.textoCta}
           linkCta={paginaInicial.linkCta}

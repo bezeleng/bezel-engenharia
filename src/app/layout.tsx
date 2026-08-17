@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import localFont from "next/font/local";
 import { SanityLive } from "@/sanity/lib/live";
+import { GoogleTagManager } from "@/components/analytics/GoogleTagManager";
+import { GoogleTagManagerNoScript } from "@/components/analytics/GoogleTagManagerNoScript";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -52,7 +54,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="pt-BR"
       className={`${montserrat.variable} ${trajanPro.variable} h-full antialiased`}
     >
+      <head>
+        <GoogleTagManager />
+      </head>
       <body className="flex min-h-full flex-col">
+        <GoogleTagManagerNoScript />
         {children}
         <SanityLive />
       </body>

@@ -28,7 +28,7 @@ export function ServicoCard({
       )}
       <h3 className="font-display text-xl text-navy">{titulo}</h3>
       <p className="text-sm text-foreground/70">{descricaoCurta}</p>
-      <span className="text-sm font-medium text-gold group-hover:underline">
+      <span className="text-sm font-medium text-gold-text group-hover:underline">
         Saiba mais →
       </span>
     </Link>
