@@ -7,6 +7,7 @@ import { Container } from "@/components/ui/Container";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { PortableTextContent } from "@/components/ui/PortableTextContent";
 import { MembroCard } from "@/components/sections/MembroCard";
+import { Diferenciais } from "@/components/sections/Diferenciais";
 
 export const metadata: Metadata = {
   title: "Sobre",
@@ -89,6 +90,13 @@ export default async function SobrePage() {
         </section>
       )}
 
+      <Diferenciais
+        titulo={pagina.tituloDiferenciais ?? undefined}
+        subtitulo={pagina.subtituloDiferenciais ?? undefined}
+        texto={pagina.textoDiferenciais ?? undefined}
+        itens={pagina.diferenciais ?? undefined}
+      />
+
       {pagina.mostrarEquipe && membros && membros.length > 0 && (
         <section className="bg-navy/[0.03] py-20">
           <Container className="flex flex-col gap-12">
@@ -97,16 +105,16 @@ export default async function SobrePage() {
               title="Nossa Equipe"
               align="center"
             />
-            <div className="mx-auto grid w-full max-w-2xl gap-8 sm:grid-cols-2">
-  {membros.map((membro) => (
-    <MembroCard
-      key={membro._id}
-      nome={membro.nome ?? ""}
-      cargo={membro.cargo ?? ""}
-      foto={membro.foto}
-    />
-  ))}
-</div>
+            <div className="flex flex-wrap justify-center gap-16">
+              {membros.map((membro) => (
+                <MembroCard
+                  key={membro._id}
+                  nome={membro.nome ?? ""}
+                  cargo={membro.cargo ?? ""}
+                  foto={membro.foto}
+                />
+              ))}
+            </div>
           </Container>
         </section>
       )}

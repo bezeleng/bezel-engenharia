@@ -352,6 +352,14 @@ export type PaginaSobre = {
   missao?: string;
   visao?: string;
   valores?: Array<string>;
+  tituloDiferenciais?: string;
+  subtituloDiferenciais?: string;
+  textoDiferenciais?: string;
+  diferenciais?: Array<{
+    titulo?: string;
+    descricao?: string;
+    _key: string;
+  }>;
   mostrarEquipe?: boolean;
   seo?: Seo;
 };
@@ -377,6 +385,8 @@ export type PaginaInicial = {
   subtituloCtaFinal?: string;
   textoBotaoCtaFinal?: string;
   linkBotaoCtaFinal?: string;
+  tituloGestao?: string;
+  textoGestao?: string;
 };
 
 export type ConfiguracaoSite = {
@@ -571,6 +581,8 @@ export type PaginaInicialQueryResult = {
   subtituloCtaFinal?: string;
   textoBotaoCtaFinal?: string;
   linkBotaoCtaFinal?: string;
+  tituloGestao?: string;
+  textoGestao?: string;
 } | null;
 
 // Source: src/sanity/lib/queries.ts
@@ -671,6 +683,14 @@ export type PaginaSobreQueryResult = {
   missao?: string;
   visao?: string;
   valores?: Array<string>;
+  tituloDiferenciais?: string;
+  subtituloDiferenciais?: string;
+  textoDiferenciais?: string;
+  diferenciais?: Array<{
+    titulo?: string;
+    descricao?: string;
+    _key: string;
+  }>;
   mostrarEquipe?: boolean;
   seo?: Seo;
 } | null;

@@ -43,6 +43,48 @@ export const paginaSobre = defineType({
       type: "array",
       of: [{ type: "string" }],
     }),
+        defineField({
+      name: "tituloDiferenciais",
+      title: "Título - Por que escolher a Bezel",
+      type: "string",
+      initialValue: "Por que escolher a Bezel?",
+    }),
+    defineField({
+      name: "subtituloDiferenciais",
+      title: "Subtítulo - Por que escolher a Bezel",
+      type: "string",
+      initialValue: "Construímos com método, não com improviso.",
+    }),
+    defineField({
+      name: "textoDiferenciais",
+      title: "Texto - Por que escolher a Bezel",
+      type: "text",
+      rows: 4,
+      initialValue:
+        "Cada obra é conduzida a partir de planejamento, orçamento, cronograma e acompanhamento contínuo. Centralizamos profissionais, fornecedores, compras e execução para proporcionar ao cliente mais controle e menos preocupações durante todo o processo.",
+    }),
+    defineField({
+      name: "diferenciais",
+      title: "Diferenciais (4 itens)",
+      type: "array",
+      of: [
+        {
+          type: "object",
+          fields: [
+            defineField({ name: "titulo", title: "Título", type: "string" }),
+            defineField({
+              name: "descricao",
+              title: "Descrição",
+              type: "string",
+            }),
+          ],
+          preview: {
+            select: { title: "titulo", subtitle: "descricao" },
+          },
+        },
+      ],
+      validation: (Rule) => Rule.max(4),
+    }),
     defineField({
       name: "mostrarEquipe",
       title: "Mostrar seção de equipe nesta página?",

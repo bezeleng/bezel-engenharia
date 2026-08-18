@@ -62,5 +62,19 @@ export const paginaInicial = defineType({
       type: "string",
       initialValue: "/contato",
     }),
+        defineField({
+      name: "tituloGestao",
+      title: "Título da Seção de Gestão Única",
+      type: "string",
+      initialValue: "Uma obra. Uma única gestão.",
+    }),
+    defineField({
+      name: "textoGestao",
+      title: "Texto da Seção de Gestão Única",
+      type: "text",
+      rows: 3,
+      initialValue:
+        "Da análise inicial à entrega das chaves, a Bezel centraliza planejamento, orçamento, fornecedores, compras, mão de obra, cronograma e acompanhamento da execução.",
+    }),
   ],
 });
