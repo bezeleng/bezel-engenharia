@@ -7,7 +7,7 @@ import { navLinks } from "@/lib/navigation";
 
 export function Header() {
   return (
-    <header className="relative border-b border-navy/10 bg-white">
+    <header className="relative z-50 border-b border-navy/10 bg-white">
       <Container className="flex items-center justify-between py-4">
         <Link href="/" className="font-display text-xl text-navy">
           BEZEL

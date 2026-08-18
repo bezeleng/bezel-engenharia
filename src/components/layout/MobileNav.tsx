@@ -11,6 +11,7 @@ export function MobileNav() {
   return (
     <div className="sm:hidden">
       <button
+        type="button"
         onClick={() => setIsOpen((open) => !open)}
         aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
         aria-expanded={isOpen}
@@ -22,13 +23,13 @@ export function MobileNav() {
       </button>
 
       {isOpen && (
-        <nav className="absolute inset-x-0 top-full flex flex-col gap-1 bg-white px-6 py-4 shadow-md">
+        <nav className="absolute inset-x-0 top-full z-50 flex flex-col gap-1 border-t border-navy/10 bg-white px-6 py-4 shadow-md">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setIsOpen(false)}
-              className="py-2 font-sans text-navy"
+              className="py-3 font-sans text-navy hover:text-gold"
             >
               {link.label}
             </Link>
