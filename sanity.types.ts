@@ -132,7 +132,9 @@ export type Obra = {
   titulo?: string;
   slug?: Slug;
   categoria?: CategoriaReference;
+  tipoObra?: "construcao_nova" | "reforma" | "ampliacao" | "retrofit";
   status?: "em_andamento" | "concluida";
+  servicosRealizados?: Array<string>;
   capa?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -141,11 +143,17 @@ export type Obra = {
     _type: "image";
   };
   galeria?: Array<{
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
+    imagem?: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    };
+    legenda?: string;
+    etapa?: "antes" | "durante" | "depois";
+    ordem?: number;
+    _type: "itemGaleria";
     _key: string;
   }>;
   descricao?: Array<{
@@ -166,10 +174,55 @@ export type Obra = {
     _type: "block";
     _key: string;
   }>;
+  desafioObra?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  solucaoBezel?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  principaisServicos?: Array<string>;
+  resultadosDestaques?: Array<string>;
   cliente?: string;
+  exibirClientePublicamente?: boolean;
   area?: number;
+  metragemTerreno?: number;
+  metragemConstruida?: number;
   ano?: number;
   localizacao?: string;
+  dataInicio?: string;
+  dataConclusao?: string;
+  previsaoConclusao?: string;
+  prazoObra?: string;
   seo?: Seo;
 };
 
@@ -884,7 +937,9 @@ export type ObraBySlugQueryResult = {
   categoria: {
     nome: string | null;
   } | null;
+  tipoObra?: "ampliacao" | "construcao_nova" | "reforma" | "retrofit";
   status?: "concluida" | "em_andamento";
+  servicosRealizados?: Array<string>;
   capa?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -893,11 +948,17 @@ export type ObraBySlugQueryResult = {
     _type: "image";
   };
   galeria?: Array<{
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
+    imagem?: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    };
+    legenda?: string;
+    etapa?: "antes" | "depois" | "durante";
+    ordem?: number;
+    _type: "itemGaleria";
     _key: string;
   }>;
   descricao?: Array<{
@@ -918,10 +979,55 @@ export type ObraBySlugQueryResult = {
     _type: "block";
     _key: string;
   }>;
+  desafioObra?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  solucaoBezel?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  principaisServicos?: Array<string>;
+  resultadosDestaques?: Array<string>;
   cliente?: string;
+  exibirClientePublicamente?: boolean;
   area?: number;
+  metragemTerreno?: number;
+  metragemConstruida?: number;
   ano?: number;
   localizacao?: string;
+  dataInicio?: string;
+  dataConclusao?: string;
+  previsaoConclusao?: string;
+  prazoObra?: string;
   seo?: Seo;
 } | null;
 
