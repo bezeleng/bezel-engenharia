@@ -10,8 +10,10 @@ import { projeto } from './projeto'
 import { obra } from './obra'
 import { membroEquipe } from './membroEquipe'
 import { video } from './video'
+import { categoriaVideo } from './categoriaVideo'
 import { galeria } from './galeria'
 import { depoimento } from './depoimento'
+
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -25,6 +27,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     projeto,
     obra,
     membroEquipe,
+    categoriaVideo,
     video,
     galeria,
     depoimento,

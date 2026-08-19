@@ -22,6 +22,20 @@ export type SanityImageAssetReference = {
   [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
 };
 
+export type ServicoReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "servico";
+};
+
+export type ObraReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "obra";
+};
+
 export type Depoimento = {
   _id: string;
   _type: "depoimento";
@@ -39,6 +53,9 @@ export type Depoimento = {
   };
   texto?: string;
   nota?: number;
+  tipoServico?: ServicoReference;
+  obraRelacionada?: ObraReference;
+  destaque?: boolean;
 };
 
 export type SanityImageCrop = {
@@ -74,11 +91,11 @@ export type Galeria = {
   }>;
 };
 
-export type CategoriaReference = {
+export type CategoriaVideoReference = {
   _ref: string;
   _type: "reference";
   _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "categoria";
+  [internalGroqTypeReferenceTo]?: "categoriaVideo";
 };
 
 export type Video = {
@@ -88,8 +105,9 @@ export type Video = {
   _updatedAt: string;
   _rev: string;
   titulo?: string;
+  slug?: Slug;
   url?: string;
-  categoria?: CategoriaReference;
+  categoria?: CategoriaVideoReference;
   thumbnail?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -97,6 +115,46 @@ export type Video = {
     crop?: SanityImageCrop;
     _type: "image";
   };
+  descricaoCurta?: string;
+  descricaoCompleta?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  dataPublicacao?: string;
+  duracao?: string;
+  destaque?: boolean;
+  obraRelacionada?: ObraReference;
+  servicoRelacionado?: ServicoReference;
+};
+
+export type Slug = {
+  _type: "slug";
+  current?: string;
+  source?: string;
+};
+
+export type CategoriaVideo = {
+  _id: string;
+  _type: "categoriaVideo";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  nome?: string;
+  slug?: Slug;
 };
 
 export type MembroEquipe = {
@@ -121,6 +179,13 @@ export type MembroEquipe = {
     _key: string;
   }>;
   ordem?: number;
+};
+
+export type CategoriaReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "categoria";
 };
 
 export type Obra = {
@@ -237,12 +302,6 @@ export type Seo = {
     crop?: SanityImageCrop;
     _type: "image";
   };
-};
-
-export type Slug = {
-  _type: "slug";
-  current?: string;
-  source?: string;
 };
 
 export type Projeto = {
@@ -561,16 +620,20 @@ export type Geopoint = {
 
 export type AllSanitySchemaTypes =
   | SanityImageAssetReference
+  | ServicoReference
+  | ObraReference
   | Depoimento
   | SanityImageCrop
   | SanityImageHotspot
   | Galeria
-  | CategoriaReference
+  | CategoriaVideoReference
   | Video
+  | Slug
+  | CategoriaVideo
   | MembroEquipe
+  | CategoriaReference
   | Obra
   | Seo
-  | Slug
   | Projeto
   | Categoria
   | Servico
@@ -1040,45 +1103,70 @@ export type ObraSlugsQueryResult = Array<{
 
 // Source: src/sanity/lib/queries.ts
 // Variable: videosQuery
-// Query: *[_type == "video"] | order(_createdAt desc)
+// Query: *[_type == "video"] | order(    coalesce(dataPublicacao, "0000-00-00") desc  ){    _id,    titulo,    slug,    url,    thumbnail,    descricaoCurta,    descricaoCompleta,    dataPublicacao,    duracao,    destaque,    categoria->{_id, nome}  }
 export type VideosQueryResult = Array<{
   _id: string;
-  _type: "video";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  titulo?: string;
-  url?: string;
-  categoria?: CategoriaReference;
-  thumbnail?: {
+  titulo: string | null;
+  slug: Slug | null;
+  url: string | null;
+  thumbnail: {
     asset?: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     _type: "image";
-  };
+  } | null;
+  descricaoCurta: string | null;
+  descricaoCompleta: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }> | null;
+  dataPublicacao: string | null;
+  duracao: string | null;
+  destaque: boolean | null;
+  categoria: {
+    _id: string;
+    nome: string | null;
+  } | null;
 }>;
 
 // Source: src/sanity/lib/queries.ts
 // Variable: depoimentosQuery
-// Query: *[_type == "depoimento"] | order(_createdAt desc)
+// Query: *[_type == "depoimento"] | order(_createdAt desc){    _id,    nomeCliente,    cargoEmpresa,    foto,    texto,    nota,    tipoServico->{nome},    obraRelacionada->{titulo, "slug": slug.current}  }
 export type DepoimentosQueryResult = Array<{
   _id: string;
-  _type: "depoimento";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  nomeCliente?: string;
-  cargoEmpresa?: string;
-  foto?: {
+  nomeCliente: string | null;
+  cargoEmpresa: string | null;
+  foto: {
     asset?: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     _type: "image";
-  };
-  texto?: string;
-  nota?: number;
+  } | null;
+  texto: string | null;
+  nota: number | null;
+  tipoServico: {
+    nome: null;
+  } | null;
+  obraRelacionada: {
+    titulo: string | null;
+    slug: string | null;
+  } | null;
 }>;
 
 // Source: src/sanity/lib/queries.ts
@@ -1112,6 +1200,39 @@ export type PoliticaPrivacidadeQueryResult = {
   seo?: Seo;
 } | null;
 
+// Source: src/sanity/lib/queries.ts
+// Variable: categoriasVideoUsadasQuery
+// Query: *[_type == "categoriaVideo" && count(*[_type == "video" && references(^._id)]) > 0]{    _id,    nome  }
+export type CategoriasVideoUsadasQueryResult = Array<{
+  _id: string;
+  nome: string | null;
+}>;
+
+// Source: src/sanity/lib/queries.ts
+// Variable: depoimentosDestaqueQuery
+// Query: *[_type == "depoimento" && destaque == true] | order(_createdAt desc)[0...3]{    _id,    nomeCliente,    cargoEmpresa,    foto,    texto,    nota,    tipoServico->{nome},    obraRelacionada->{titulo, "slug": slug.current}  }
+export type DepoimentosDestaqueQueryResult = Array<{
+  _id: string;
+  nomeCliente: string | null;
+  cargoEmpresa: string | null;
+  foto: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  texto: string | null;
+  nota: number | null;
+  tipoServico: {
+    nome: null;
+  } | null;
+  obraRelacionada: {
+    titulo: string | null;
+    slug: string | null;
+  } | null;
+}>;
+
 // Query TypeMap
 import "@sanity/client";
 declare module "@sanity/client" {
@@ -1130,8 +1251,10 @@ declare module "@sanity/client" {
     '*[_type == "obra"] | order(_createdAt desc){\n    _id, titulo, slug, capa, status, categoria->{nome}\n  }': ObrasQueryResult;
     '*[_type == "obra" && slug.current == $slug][0]{\n    ...,\n    categoria->{nome}\n  }': ObraBySlugQueryResult;
     '*[_type == "obra"]{ "slug": slug.current }': ObraSlugsQueryResult;
-    '*[_type == "video"] | order(_createdAt desc)': VideosQueryResult;
-    '*[_type == "depoimento"] | order(_createdAt desc)': DepoimentosQueryResult;
+    '*[_type == "video"] | order(\n    coalesce(dataPublicacao, "0000-00-00") desc\n  ){\n    _id,\n    titulo,\n    slug,\n    url,\n    thumbnail,\n    descricaoCurta,\n    descricaoCompleta,\n    dataPublicacao,\n    duracao,\n    destaque,\n    categoria->{_id, nome}\n  }': VideosQueryResult;
+    '*[_type == "depoimento"] | order(_createdAt desc){\n    _id,\n    nomeCliente,\n    cargoEmpresa,\n    foto,\n    texto,\n    nota,\n    tipoServico->{nome},\n    obraRelacionada->{titulo, "slug": slug.current}\n  }': DepoimentosQueryResult;
     '*[_type == "politicaPrivacidade"][0]': PoliticaPrivacidadeQueryResult;
+    '*[_type == "categoriaVideo" && count(*[_type == "video" && references(^._id)]) > 0]{\n    _id,\n    nome\n  }': CategoriasVideoUsadasQueryResult;
+    '*[_type == "depoimento" && destaque == true] | order(_createdAt desc)[0...3]{\n    _id,\n    nomeCliente,\n    cargoEmpresa,\n    foto,\n    texto,\n    nota,\n    tipoServico->{nome},\n    obraRelacionada->{titulo, "slug": slug.current}\n  }': DepoimentosDestaqueQueryResult;
   }
 }

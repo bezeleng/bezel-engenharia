@@ -68,11 +68,52 @@ export const obraSlugsQuery = defineQuery(
   `*[_type == "obra"]{ "slug": slug.current }`
 );
 export const videosQuery = defineQuery(
-  `*[_type == "video"] | order(_createdAt desc)`
+  `*[_type == "video"] | order(
+    coalesce(dataPublicacao, "0000-00-00") desc
+  ){
+    _id,
+    titulo,
+    slug,
+    url,
+    thumbnail,
+    descricaoCurta,
+    descricaoCompleta,
+    dataPublicacao,
+    duracao,
+    destaque,
+    categoria->{_id, nome}
+  }`
 );
 export const depoimentosQuery = defineQuery(
-  `*[_type == "depoimento"] | order(_createdAt desc)`
+  `*[_type == "depoimento"] | order(_createdAt desc){
+    _id,
+    nomeCliente,
+    cargoEmpresa,
+    foto,
+    texto,
+    nota,
+    tipoServico->{nome},
+    obraRelacionada->{titulo, "slug": slug.current}
+  }`
 );
 export const politicaPrivacidadeQuery = defineQuery(
   `*[_type == "politicaPrivacidade"][0]`
+);
+export const categoriasVideoUsadasQuery = defineQuery(
+  `*[_type == "categoriaVideo" && count(*[_type == "video" && references(^._id)]) > 0]{
+    _id,
+    nome
+  }`
+);
+export const depoimentosDestaqueQuery = defineQuery(
+  `*[_type == "depoimento" && destaque == true] | order(_createdAt desc)[0...3]{
+    _id,
+    nomeCliente,
+    cargoEmpresa,
+    foto,
+    texto,
+    nota,
+    tipoServico->{nome},
+    obraRelacionada->{titulo, "slug": slug.current}
+  }`
 );
