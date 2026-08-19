@@ -519,6 +519,13 @@ export type ConfiguracaoSite = {
   whatsapp?: string;
   email?: string;
   endereco?: string;
+  logradouro?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
+  cnpj?: string;
+  regiaoAtendimento?: Array<string>;
+  linkAvaliacoesGoogle?: string;
 };
 
 export type SanityImagePaletteSwatch = {
@@ -671,6 +678,13 @@ export type ConfiguracaoSiteQueryResult = {
   whatsapp?: string;
   email?: string;
   endereco?: string;
+  logradouro?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
+  cnpj?: string;
+  regiaoAtendimento?: Array<string>;
+  linkAvaliacoesGoogle?: string;
 } | null;
 
 // Source: src/sanity/lib/queries.ts

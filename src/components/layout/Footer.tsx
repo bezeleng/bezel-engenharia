@@ -1,22 +1,38 @@
 // src/components/layout/Footer.tsx
 import Link from "next/link";
+import { sanityFetch } from "@/sanity/lib/live";
+import { configuracaoSiteQuery } from "@/sanity/lib/queries";
 import { Container } from "@/components/ui/Container";
 import { navLinks } from "@/lib/navigation";
 
-export function Footer() {
+export async function Footer() {
+  const { data: config } = await sanityFetch({ query: configuracaoSiteQuery });
+
+  const enderecoLinha =
+    config?.logradouro && config?.cidade && config?.estado
+      ? `${config.logradouro} — ${config.cidade}/${config.estado}`
+      : config?.endereco;
+
+  const regiao =
+    config?.regiaoAtendimento && config.regiaoAtendimento.length > 0
+      ? config.regiaoAtendimento.join(" • ")
+      : "Jacareí • São José dos Campos • Vale do Paraíba";
+
   return (
     <footer className="bg-navy text-white">
-      <Container className="flex flex-col gap-8 py-12 sm:flex-row sm:justify-between">
-        <div>
-          <span className="font-display text-xl">BEZEL</span>
-          <p className="mt-2 max-w-xs text-sm text-white/80">
-            Arquitetura • Engenharia • Construção
-          </p>
-          <p className="mt-1 max-w-xs text-sm text-white/50">
-            Jacareí • São José dos Campos 
-            <br />
-            Vale do Paraíba
-          </p>
+      <Container className="flex flex-col gap-10 py-12 sm:flex-row sm:justify-between">
+        <div className="flex flex-col gap-3">
+          <div>
+            <span className="font-display text-xl">BEZEL</span>
+            <p className="mt-1 text-sm text-white/70">
+              Arquitetura • Engenharia • Construção
+            </p>
+          </div>
+          <div className="flex flex-col gap-1 text-sm text-white/50">
+            {enderecoLinha && <p>{enderecoLinha}</p>}
+            {config?.cnpj && <p>CNPJ: {config.cnpj}</p>}
+            <p>{regiao}</p>
+          </div>
         </div>
 
         <nav className="flex flex-col gap-2 text-sm">

@@ -1,3 +1,4 @@
+// src/sanity/schemaTypes/configuracaoSite.ts
 import { defineField, defineType } from "sanity";
 
 export const configuracaoSite = defineType({
@@ -36,9 +37,51 @@ export const configuracaoSite = defineType({
     }),
     defineField({
       name: "endereco",
-      title: "Endereço",
+      title: "Endereço (texto livre)",
       type: "text",
       rows: 3,
+      description:
+        "Usado como exibição simples. Para o mapa e dados estruturados, preencha também os campos estruturados abaixo.",
+    }),
+    defineField({
+      name: "logradouro",
+      title: "Logradouro",
+      type: "string",
+      description: 'Ex: "Rua Targino Emygdio dos Santos, 140"',
+    }),
+    defineField({
+      name: "cidade",
+      title: "Cidade",
+      type: "string",
+      initialValue: "Jacareí",
+    }),
+    defineField({
+      name: "estado",
+      title: "Estado (UF)",
+      type: "string",
+      initialValue: "SP",
+    }),
+    defineField({
+      name: "cep",
+      title: "CEP",
+      type: "string",
+    }),
+    defineField({
+      name: "cnpj",
+      title: "CNPJ",
+      type: "string",
+    }),
+    defineField({
+      name: "regiaoAtendimento",
+      title: "Região de Atendimento",
+      type: "array",
+      of: [{ type: "string" }],
+      initialValue: ["Jacareí", "São José dos Campos", "Vale do Paraíba"],
+    }),
+    defineField({
+      name: "linkAvaliacoesGoogle",
+      title: "Link do Perfil no Google (avaliações)",
+      type: "url",
     }),
   ],
 });

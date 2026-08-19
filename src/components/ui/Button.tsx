@@ -20,12 +20,16 @@ interface BaseProps {
 
 interface ButtonAsLink extends BaseProps {
   href: string;
+  target?: string;
+  rel?: string;
 }
 
 interface ButtonAsButton
   extends BaseProps,
     Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   href?: undefined;
+  target?: undefined;
+  rel?: undefined;
 }
 
 type ButtonProps = ButtonAsLink | ButtonAsButton;
@@ -35,13 +39,15 @@ export function Button({
   variant = "primary",
   className = "",
   href,
+  target,
+  rel,
   ...rest
 }: ButtonProps) {
   const classes = `${baseClasses} ${variantClasses[variant]} ${className}`;
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link href={href} target={target} rel={rel} className={classes}>
         {children}
       </Link>
     );
