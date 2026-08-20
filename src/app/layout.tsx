@@ -52,6 +52,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="pt-BR"
       className={`${montserrat.variable} ${trajanPro.variable} h-full antialiased`}
     >
-      </html>
+      <body className="flex min-h-full flex-col">
+        {children}
+        <SanityLive />
+      </body>
+    </html>
   );
 }
