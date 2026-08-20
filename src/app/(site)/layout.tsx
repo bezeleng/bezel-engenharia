@@ -2,6 +2,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getOrganizationSchema } from "@/lib/schema-org";
+import { GoogleTagManager } from "@/components/analytics/GoogleTagManager";
+import { GoogleTagManagerNoScript } from "@/components/analytics/GoogleTagManagerNoScript";
 import { sanityFetch } from "@/sanity/lib/live";
 import { configuracaoSiteQuery } from "@/sanity/lib/queries";
 
@@ -15,7 +17,9 @@ export default async function SiteLayout({
 
   return (
     <>
+      <GoogleTagManager />
       {organizationSchema && <JsonLd data={organizationSchema} />}
+      <GoogleTagManagerNoScript />
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
