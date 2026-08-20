@@ -313,6 +313,7 @@ export type Projeto = {
   titulo?: string;
   slug?: Slug;
   categoria?: CategoriaReference;
+  destaque?: boolean;
   capa?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -766,7 +767,7 @@ export type ServicosQueryResult = Array<{
 
 // Source: src/sanity/lib/queries.ts
 // Variable: projetosDestaqueQuery
-// Query: *[_type == "projeto"] | order(_createdAt desc)[0...6]{    _id,    titulo,    slug,    capa,    categoria->{nome}  }
+// Query: *[_type == "projeto" && destaque == true] | order(_createdAt desc)[0...6]{    _id,    titulo,    slug,    capa,    categoria->{nome}  }
 export type ProjetosDestaqueQueryResult = Array<{
   _id: string;
   titulo: string | null;
@@ -941,6 +942,7 @@ export type ProjetoBySlugQueryResult = {
   categoria: {
     nome: string | null;
   } | null;
+  destaque?: boolean;
   capa?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -1262,7 +1264,7 @@ declare module "@sanity/client" {
     '*[_type == "configuracaoSite"][0]': ConfiguracaoSiteQueryResult;
     '*[_type == "paginaInicial"][0]': PaginaInicialQueryResult;
     '*[_type == "servico"] | order(ordem asc)': ServicosQueryResult;
-    '*[_type == "projeto"] | order(_createdAt desc)[0...6]{\n    _id,\n    titulo,\n    slug,\n    capa,\n    categoria->{nome}\n  }': ProjetosDestaqueQueryResult;
+    '*[_type == "projeto" && destaque == true] | order(_createdAt desc)[0...6]{\n    _id,\n    titulo,\n    slug,\n    capa,\n    categoria->{nome}\n  }': ProjetosDestaqueQueryResult;
     '*[_type == "paginaSobre"][0]': PaginaSobreQueryResult;
     '*[_type == "membroEquipe"] | order(ordem asc)': MembrosEquipeQueryResult;
     '*[_type == "servico" && slug.current == $slug][0]': ServicoBySlugQueryResult;

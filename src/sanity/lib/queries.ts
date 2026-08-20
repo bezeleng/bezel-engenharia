@@ -12,7 +12,7 @@ export const servicosQuery = defineQuery(
   `*[_type == "servico"] | order(ordem asc)`
 );
 export const projetosDestaqueQuery = defineQuery(
-  `*[_type == "projeto"] | order(_createdAt desc)[0...6]{
+  `*[_type == "projeto" && destaque == true] | order(_createdAt desc)[0...6]{
     _id,
     titulo,
     slug,

@@ -34,6 +34,13 @@ export const projeto = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: "destaque",
+      title: "Destaque",
+      type: "boolean",
+      initialValue: false,
+      description: "Exibido no carrossel de Projetos em Destaque na Home.",
+    }),
+    defineField({
       name: "capa",
       title: "Imagem de Capa",
       type: "image",

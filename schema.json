@@ -2103,6 +2103,13 @@
         },
         "optional": true
       },
+      "destaque": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
       "capa": {
         "type": "objectAttribute",
         "value": {
