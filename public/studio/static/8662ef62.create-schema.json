@@ -1,0 +1,2450 @@
+[
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "nomeEmpresa",
+        "type": "string",
+        "title": "Nome da Empresa"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "logo",
+        "type": "image"
+      },
+      {
+        "name": "telefone",
+        "type": "string"
+      },
+      {
+        "description": "Ex: 5511999999999",
+        "name": "whatsapp",
+        "type": "string",
+        "title": "WhatsApp (somente números, com DDI)"
+      },
+      {
+        "name": "email",
+        "type": "string",
+        "title": "E-mail"
+      },
+      {
+        "rows": 3,
+        "description": "Usado como exibição simples. Para o mapa e dados estruturados, preencha também os campos estruturados abaixo.",
+        "name": "endereco",
+        "type": "text",
+        "title": "Endereço (texto livre)"
+      },
+      {
+        "description": "Ex: \"Rua Targino Emygdio dos Santos, 140\"",
+        "name": "logradouro",
+        "type": "string"
+      },
+      {
+        "initialValue": "Jacareí",
+        "name": "cidade",
+        "type": "string"
+      },
+      {
+        "initialValue": "SP",
+        "name": "estado",
+        "type": "string",
+        "title": "Estado (UF)"
+      },
+      {
+        "name": "cep",
+        "type": "string",
+        "title": "CEP"
+      },
+      {
+        "name": "cnpj",
+        "type": "string",
+        "title": "CNPJ"
+      },
+      {
+        "initialValue": [
+          "Jacareí",
+          "São José dos Campos",
+          "Vale do Paraíba"
+        ],
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "regiaoAtendimento",
+        "type": "array",
+        "title": "Região de Atendimento"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "name": "linkAvaliacoesGoogle",
+        "type": "url",
+        "title": "Link do Perfil no Google (avaliações)"
+      }
+    ],
+    "name": "configuracaoSite",
+    "type": "document",
+    "title": "Configurações do Site"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "tituloHero",
+        "type": "string",
+        "title": "Título do Banner"
+      },
+      {
+        "rows": 2,
+        "name": "subtituloHero",
+        "type": "text",
+        "title": "Subtítulo do Banner"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "imagemFundo",
+        "type": "image",
+        "title": "Imagem de Fundo"
+      },
+      {
+        "initialValue": "Solicitar Orçamento",
+        "name": "textoCta",
+        "type": "string",
+        "title": "Texto do Botão (CTA)"
+      },
+      {
+        "initialValue": "/orcamento",
+        "name": "linkCta",
+        "type": "string",
+        "title": "Link do Botão (CTA)"
+      },
+      {
+        "initialValue": "Pronto para começar seu projeto?",
+        "name": "tituloCtaFinal",
+        "type": "string",
+        "title": "Título do CTA Final"
+      },
+      {
+        "rows": 2,
+        "initialValue": "Entre em contato e transforme sua ideia em realidade.",
+        "name": "subtituloCtaFinal",
+        "type": "text",
+        "title": "Subtítulo do CTA Final"
+      },
+      {
+        "initialValue": "Fale Conosco",
+        "name": "textoBotaoCtaFinal",
+        "type": "string",
+        "title": "Texto do Botão (CTA Final)"
+      },
+      {
+        "initialValue": "/contato",
+        "name": "linkBotaoCtaFinal",
+        "type": "string",
+        "title": "Link do Botão (CTA Final)"
+      },
+      {
+        "initialValue": "Uma obra. Uma única gestão.",
+        "name": "tituloGestao",
+        "type": "string",
+        "title": "Título da Seção de Gestão Única"
+      },
+      {
+        "rows": 3,
+        "initialValue": "Da análise inicial à entrega das chaves, a Bezel centraliza planejamento, orçamento, fornecedores, compras, mão de obra, cronograma e acompanhamento da execução.",
+        "name": "textoGestao",
+        "type": "text",
+        "title": "Texto da Seção de Gestão Única"
+      }
+    ],
+    "name": "paginaInicial",
+    "type": "document",
+    "title": "Página Inicial"
+  },
+  {
+    "fields": [
+      {
+        "initialValue": "Sobre a BEZEL",
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "titulo",
+        "type": "string",
+        "title": "Título"
+      },
+      {
+        "of": [
+          {
+            "lists": [
+              {
+                "value": "bullet",
+                "title": "Bulleted list"
+              },
+              {
+                "value": "number",
+                "title": "Numbered list"
+              }
+            ],
+            "marks": {
+              "annotations": [
+                {
+                  "i18nTitleKey": "inputs.portable-text.annotation.link",
+                  "options": {
+                    "modal": {
+                      "type": "popover"
+                    }
+                  },
+                  "fields": [
+                    {
+                      "validation": [
+                        {
+                          "level": "error",
+                          "rules": [
+                            {
+                              "flag": "uri",
+                              "constraint": {
+                                "options": {
+                                  "scheme": [
+                                    "/^http$/",
+                                    "/^https$/",
+                                    "/^tel$/",
+                                    "/^mailto$/"
+                                  ],
+                                  "allowRelative": true,
+                                  "relativeOnly": false,
+                                  "allowCredentials": false
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "description": "A valid web, email, phone, or relative link.",
+                      "name": "href",
+                      "type": "url",
+                      "title": "Link"
+                    }
+                  ],
+                  "name": "link",
+                  "type": "object"
+                }
+              ],
+              "decorators": [
+                {
+                  "value": "strong",
+                  "title": "Strong"
+                },
+                {
+                  "value": "em",
+                  "title": "Italic"
+                },
+                {
+                  "value": "code",
+                  "title": "Code"
+                },
+                {
+                  "value": "underline",
+                  "title": "Underline"
+                },
+                {
+                  "value": "strike-through",
+                  "title": "Strike"
+                }
+              ]
+            },
+            "of": [],
+            "styles": [
+              {
+                "value": "normal",
+                "title": "Normal"
+              },
+              {
+                "value": "h1",
+                "title": "Heading 1"
+              },
+              {
+                "value": "h2",
+                "title": "Heading 2"
+              },
+              {
+                "value": "h3",
+                "title": "Heading 3"
+              },
+              {
+                "value": "h4",
+                "title": "Heading 4"
+              },
+              {
+                "value": "h5",
+                "title": "Heading 5"
+              },
+              {
+                "value": "h6",
+                "title": "Heading 6"
+              },
+              {
+                "value": "blockquote",
+                "title": "Quote"
+              }
+            ],
+            "type": "block"
+          }
+        ],
+        "name": "textoIntroducao",
+        "type": "array",
+        "title": "Texto de Introdução"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "imagemDestaque",
+        "type": "image",
+        "title": "Imagem de Destaque"
+      },
+      {
+        "rows": 3,
+        "name": "missao",
+        "type": "text",
+        "title": "Missão"
+      },
+      {
+        "rows": 3,
+        "name": "visao",
+        "type": "text",
+        "title": "Visão"
+      },
+      {
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "valores",
+        "type": "array"
+      },
+      {
+        "initialValue": "Por que escolher a Bezel?",
+        "name": "tituloDiferenciais",
+        "type": "string",
+        "title": "Título - Por que escolher a Bezel"
+      },
+      {
+        "initialValue": "Construímos com método, não com improviso.",
+        "name": "subtituloDiferenciais",
+        "type": "string",
+        "title": "Subtítulo - Por que escolher a Bezel"
+      },
+      {
+        "rows": 4,
+        "initialValue": "Cada obra é conduzida a partir de planejamento, orçamento, cronograma e acompanhamento contínuo. Centralizamos profissionais, fornecedores, compras e execução para proporcionar ao cliente mais controle e menos preocupações durante todo o processo.",
+        "name": "textoDiferenciais",
+        "type": "text",
+        "title": "Texto - Por que escolher a Bezel"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "max",
+                "constraint": 4
+              }
+            ]
+          }
+        ],
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "titulo",
+                "type": "string",
+                "title": "Título"
+              },
+              {
+                "name": "descricao",
+                "type": "string",
+                "title": "Descrição"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "diferenciais",
+        "type": "array",
+        "title": "Diferenciais (4 itens)"
+      },
+      {
+        "initialValue": true,
+        "name": "mostrarEquipe",
+        "type": "boolean",
+        "title": "Mostrar seção de equipe nesta página?"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "seo",
+        "type": "seo",
+        "title": "SEO"
+      }
+    ],
+    "name": "paginaSobre",
+    "type": "document",
+    "title": "Página Sobre"
+  },
+  {
+    "fields": [
+      {
+        "initialValue": "Política de Privacidade",
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "titulo",
+        "type": "string",
+        "title": "Título"
+      },
+      {
+        "of": [
+          {
+            "lists": [
+              {
+                "value": "bullet",
+                "title": "Bulleted list"
+              },
+              {
+                "value": "number",
+                "title": "Numbered list"
+              }
+            ],
+            "marks": {
+              "annotations": [
+                {
+                  "i18nTitleKey": "inputs.portable-text.annotation.link",
+                  "options": {
+                    "modal": {
+                      "type": "popover"
+                    }
+                  },
+                  "fields": [
+                    {
+                      "validation": [
+                        {
+                          "level": "error",
+                          "rules": [
+                            {
+                              "flag": "uri",
+                              "constraint": {
+                                "options": {
+                                  "scheme": [
+                                    "/^http$/",
+                                    "/^https$/",
+                                    "/^tel$/",
+                                    "/^mailto$/"
+                                  ],
+                                  "allowRelative": true,
+                                  "relativeOnly": false,
+                                  "allowCredentials": false
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "description": "A valid web, email, phone, or relative link.",
+                      "name": "href",
+                      "type": "url",
+                      "title": "Link"
+                    }
+                  ],
+                  "name": "link",
+                  "type": "object"
+                }
+              ],
+              "decorators": [
+                {
+                  "value": "strong",
+                  "title": "Strong"
+                },
+                {
+                  "value": "em",
+                  "title": "Italic"
+                },
+                {
+                  "value": "code",
+                  "title": "Code"
+                },
+                {
+                  "value": "underline",
+                  "title": "Underline"
+                },
+                {
+                  "value": "strike-through",
+                  "title": "Strike"
+                }
+              ]
+            },
+            "of": [],
+            "styles": [
+              {
+                "value": "normal",
+                "title": "Normal"
+              },
+              {
+                "value": "h1",
+                "title": "Heading 1"
+              },
+              {
+                "value": "h2",
+                "title": "Heading 2"
+              },
+              {
+                "value": "h3",
+                "title": "Heading 3"
+              },
+              {
+                "value": "h4",
+                "title": "Heading 4"
+              },
+              {
+                "value": "h5",
+                "title": "Heading 5"
+              },
+              {
+                "value": "h6",
+                "title": "Heading 6"
+              },
+              {
+                "value": "blockquote",
+                "title": "Quote"
+              }
+            ],
+            "type": "block"
+          }
+        ],
+        "name": "conteudo",
+        "type": "array",
+        "title": "Conteúdo"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "seo",
+        "type": "seo",
+        "title": "SEO"
+      }
+    ],
+    "name": "politicaPrivacidade",
+    "type": "document",
+    "title": "Política de Privacidade"
+  },
+  {
+    "options": {
+      "collapsible": true,
+      "collapsed": true
+    },
+    "fields": [
+      {
+        "description": "Se vazio, usa o título da página. Ideal: até 60 caracteres.",
+        "name": "metaTitulo",
+        "type": "string",
+        "title": "Meta Título"
+      },
+      {
+        "rows": 3,
+        "description": "Ideal: até 160 caracteres.",
+        "name": "metaDescricao",
+        "type": "text",
+        "title": "Meta Descrição"
+      },
+      {
+        "name": "imagemOg",
+        "type": "image",
+        "title": "Imagem de Compartilhamento (Open Graph)"
+      }
+    ],
+    "name": "seo",
+    "type": "object",
+    "title": "SEO"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "titulo",
+        "type": "string",
+        "title": "Título"
+      },
+      {
+        "options": {
+          "source": "titulo",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "slug",
+        "type": "slug",
+        "title": "Slug (URL)"
+      },
+      {
+        "name": "icone",
+        "type": "image",
+        "title": "Ícone"
+      },
+      {
+        "rows": 3,
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              },
+              {
+                "flag": "max",
+                "constraint": 160
+              }
+            ]
+          }
+        ],
+        "description": "Usada em cards e listagens.",
+        "name": "descricaoCurta",
+        "type": "text",
+        "title": "Descrição Curta"
+      },
+      {
+        "description": "Usada na página individual do serviço.",
+        "of": [
+          {
+            "lists": [
+              {
+                "value": "bullet",
+                "title": "Bulleted list"
+              },
+              {
+                "value": "number",
+                "title": "Numbered list"
+              }
+            ],
+            "marks": {
+              "annotations": [
+                {
+                  "i18nTitleKey": "inputs.portable-text.annotation.link",
+                  "options": {
+                    "modal": {
+                      "type": "popover"
+                    }
+                  },
+                  "fields": [
+                    {
+                      "validation": [
+                        {
+                          "level": "error",
+                          "rules": [
+                            {
+                              "flag": "uri",
+                              "constraint": {
+                                "options": {
+                                  "scheme": [
+                                    "/^http$/",
+                                    "/^https$/",
+                                    "/^tel$/",
+                                    "/^mailto$/"
+                                  ],
+                                  "allowRelative": true,
+                                  "relativeOnly": false,
+                                  "allowCredentials": false
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "description": "A valid web, email, phone, or relative link.",
+                      "name": "href",
+                      "type": "url",
+                      "title": "Link"
+                    }
+                  ],
+                  "name": "link",
+                  "type": "object"
+                }
+              ],
+              "decorators": [
+                {
+                  "value": "strong",
+                  "title": "Strong"
+                },
+                {
+                  "value": "em",
+                  "title": "Italic"
+                },
+                {
+                  "value": "code",
+                  "title": "Code"
+                },
+                {
+                  "value": "underline",
+                  "title": "Underline"
+                },
+                {
+                  "value": "strike-through",
+                  "title": "Strike"
+                }
+              ]
+            },
+            "of": [],
+            "styles": [
+              {
+                "value": "normal",
+                "title": "Normal"
+              },
+              {
+                "value": "h1",
+                "title": "Heading 1"
+              },
+              {
+                "value": "h2",
+                "title": "Heading 2"
+              },
+              {
+                "value": "h3",
+                "title": "Heading 3"
+              },
+              {
+                "value": "h4",
+                "title": "Heading 4"
+              },
+              {
+                "value": "h5",
+                "title": "Heading 5"
+              },
+              {
+                "value": "h6",
+                "title": "Heading 6"
+              },
+              {
+                "value": "blockquote",
+                "title": "Quote"
+              }
+            ],
+            "type": "block"
+          }
+        ],
+        "name": "descricaoLonga",
+        "type": "array",
+        "title": "Descrição Completa"
+      },
+      {
+        "description": "Menor número aparece primeiro.",
+        "name": "ordem",
+        "type": "number",
+        "title": "Ordem de Exibição"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "seo",
+        "type": "seo",
+        "title": "SEO"
+      }
+    ],
+    "name": "servico",
+    "type": "document",
+    "title": "Serviço"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "nome",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "nome",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "slug",
+        "type": "slug",
+        "title": "Slug (URL)"
+      }
+    ],
+    "name": "categoria",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "titulo",
+        "type": "string",
+        "title": "Título"
+      },
+      {
+        "options": {
+          "source": "titulo",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "slug",
+        "type": "slug",
+        "title": "Slug (URL)"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "to": [
+          {
+            "type": "categoria"
+          }
+        ],
+        "name": "categoria",
+        "type": "reference"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "capa",
+        "type": "image",
+        "title": "Imagem de Capa"
+      },
+      {
+        "of": [
+          {
+            "options": {
+              "hotspot": true
+            },
+            "type": "image"
+          }
+        ],
+        "name": "galeria",
+        "type": "array",
+        "title": "Galeria de Fotos"
+      },
+      {
+        "of": [
+          {
+            "lists": [
+              {
+                "value": "bullet",
+                "title": "Bulleted list"
+              },
+              {
+                "value": "number",
+                "title": "Numbered list"
+              }
+            ],
+            "marks": {
+              "annotations": [
+                {
+                  "i18nTitleKey": "inputs.portable-text.annotation.link",
+                  "options": {
+                    "modal": {
+                      "type": "popover"
+                    }
+                  },
+                  "fields": [
+                    {
+                      "validation": [
+                        {
+                          "level": "error",
+                          "rules": [
+                            {
+                              "flag": "uri",
+                              "constraint": {
+                                "options": {
+                                  "scheme": [
+                                    "/^http$/",
+                                    "/^https$/",
+                                    "/^tel$/",
+                                    "/^mailto$/"
+                                  ],
+                                  "allowRelative": true,
+                                  "relativeOnly": false,
+                                  "allowCredentials": false
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "description": "A valid web, email, phone, or relative link.",
+                      "name": "href",
+                      "type": "url",
+                      "title": "Link"
+                    }
+                  ],
+                  "name": "link",
+                  "type": "object"
+                }
+              ],
+              "decorators": [
+                {
+                  "value": "strong",
+                  "title": "Strong"
+                },
+                {
+                  "value": "em",
+                  "title": "Italic"
+                },
+                {
+                  "value": "code",
+                  "title": "Code"
+                },
+                {
+                  "value": "underline",
+                  "title": "Underline"
+                },
+                {
+                  "value": "strike-through",
+                  "title": "Strike"
+                }
+              ]
+            },
+            "of": [],
+            "styles": [
+              {
+                "value": "normal",
+                "title": "Normal"
+              },
+              {
+                "value": "h1",
+                "title": "Heading 1"
+              },
+              {
+                "value": "h2",
+                "title": "Heading 2"
+              },
+              {
+                "value": "h3",
+                "title": "Heading 3"
+              },
+              {
+                "value": "h4",
+                "title": "Heading 4"
+              },
+              {
+                "value": "h5",
+                "title": "Heading 5"
+              },
+              {
+                "value": "h6",
+                "title": "Heading 6"
+              },
+              {
+                "value": "blockquote",
+                "title": "Quote"
+              }
+            ],
+            "type": "block"
+          }
+        ],
+        "name": "descricao",
+        "type": "array",
+        "title": "Descrição"
+      },
+      {
+        "name": "cliente",
+        "type": "string",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "name": "area",
+        "type": "number",
+        "title": "Área (m²)",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "name": "ano",
+        "type": "number",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "name": "localizacao",
+        "type": "string",
+        "title": "Localização",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "seo",
+        "type": "seo",
+        "title": "SEO"
+      }
+    ],
+    "fieldsets": [
+      {
+        "name": "fichaTecnica",
+        "title": "Ficha Técnica",
+        "options": {
+          "columns": 2
+        }
+      }
+    ],
+    "name": "projeto",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "titulo",
+        "type": "string",
+        "title": "Título"
+      },
+      {
+        "options": {
+          "source": "titulo",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "slug",
+        "type": "slug",
+        "title": "Slug (URL)"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "to": [
+          {
+            "type": "categoria"
+          }
+        ],
+        "name": "categoria",
+        "type": "reference"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Construção Nova",
+              "value": "construcao_nova"
+            },
+            {
+              "title": "Reforma",
+              "value": "reforma"
+            },
+            {
+              "title": "Ampliação",
+              "value": "ampliacao"
+            },
+            {
+              "title": "Retrofit",
+              "value": "retrofit"
+            }
+          ]
+        },
+        "name": "tipoObra",
+        "type": "string",
+        "title": "Tipo de Obra"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Em Andamento",
+              "value": "em_andamento"
+            },
+            {
+              "title": "Concluída",
+              "value": "concluida"
+            }
+          ],
+          "layout": "radio"
+        },
+        "initialValue": "em_andamento",
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "em_andamento",
+                  "concluida"
+                ]
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "status",
+        "type": "string"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Gerenciamento de Obras",
+              "value": "gerenciamento_de_obras"
+            },
+            {
+              "title": "Execução da Obra",
+              "value": "execucao_da_obra"
+            },
+            {
+              "title": "Planejamento",
+              "value": "planejamento"
+            },
+            {
+              "title": "Orçamento",
+              "value": "orcamento"
+            },
+            {
+              "title": "Estudo de Viabilidade",
+              "value": "estudo_de_viabilidade"
+            },
+            {
+              "title": "Gestão de Compras e Fornecedores",
+              "value": "gestao_de_compras_e_fornecedores"
+            },
+            {
+              "title": "Acompanhamento Técnico",
+              "value": "acompanhamento_tecnico"
+            },
+            {
+              "title": "Projeto Arquitetônico",
+              "value": "projeto_arquitetonico"
+            },
+            {
+              "title": "Projeto de Engenharia",
+              "value": "projeto_de_engenharia"
+            }
+          ],
+          "layout": "grid"
+        },
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "servicosRealizados",
+        "type": "array",
+        "title": "Serviços Realizados pela BEZEL"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "capa",
+        "type": "image",
+        "title": "Imagem de Capa"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "options": {
+                  "hotspot": true
+                },
+                "validation": [
+                  {
+                    "level": "error",
+                    "rules": [
+                      {
+                        "flag": "presence",
+                        "constraint": "required"
+                      }
+                    ]
+                  }
+                ],
+                "name": "imagem",
+                "type": "image"
+              },
+              {
+                "name": "legenda",
+                "type": "string"
+              },
+              {
+                "options": {
+                  "list": [
+                    {
+                      "title": "Antes",
+                      "value": "antes"
+                    },
+                    {
+                      "title": "Durante",
+                      "value": "durante"
+                    },
+                    {
+                      "title": "Depois",
+                      "value": "depois"
+                    }
+                  ],
+                  "layout": "radio"
+                },
+                "name": "etapa",
+                "type": "string"
+              },
+              {
+                "name": "ordem",
+                "type": "number",
+                "title": "Ordem de Exibição"
+              }
+            ],
+            "type": "object",
+            "name": "itemGaleria",
+            "title": "Imagem"
+          }
+        ],
+        "name": "galeria",
+        "type": "array",
+        "title": "Galeria de Fotos"
+      },
+      {
+        "of": [
+          {
+            "lists": [
+              {
+                "value": "bullet",
+                "title": "Bulleted list"
+              },
+              {
+                "value": "number",
+                "title": "Numbered list"
+              }
+            ],
+            "marks": {
+              "annotations": [
+                {
+                  "i18nTitleKey": "inputs.portable-text.annotation.link",
+                  "options": {
+                    "modal": {
+                      "type": "popover"
+                    }
+                  },
+                  "fields": [
+                    {
+                      "validation": [
+                        {
+                          "level": "error",
+                          "rules": [
+                            {
+                              "flag": "uri",
+                              "constraint": {
+                                "options": {
+                                  "scheme": [
+                                    "/^http$/",
+                                    "/^https$/",
+                                    "/^tel$/",
+                                    "/^mailto$/"
+                                  ],
+                                  "allowRelative": true,
+                                  "relativeOnly": false,
+                                  "allowCredentials": false
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "description": "A valid web, email, phone, or relative link.",
+                      "name": "href",
+                      "type": "url",
+                      "title": "Link"
+                    }
+                  ],
+                  "name": "link",
+                  "type": "object"
+                }
+              ],
+              "decorators": [
+                {
+                  "value": "strong",
+                  "title": "Strong"
+                },
+                {
+                  "value": "em",
+                  "title": "Italic"
+                },
+                {
+                  "value": "code",
+                  "title": "Code"
+                },
+                {
+                  "value": "underline",
+                  "title": "Underline"
+                },
+                {
+                  "value": "strike-through",
+                  "title": "Strike"
+                }
+              ]
+            },
+            "of": [],
+            "styles": [
+              {
+                "value": "normal",
+                "title": "Normal"
+              },
+              {
+                "value": "h1",
+                "title": "Heading 1"
+              },
+              {
+                "value": "h2",
+                "title": "Heading 2"
+              },
+              {
+                "value": "h3",
+                "title": "Heading 3"
+              },
+              {
+                "value": "h4",
+                "title": "Heading 4"
+              },
+              {
+                "value": "h5",
+                "title": "Heading 5"
+              },
+              {
+                "value": "h6",
+                "title": "Heading 6"
+              },
+              {
+                "value": "blockquote",
+                "title": "Quote"
+              }
+            ],
+            "type": "block"
+          }
+        ],
+        "name": "descricao",
+        "type": "array",
+        "title": "Descrição (Sobre a Obra)"
+      },
+      {
+        "of": [
+          {
+            "lists": [
+              {
+                "value": "bullet",
+                "title": "Bulleted list"
+              },
+              {
+                "value": "number",
+                "title": "Numbered list"
+              }
+            ],
+            "marks": {
+              "annotations": [
+                {
+                  "i18nTitleKey": "inputs.portable-text.annotation.link",
+                  "options": {
+                    "modal": {
+                      "type": "popover"
+                    }
+                  },
+                  "fields": [
+                    {
+                      "validation": [
+                        {
+                          "level": "error",
+                          "rules": [
+                            {
+                              "flag": "uri",
+                              "constraint": {
+                                "options": {
+                                  "scheme": [
+                                    "/^http$/",
+                                    "/^https$/",
+                                    "/^tel$/",
+                                    "/^mailto$/"
+                                  ],
+                                  "allowRelative": true,
+                                  "relativeOnly": false,
+                                  "allowCredentials": false
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "description": "A valid web, email, phone, or relative link.",
+                      "name": "href",
+                      "type": "url",
+                      "title": "Link"
+                    }
+                  ],
+                  "name": "link",
+                  "type": "object"
+                }
+              ],
+              "decorators": [
+                {
+                  "value": "strong",
+                  "title": "Strong"
+                },
+                {
+                  "value": "em",
+                  "title": "Italic"
+                },
+                {
+                  "value": "code",
+                  "title": "Code"
+                },
+                {
+                  "value": "underline",
+                  "title": "Underline"
+                },
+                {
+                  "value": "strike-through",
+                  "title": "Strike"
+                }
+              ]
+            },
+            "of": [],
+            "styles": [
+              {
+                "value": "normal",
+                "title": "Normal"
+              },
+              {
+                "value": "h1",
+                "title": "Heading 1"
+              },
+              {
+                "value": "h2",
+                "title": "Heading 2"
+              },
+              {
+                "value": "h3",
+                "title": "Heading 3"
+              },
+              {
+                "value": "h4",
+                "title": "Heading 4"
+              },
+              {
+                "value": "h5",
+                "title": "Heading 5"
+              },
+              {
+                "value": "h6",
+                "title": "Heading 6"
+              },
+              {
+                "value": "blockquote",
+                "title": "Quote"
+              }
+            ],
+            "type": "block"
+          }
+        ],
+        "name": "desafioObra",
+        "type": "array",
+        "title": "O Desafio"
+      },
+      {
+        "of": [
+          {
+            "lists": [
+              {
+                "value": "bullet",
+                "title": "Bulleted list"
+              },
+              {
+                "value": "number",
+                "title": "Numbered list"
+              }
+            ],
+            "marks": {
+              "annotations": [
+                {
+                  "i18nTitleKey": "inputs.portable-text.annotation.link",
+                  "options": {
+                    "modal": {
+                      "type": "popover"
+                    }
+                  },
+                  "fields": [
+                    {
+                      "validation": [
+                        {
+                          "level": "error",
+                          "rules": [
+                            {
+                              "flag": "uri",
+                              "constraint": {
+                                "options": {
+                                  "scheme": [
+                                    "/^http$/",
+                                    "/^https$/",
+                                    "/^tel$/",
+                                    "/^mailto$/"
+                                  ],
+                                  "allowRelative": true,
+                                  "relativeOnly": false,
+                                  "allowCredentials": false
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "description": "A valid web, email, phone, or relative link.",
+                      "name": "href",
+                      "type": "url",
+                      "title": "Link"
+                    }
+                  ],
+                  "name": "link",
+                  "type": "object"
+                }
+              ],
+              "decorators": [
+                {
+                  "value": "strong",
+                  "title": "Strong"
+                },
+                {
+                  "value": "em",
+                  "title": "Italic"
+                },
+                {
+                  "value": "code",
+                  "title": "Code"
+                },
+                {
+                  "value": "underline",
+                  "title": "Underline"
+                },
+                {
+                  "value": "strike-through",
+                  "title": "Strike"
+                }
+              ]
+            },
+            "of": [],
+            "styles": [
+              {
+                "value": "normal",
+                "title": "Normal"
+              },
+              {
+                "value": "h1",
+                "title": "Heading 1"
+              },
+              {
+                "value": "h2",
+                "title": "Heading 2"
+              },
+              {
+                "value": "h3",
+                "title": "Heading 3"
+              },
+              {
+                "value": "h4",
+                "title": "Heading 4"
+              },
+              {
+                "value": "h5",
+                "title": "Heading 5"
+              },
+              {
+                "value": "h6",
+                "title": "Heading 6"
+              },
+              {
+                "value": "blockquote",
+                "title": "Quote"
+              }
+            ],
+            "type": "block"
+          }
+        ],
+        "name": "solucaoBezel",
+        "type": "array",
+        "title": "Nossa Solução"
+      },
+      {
+        "description": "Lista livre, um item por linha.",
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "principaisServicos",
+        "type": "array",
+        "title": "Principais Serviços Executados"
+      },
+      {
+        "description": "Lista livre, um item por linha.",
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "resultadosDestaques",
+        "type": "array",
+        "title": "Resultados / Destaques"
+      },
+      {
+        "name": "cliente",
+        "type": "string",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "initialValue": false,
+        "name": "exibirClientePublicamente",
+        "type": "boolean",
+        "title": "Exibir cliente publicamente?",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "name": "area",
+        "type": "number",
+        "title": "Área (m²)",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "name": "metragemTerreno",
+        "type": "number",
+        "title": "Metragem do Terreno (m²)",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "name": "metragemConstruida",
+        "type": "number",
+        "title": "Metragem Construída (m²)",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "name": "ano",
+        "type": "number",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "name": "localizacao",
+        "type": "string",
+        "title": "Localização",
+        "fieldset": "fichaTecnica"
+      },
+      {
+        "name": "dataInicio",
+        "type": "date",
+        "title": "Data de Início",
+        "fieldset": "datas"
+      },
+      {
+        "hidden": "conditional",
+        "name": "dataConclusao",
+        "type": "date",
+        "title": "Data de Conclusão",
+        "fieldset": "datas"
+      },
+      {
+        "hidden": "conditional",
+        "name": "previsaoConclusao",
+        "type": "date",
+        "title": "Previsão de Conclusão",
+        "fieldset": "datas"
+      },
+      {
+        "description": "Ex: \"12 meses\"",
+        "name": "prazoObra",
+        "type": "string",
+        "title": "Prazo da Obra",
+        "fieldset": "datas"
+      },
+      {
+        "options": {
+          "collapsible": true,
+          "collapsed": true
+        },
+        "name": "seo",
+        "type": "seo",
+        "title": "SEO"
+      }
+    ],
+    "fieldsets": [
+      {
+        "name": "fichaTecnica",
+        "title": "Ficha Técnica",
+        "options": {
+          "columns": 2
+        }
+      },
+      {
+        "name": "datas",
+        "title": "Datas e Prazo",
+        "options": {
+          "columns": 2
+        }
+      }
+    ],
+    "name": "obra",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "nome",
+        "type": "string"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "cargo",
+        "type": "string"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "foto",
+        "type": "image"
+      },
+      {
+        "rows": 4,
+        "name": "bio",
+        "type": "text",
+        "title": "Bio Curta"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "options": {
+                  "list": [
+                    {
+                      "title": "LinkedIn",
+                      "value": "linkedin"
+                    },
+                    {
+                      "title": "Instagram",
+                      "value": "instagram"
+                    }
+                  ]
+                },
+                "name": "rede",
+                "type": "string"
+              },
+              {
+                "validation": [
+                  {
+                    "level": "error",
+                    "rules": [
+                      {
+                        "flag": "uri",
+                        "constraint": {
+                          "options": {
+                            "scheme": [
+                              "/^http$/",
+                              "/^https$/"
+                            ],
+                            "allowRelative": false,
+                            "relativeOnly": false,
+                            "allowCredentials": false
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "name": "url",
+                "type": "url",
+                "title": "URL"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "redesSociais",
+        "type": "array"
+      },
+      {
+        "name": "ordem",
+        "type": "number",
+        "title": "Ordem de Exibição"
+      }
+    ],
+    "name": "membroEquipe",
+    "type": "document",
+    "title": "Membro da Equipe"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "nome",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "nome",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "slug",
+        "type": "slug",
+        "title": "Slug (URL)"
+      }
+    ],
+    "name": "categoriaVideo",
+    "type": "document",
+    "title": "Categoria de Vídeo"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "titulo",
+        "type": "string",
+        "title": "Título"
+      },
+      {
+        "options": {
+          "source": "titulo",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "custom"
+              }
+            ]
+          }
+        ],
+        "name": "slug",
+        "type": "slug",
+        "title": "Slug (URL)"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "url",
+        "type": "url",
+        "title": "URL do Vídeo (YouTube ou Vimeo)"
+      },
+      {
+        "to": [
+          {
+            "type": "categoriaVideo"
+          }
+        ],
+        "name": "categoria",
+        "type": "reference"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "description": "Opcional. Para YouTube, se vazio, usamos a miniatura automática da plataforma. Para Vimeo, recomendamos sempre enviar uma thumbnail.",
+        "name": "thumbnail",
+        "type": "image",
+        "title": "Thumbnail Personalizada"
+      },
+      {
+        "rows": 2,
+        "description": "Usada no card da grade de vídeos.",
+        "name": "descricaoCurta",
+        "type": "text",
+        "title": "Descrição Curta"
+      },
+      {
+        "of": [
+          {
+            "lists": [
+              {
+                "value": "bullet",
+                "title": "Bulleted list"
+              },
+              {
+                "value": "number",
+                "title": "Numbered list"
+              }
+            ],
+            "marks": {
+              "annotations": [
+                {
+                  "i18nTitleKey": "inputs.portable-text.annotation.link",
+                  "options": {
+                    "modal": {
+                      "type": "popover"
+                    }
+                  },
+                  "fields": [
+                    {
+                      "validation": [
+                        {
+                          "level": "error",
+                          "rules": [
+                            {
+                              "flag": "uri",
+                              "constraint": {
+                                "options": {
+                                  "scheme": [
+                                    "/^http$/",
+                                    "/^https$/",
+                                    "/^tel$/",
+                                    "/^mailto$/"
+                                  ],
+                                  "allowRelative": true,
+                                  "relativeOnly": false,
+                                  "allowCredentials": false
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "description": "A valid web, email, phone, or relative link.",
+                      "name": "href",
+                      "type": "url",
+                      "title": "Link"
+                    }
+                  ],
+                  "name": "link",
+                  "type": "object"
+                }
+              ],
+              "decorators": [
+                {
+                  "value": "strong",
+                  "title": "Strong"
+                },
+                {
+                  "value": "em",
+                  "title": "Italic"
+                },
+                {
+                  "value": "code",
+                  "title": "Code"
+                },
+                {
+                  "value": "underline",
+                  "title": "Underline"
+                },
+                {
+                  "value": "strike-through",
+                  "title": "Strike"
+                }
+              ]
+            },
+            "of": [],
+            "styles": [
+              {
+                "value": "normal",
+                "title": "Normal"
+              },
+              {
+                "value": "h1",
+                "title": "Heading 1"
+              },
+              {
+                "value": "h2",
+                "title": "Heading 2"
+              },
+              {
+                "value": "h3",
+                "title": "Heading 3"
+              },
+              {
+                "value": "h4",
+                "title": "Heading 4"
+              },
+              {
+                "value": "h5",
+                "title": "Heading 5"
+              },
+              {
+                "value": "h6",
+                "title": "Heading 6"
+              },
+              {
+                "value": "blockquote",
+                "title": "Quote"
+              }
+            ],
+            "type": "block"
+          }
+        ],
+        "name": "descricaoCompleta",
+        "type": "array",
+        "title": "Descrição Completa"
+      },
+      {
+        "name": "dataPublicacao",
+        "type": "date",
+        "title": "Data de Publicação"
+      },
+      {
+        "description": "Ex: \"12:34\" ou \"15 min\".",
+        "name": "duracao",
+        "type": "string",
+        "title": "Duração"
+      },
+      {
+        "initialValue": false,
+        "description": "Aparece em card maior no topo da página de Vídeos.",
+        "name": "destaque",
+        "type": "boolean",
+        "title": "Vídeo em Destaque"
+      },
+      {
+        "description": "Preparado para uso futuro — ainda não exibido em Obras.",
+        "to": [
+          {
+            "type": "obra"
+          }
+        ],
+        "name": "obraRelacionada",
+        "type": "reference"
+      },
+      {
+        "description": "Preparado para uso futuro — ainda não exibido em Serviços.",
+        "to": [
+          {
+            "type": "servico"
+          }
+        ],
+        "name": "servicoRelacionado",
+        "type": "reference",
+        "title": "Serviço Relacionado"
+      }
+    ],
+    "name": "video",
+    "type": "document",
+    "title": "Vídeo"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "titulo",
+        "type": "string",
+        "title": "Título"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "min",
+                "constraint": 1
+              }
+            ]
+          }
+        ],
+        "of": [
+          {
+            "options": {
+              "hotspot": true
+            },
+            "type": "image"
+          }
+        ],
+        "name": "imagens",
+        "type": "array"
+      }
+    ],
+    "name": "galeria",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "nomeCliente",
+        "type": "string",
+        "title": "Nome do Cliente"
+      },
+      {
+        "name": "cargoEmpresa",
+        "type": "string",
+        "title": "Cargo / Empresa"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "foto",
+        "type": "image"
+      },
+      {
+        "rows": 5,
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "texto",
+        "type": "text",
+        "title": "Depoimento"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "min",
+                "constraint": 1
+              },
+              {
+                "flag": "max",
+                "constraint": 5
+              }
+            ]
+          }
+        ],
+        "name": "nota",
+        "type": "number",
+        "title": "Nota (1 a 5)"
+      },
+      {
+        "to": [
+          {
+            "type": "servico"
+          }
+        ],
+        "name": "tipoServico",
+        "type": "reference",
+        "title": "Tipo de Serviço"
+      },
+      {
+        "to": [
+          {
+            "type": "obra"
+          }
+        ],
+        "name": "obraRelacionada",
+        "type": "reference"
+      },
+      {
+        "initialValue": false,
+        "description": "Exibido na Home quando marcado.",
+        "name": "destaque",
+        "type": "boolean"
+      }
+    ],
+    "name": "depoimento",
+    "type": "document"
+  }
+]
