@@ -30,6 +30,15 @@ export const configuracaoSite = defineType({
       description: "Ex: 5511999999999",
     }),
     defineField({
+      name: "mensagemWhatsapp",
+      title: "Mensagem Inicial do WhatsApp",
+      type: "text",
+      rows: 3,
+      initialValue:
+        "Olá! Vim pelo site da BEZEL e gostaria de conversar sobre meu projeto.",
+      description: "Texto que já vem preenchido ao abrir a conversa.",
+    }),
+    defineField({
       name: "email",
       title: "E-mail",
       type: "string",
@@ -82,6 +91,27 @@ export const configuracaoSite = defineType({
       name: "linkAvaliacoesGoogle",
       title: "Link do Perfil no Google (avaliações)",
       type: "url",
+    }),
+    defineField({
+      name: "instagramUrl",
+      title: "Instagram (URL completa)",
+      type: "url",
+      validation: (Rule) =>
+        Rule.uri({ scheme: ["http", "https"] }),
+    }),
+    defineField({
+      name: "facebookUrl",
+      title: "Facebook (URL completa)",
+      type: "url",
+      validation: (Rule) =>
+        Rule.uri({ scheme: ["http", "https"] }),
+    }),
+    defineField({
+      name: "youtubeUrl",
+      title: "YouTube (URL completa)",
+      type: "url",
+      validation: (Rule) =>
+        Rule.uri({ scheme: ["http", "https"] }),
     }),
   ],
 });

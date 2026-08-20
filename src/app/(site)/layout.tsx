@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getOrganizationSchema } from "@/lib/schema-org";
 import { GoogleTagManager } from "@/components/analytics/GoogleTagManager";
@@ -23,6 +24,10 @@ export default async function SiteLayout({
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
+      <WhatsAppButton
+        whatsapp={config?.whatsapp}
+        mensagem={config?.mensagemWhatsapp}
+      />
     </>
   );
 }

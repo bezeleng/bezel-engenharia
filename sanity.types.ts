@@ -517,6 +517,7 @@ export type ConfiguracaoSite = {
   };
   telefone?: string;
   whatsapp?: string;
+  mensagemWhatsapp?: string;
   email?: string;
   endereco?: string;
   logradouro?: string;
@@ -526,6 +527,9 @@ export type ConfiguracaoSite = {
   cnpj?: string;
   regiaoAtendimento?: Array<string>;
   linkAvaliacoesGoogle?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  youtubeUrl?: string;
 };
 
 export type SanityImagePaletteSwatch = {
@@ -676,6 +680,7 @@ export type ConfiguracaoSiteQueryResult = {
   };
   telefone?: string;
   whatsapp?: string;
+  mensagemWhatsapp?: string;
   email?: string;
   endereco?: string;
   logradouro?: string;
@@ -685,6 +690,9 @@ export type ConfiguracaoSiteQueryResult = {
   cnpj?: string;
   regiaoAtendimento?: Array<string>;
   linkAvaliacoesGoogle?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  youtubeUrl?: string;
 } | null;
 
 // Source: src/sanity/lib/queries.ts

@@ -4,6 +4,11 @@ import { sanityFetch } from "@/sanity/lib/live";
 import { configuracaoSiteQuery } from "@/sanity/lib/queries";
 import { Container } from "@/components/ui/Container";
 import { navLinks } from "@/lib/navigation";
+import {
+  InstagramIcon,
+  FacebookIcon,
+  YouTubeIcon,
+} from "@/components/ui/SocialIcons";
 
 export async function Footer() {
   const { data: config } = await sanityFetch({ query: configuracaoSiteQuery });
@@ -17,6 +22,12 @@ export async function Footer() {
     config?.regiaoAtendimento && config.regiaoAtendimento.length > 0
       ? config.regiaoAtendimento.join(" • ")
       : "Jacareí • São José dos Campos • Vale do Paraíba";
+
+  const redesSociais = [
+    { url: config?.instagramUrl, label: "Instagram", Icon: InstagramIcon },
+    { url: config?.facebookUrl, label: "Facebook", Icon: FacebookIcon },
+    { url: config?.youtubeUrl, label: "YouTube", Icon: YouTubeIcon },
+  ].filter((rede) => rede.url);
 
   return (
     <footer className="bg-navy text-white">
@@ -33,6 +44,22 @@ export async function Footer() {
             {config?.cnpj && <p>CNPJ: {config.cnpj}</p>}
             <p>{regiao}</p>
           </div>
+          {redesSociais.length > 0 && (
+            <div className="mt-2 flex gap-5">
+              {redesSociais.map(({ url, label, Icon }) => (
+                <a
+                  key={label}
+                  href={url!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="text-white/70 transition-colors hover:text-gold"
+                >
+                  <Icon className="h-10 w-10" />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
 
         <nav className="flex flex-col gap-2 text-sm">

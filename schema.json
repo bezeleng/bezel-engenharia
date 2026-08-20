@@ -3635,6 +3635,13 @@
         },
         "optional": true
       },
+      "mensagemWhatsapp": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
       "email": {
         "type": "objectAttribute",
         "value": {
@@ -3695,6 +3702,27 @@
         "optional": true
       },
       "linkAvaliacoesGoogle": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "instagramUrl": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "facebookUrl": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "youtubeUrl": {
         "type": "objectAttribute",
         "value": {
           "type": "string"
