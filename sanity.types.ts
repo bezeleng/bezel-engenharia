@@ -514,6 +514,17 @@ export type PaginaInicial = {
   subtituloCtaFinal?: string;
   textoBotaoCtaFinal?: string;
   linkBotaoCtaFinal?: string;
+  galeriaDestaques?: Array<{
+    titulo?: string;
+    imagem?: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    };
+    _key: string;
+  }>;
   tituloGestao?: string;
   textoGestao?: string;
 };
@@ -736,6 +747,17 @@ export type PaginaInicialQueryResult = {
   subtituloCtaFinal?: string;
   textoBotaoCtaFinal?: string;
   linkBotaoCtaFinal?: string;
+  galeriaDestaques?: Array<{
+    titulo?: string;
+    imagem?: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    };
+    _key: string;
+  }>;
   tituloGestao?: string;
   textoGestao?: string;
 } | null;
