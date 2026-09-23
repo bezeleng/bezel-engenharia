@@ -24,6 +24,34 @@ export const servico = defineType({
       type: "image",
     }),
     defineField({
+      name: "imagemDestaque",
+      title: "Imagem de Destaque",
+      type: "image",
+      options: { hotspot: true },
+      description:
+        "Imagem principal exibida na página individual do serviço, logo abaixo do título.",
+    }),
+    defineField({
+      name: "galeria",
+      title: "Galeria de Imagens",
+      type: "array",
+      description:
+        "Adicione uma ou mais imagens para complementar a apresentação deste serviço.",
+      of: [
+        {
+          type: "image",
+          options: { hotspot: true },
+          fields: [
+            defineField({
+              name: "legenda",
+              title: "Legenda",
+              type: "string",
+            }),
+          ],
+        },
+      ],
+    }),
+    defineField({
       name: "descricaoCurta",
       title: "Descrição Curta",
       type: "text",
