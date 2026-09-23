@@ -61,8 +61,14 @@ export default async function ServicoPage({ params }: ServicoPageProps) {
           {servico.titulo}
         </h1>
 
+        {servico.descricaoLonga && (
+          <div className="mt-8 max-w-3xl">
+            <PortableTextContent value={servico.descricaoLonga} />
+          </div>
+        )}
+
         {imagemDestaqueUrl && (
-          <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-3xl shadow-lg">
+          <div className="relative mt-10 aspect-[16/9] max-w-3xl overflow-hidden rounded-3xl shadow-lg">
             <Image
               src={imagemDestaqueUrl}
               alt={servico.titulo ?? ""}
@@ -73,14 +79,8 @@ export default async function ServicoPage({ params }: ServicoPageProps) {
           </div>
         )}
 
-        {servico.descricaoLonga && (
-          <div className="mt-10 max-w-3xl">
-            <PortableTextContent value={servico.descricaoLonga} />
-          </div>
-        )}
-
         {servico.galeria && servico.galeria.length > 0 && (
-          <div className="mt-12 grid gap-5 sm:grid-cols-2">
+          <div className="mt-12 grid max-w-3xl gap-5 sm:grid-cols-2">
             {servico.galeria.map((imagem) => {
               const imagemUrl = urlFor(imagem)
                 .width(1000)
