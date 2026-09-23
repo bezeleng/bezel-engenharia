@@ -379,6 +379,22 @@ export type Servico = {
     crop?: SanityImageCrop;
     _type: "image";
   };
+  imagemDestaque?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  galeria?: Array<{
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+    _key: string;
+    legenda?: string;
+  }>;
   descricaoCurta?: string;
   descricaoLonga?: Array<{
     children?: Array<{
@@ -742,6 +758,22 @@ export type ServicosQueryResult = Array<{
     crop?: SanityImageCrop;
     _type: "image";
   };
+  imagemDestaque?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  galeria?: Array<{
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+    _key: string;
+    legenda?: string;
+  }>;
   descricaoCurta?: string;
   descricaoLonga?: Array<{
     children?: Array<{
@@ -879,6 +911,22 @@ export type ServicoBySlugQueryResult = {
     crop?: SanityImageCrop;
     _type: "image";
   };
+  imagemDestaque?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  galeria?: Array<{
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+    _key: string;
+    legenda?: string;
+  }>;
   descricaoCurta?: string;
   descricaoLonga?: Array<{
     children?: Array<{
