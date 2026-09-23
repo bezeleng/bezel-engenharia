@@ -63,6 +63,41 @@ export const paginaInicial = defineType({
       initialValue: "/contato",
     }),
         defineField({
+      name: "galeriaDestaques",
+      title: "Galeria de Destaques da Home",
+      description:
+        "Adicione quantas imagens quiser. Cada item aparece com um título acima da imagem. No desktop são exibidos até 3 itens por linha.",
+      type: "array",
+      of: [
+        {
+          type: "object",
+          title: "Destaque",
+          fields: [
+            defineField({
+              name: "titulo",
+              title: "Título",
+              type: "string",
+              description: 'Ex.: "Steel Frame"',
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: "imagem",
+              title: "Imagem",
+              type: "image",
+              options: { hotspot: true },
+              validation: (Rule) => Rule.required(),
+            }),
+          ],
+          preview: {
+            select: {
+              title: "titulo",
+              media: "imagem",
+            },
+          },
+        },
+      ],
+    }),
+    defineField({
       name: "tituloGestao",
       title: "Título da Seção de Gestão Única",
       type: "string",
