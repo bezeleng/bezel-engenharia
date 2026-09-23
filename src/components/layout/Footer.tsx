@@ -18,10 +18,14 @@ export async function Footer() {
       ? `${config.logradouro} — ${config.cidade}/${config.estado}`
       : config?.endereco;
 
-  const regiao =
+  const regioes =
     config?.regiaoAtendimento && config.regiaoAtendimento.length > 0
-      ? config.regiaoAtendimento.join(" • ")
-      : "Jacareí • São José dos Campos • Vale do Paraíba";
+      ? config.regiaoAtendimento
+      : ["Jacareí", "São José dos Campos", "Vale do Paraíba"];
+
+  const meioRegioes = Math.ceil(regioes.length / 2);
+  const regioesLinha1 = regioes.slice(0, meioRegioes).join(" • ");
+  const regioesLinha2 = regioes.slice(meioRegioes).join(" • ");
 
   const redesSociais = [
     { url: config?.instagramUrl, label: "Instagram", Icon: InstagramIcon },
@@ -42,7 +46,10 @@ export async function Footer() {
           <div className="flex flex-col gap-1 text-sm text-white/50">
             {enderecoLinha && <p>{enderecoLinha}</p>}
             {config?.cnpj && <p>CNPJ: {config.cnpj}</p>}
-            <p>{regiao}</p>
+            <div className="max-w-5xl">
+              <p>{regioesLinha1}</p>
+              {regioesLinha2 && <p className="mt-1">{regioesLinha2}</p>}
+            </div>
           </div>
           {redesSociais.length > 0 && (
             <div className="mt-2 flex gap-5">
