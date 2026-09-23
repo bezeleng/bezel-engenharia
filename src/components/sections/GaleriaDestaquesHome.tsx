@@ -27,10 +27,12 @@ export async function GaleriaDestaquesHome() {
               .url();
 
             return (
-              <article key={item._key} className="min-w-0">
-                <h3 className="mb-3 text-center text-xl font-semibold text-navy sm:text-2xl">
-                  {item.titulo}
-                </h3>
+              <article key={item._key} className="flex min-w-0 flex-col">
+                <div className="mb-3 flex min-h-8 items-end justify-center px-1">
+                  <h3 className="font-display whitespace-nowrap text-center text-base text-navy sm:text-lg lg:text-[19px]">
+                    {item.titulo}
+                  </h3>
+                </div>
                 <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-black/5 bg-neutral-100 shadow-sm">
                   <Image
                     src={imagemUrl}
