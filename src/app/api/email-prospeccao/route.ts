@@ -41,7 +41,7 @@ function escaparHtml(valor: string) {
 }
 
 function personalizar(texto: string, nome: string) {
-  return texto.replaceAll("{{nome}}", nome || "sua instituição");
+  return texto.replaceAll("{{nome}}", nome || "contato");
 }
 
 function montarHtml(mensagem: string) {
@@ -55,7 +55,7 @@ function montarHtml(mensagem: string) {
         </div>
         <div style="padding:28px;font-size:15px;line-height:1.7">${corpo}</div>
         <div style="padding:18px 28px;background:#f5f2ed;color:#5f6368;font-size:11px;line-height:1.5">
-          Mensagem comercial enviada pela BEZEL a um contato institucional.
+          Mensagem comercial enviada pela BEZEL a um contato profissional ou institucional.
           Se preferir não receber novos contatos, responda a este e-mail informando “remover”.
         </div>
       </div>
@@ -83,8 +83,8 @@ export async function POST(request: Request) {
   );
 
   if (teste) {
-    const texto = personalizar(mensagem, "Instituição de teste");
-    const assuntoSeguro = personalizar(assunto, "Instituição de teste").replace(/[\r\n]+/g, " ").trim();
+    const texto = personalizar(mensagem, "Contato de teste");
+    const assuntoSeguro = personalizar(assunto, "Contato de teste").replace(/[\r\n]+/g, " ").trim();
     try {
       await enviarEmail({
         destinatario: smtpUser,
