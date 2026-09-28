@@ -4,7 +4,7 @@ export const EMAIL_SESSION_COOKIE = "bezel_email_session";
 const SESSION_SECONDS = 60 * 60 * 8;
 
 function secret() {
-  const value = process.env.EMAIL_PANEL_PASSWORD;
+  const value = process.env.EMAIL_PANEL_PASSWORD?.trim();
   if (!value) throw new Error("EMAIL_PANEL_PASSWORD não configurado.");
   return value;
 }
