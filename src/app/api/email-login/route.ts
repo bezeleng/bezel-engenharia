@@ -30,9 +30,11 @@ export async function POST(request: Request) {
   response.cookies.set(EMAIL_SESSION_COOKIE, criarTokenSessao(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "lax",
     path: "/",
     maxAge: EMAIL_SESSION_MAX_AGE,
+    expires: new Date(Date.now() + EMAIL_SESSION_MAX_AGE * 1000),
+    priority: "medium",
   });
   return response;
 }
