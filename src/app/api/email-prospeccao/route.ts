@@ -173,7 +173,6 @@ export async function POST(request: Request) {
         status: "ENVIADO",
       });
       if (!existente || existente.status === "NOVO") await registrarContatoEnviado(salvo._id);
-      else await salvarContato({ nome: salvo.nome, email, status: existente.status });
     } catch (error) {
       console.error("Falha no envio de prospecção:", email, error);
       falhas.push({ email, erro: "Falha no envio pelo servidor SMTP." });
