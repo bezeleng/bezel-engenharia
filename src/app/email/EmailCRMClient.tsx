@@ -225,8 +225,50 @@ export default function EmailCRMClient() {
   }
 
   const filtrados = (dados?.contatos || []).filter((c) =>
-    `${c.nome} ${c.email} ${c.cidade || ""}`.toLowerCase().includes(busca.toLowerCase())
+    `${c.nome} ${c.email} ${c.cidade || ""} ${c.segmento || ""}`.toLowerCase().includes(busca.toLowerCase())
   );
+
+  const selecionaveisVisiveis = filtrados.filter((c) => !c.optOut);
+  const todosVisiveisSelecionados = selecionaveisVisiveis.length > 0 &&
+    selecionaveisVisiveis.every((c) => selecionados.includes(c._id));
+
+  function alternarContato(id: string) {
+    setSelecionados((atuais) => {
+      if (atuais.includes(id)) return atuais.filter((x) => x !== id);
+      if (atuais.length >= 20) return atuais;
+      return [...atuais, id];
+    });
+  }
+
+  function alternarTodosVisiveis() {
+    if (todosVisiveisSelecionados) {
+      const idsVisiveis = new Set(selecionaveisVisiveis.map((c) => c._id));
+      setSelecionados((atuais) => atuais.filter((id) => !idsVisiveis.has(id)));
+      return;
+    }
+    setSelecionados((atuais) => {
+      const novos = [...atuais];
+      for (const contato of selecionaveisVisiveis) {
+        if (novos.length >= 20) break;
+        if (!novos.includes(contato._id)) novos.push(contato._id);
+      }
+      return novos;
+    });
+  }
+
+  function prepararEnvioSelecionados() {
+    const contatos = (dados?.contatos || []).filter((c) => selecionados.includes(c._id) && !c.optOut);
+    setDestinatarios(contatos.map((c) => `${c.nome} | ${c.email}`).join("\n"));
+    setResultado("");
+    setAba("enviar");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function aplicarTemplate(chave: TemplateKey) {
+    setTemplate(chave);
+    setAssunto(TEMPLATES[chave].assunto);
+    setMensagem(TEMPLATES[chave].mensagem);
+  }
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f5f2ed] px-3 py-4 text-[#1c1c1c] sm:px-4 sm:py-8">
@@ -291,7 +333,7 @@ export default function EmailCRMClient() {
               <div className="flex justify-between gap-3">
                 <div>
                   <label className="text-sm font-semibold text-[#193451]">Destinatários</label>
-                  <p className="mt-1 text-xs text-slate-500">Um por linha: Instituição | email@dominio.com</p>
+                  <p className="mt-1 text-xs text-slate-500">Um por linha: Nome ou empresa | email@dominio.com</p>
                 </div>
                 <span className="text-sm font-semibold text-[#193451]">{contatosDigitados.length}/20</span>
               </div>
@@ -299,7 +341,13 @@ export default function EmailCRMClient() {
                 className="mt-3 w-full rounded-xl border border-slate-300 px-4 py-3 font-mono text-sm outline-none focus:border-[#c3a06a]" />
             </section>
             <section className="rounded-2xl bg-white p-6 shadow-sm">
-              <label className="text-sm font-semibold text-[#193451]">Assunto</label>
+              <label className="text-sm font-semibold text-[#193451]">Modelo de mensagem</label>
+              <select value={template} onChange={(e) => aplicarTemplate(e.target.value as TemplateKey)}
+                className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#c3a06a]">
+                {Object.entries(TEMPLATES).map(([key, item]) => <option key={key} value={key}>{item.label}</option>)}
+              </select>
+              <p className="mt-2 text-xs text-slate-500">O modelo preenche assunto e mensagem; você pode editar tudo antes de enviar.</p>
+              <label className="mt-5 block text-sm font-semibold text-[#193451]">Assunto</label>
               <input value={assunto} onChange={(e) => setAssunto(e.target.value)} maxLength={180}
                 className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#c3a06a]" />
               <label className="mt-5 block text-sm font-semibold text-[#193451]">Mensagem</label>
@@ -310,7 +358,7 @@ export default function EmailCRMClient() {
             <section className="rounded-2xl bg-white p-6 shadow-sm">
               <label className="flex gap-3 text-sm text-slate-700">
                 <input type="checkbox" checked={confirmacao} onChange={(e) => setConfirmacao(e.target.checked)} className="mt-1 accent-[#193451]" />
-                <span>Confirmo que são contatos institucionais selecionados para prospecção comercial da BEZEL.</span>
+                <span>Confirmo que estes contatos foram selecionados para prospecção comercial ou relacionamento profissional da BEZEL.</span>
               </label>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button type="button" disabled={!!enviando || !confirmacao} onClick={(e) => void enviar(e as unknown as FormEvent, true)}
@@ -330,7 +378,7 @@ export default function EmailCRMClient() {
         {aba === "contatos" && (
           <section className="mt-6 grid min-w-0 gap-5">
             <form onSubmit={criarContato} className="grid min-w-0 gap-3 rounded-2xl bg-white p-4 shadow-sm sm:p-5 md:grid-cols-5">
-              <input required placeholder="Instituição" value={novo.nome} onChange={(e) => setNovo({...novo,nome:e.target.value})} className="rounded-lg border p-3 text-sm" />
+              <input required placeholder="Nome / empresa" value={novo.nome} onChange={(e) => setNovo({...novo,nome:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <input required type="email" placeholder="E-mail" value={novo.email} onChange={(e) => setNovo({...novo,email:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <input placeholder="Cidade" value={novo.cidade} onChange={(e) => setNovo({...novo,cidade:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <input placeholder="Segmento" value={novo.segmento} onChange={(e) => setNovo({...novo,segmento:e.target.value})} className="rounded-lg border p-3 text-sm" />
