@@ -62,3 +62,12 @@ Use `{{nome}}` no assunto ou corpo para personalização.
 A V2 mantém no máximo 20 envios comerciais registrados por dia. Testes para a própria BEZEL não entram no limite. Contatos em opt-out são bloqueados antes do SMTP.
 
 O controle foi desenhado para uso interno por uma única equipe. Se no futuro houver múltiplos operadores enviando simultaneamente, o limite diário deve migrar para um contador transacional/atômico.
+
+## Checklist de ativação
+
+1. Configurar `SANITY_API_WRITE_TOKEN` na Vercel para Production, Preview e Development.
+2. Gerar um novo deployment depois da configuração da variável.
+3. Validar login, dashboard e cadastro de um contato de teste.
+4. Validar envio de teste para a própria BEZEL.
+5. Validar um envio real controlado e confirmar histórico/limite diário.
+6. Somente depois promover a V2 para produção.
