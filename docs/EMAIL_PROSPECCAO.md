@@ -46,3 +46,8 @@ O marcador `{{nome}}` no assunto ou mensagem é substituído pelo nome cadastrad
 - o painel inclui opção de teste antes do envio real.
 
 Para histórico persistente, follow-up, listas e supressão permanente, evoluir para armazenamento dedicado antes de ampliar volume.
+
+
+## Deploy
+
+Depois de criar ou alterar `EMAIL_PANEL_PASSWORD` na Vercel, faça um novo deployment para que a versão publicada receba a variável de ambiente.
