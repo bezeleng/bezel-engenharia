@@ -385,14 +385,35 @@ export default function EmailCRMClient() {
               <button className="rounded-lg bg-[#193451] px-4 py-3 text-sm font-semibold text-white">Adicionar contato</button>
             </form>
             <div className="min-w-0 rounded-2xl bg-white p-4 shadow-sm sm:p-5">
-              <input placeholder="Buscar contato..." value={busca} onChange={(e) => setBusca(e.target.value)}
-                className="mb-4 w-full min-w-0 rounded-lg border p-3 text-sm md:max-w-sm" />
+              <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <input placeholder="Buscar por nome, e-mail, cidade ou segmento..." value={busca} onChange={(e) => setBusca(e.target.value)}
+                  className="w-full min-w-0 rounded-lg border p-3 text-sm lg:max-w-md" />
+                <div className="flex flex-wrap items-center gap-2">
+                  <button type="button" onClick={alternarTodosVisiveis}
+                    className="rounded-lg border border-[#193451] px-3 py-2 text-xs font-semibold text-[#193451]">
+                    {todosVisiveisSelecionados ? "Desmarcar visíveis" : "Selecionar visíveis"}
+                  </button>
+                  <button type="button" disabled={selecionados.length === 0} onClick={prepararEnvioSelecionados}
+                    className="rounded-lg bg-[#193451] px-4 py-2 text-xs font-semibold text-white disabled:opacity-40">
+                    Enviar e-mail para selecionados ({selecionados.length})
+                  </button>
+                </div>
+              </div>
+              <p className="mb-4 text-xs text-slate-500">Selecione até 20 contatos. Contatos bloqueados não podem ser selecionados.</p>
 
               <div className="grid gap-3 md:hidden">
                 {filtrados.map((c) => (
-                  <article key={c._id} className="min-w-0 rounded-xl border border-slate-200 p-4">
-                    <div className="break-words font-semibold text-[#193451]">{c.nome || "Sem nome"}</div>
-                    <div className="mt-0.5 break-all text-xs text-slate-500">{c.email}</div>
+                  <article key={c._id} className={`min-w-0 rounded-xl border p-4 ${selecionados.includes(c._id) ? "border-[#c3a06a] bg-[#fffaf0]" : "border-slate-200"}`}>
+                    <div className="flex items-start gap-3">
+                      <input type="checkbox" aria-label={`Selecionar ${c.nome}`} checked={selecionados.includes(c._id)}
+                        disabled={c.optOut} onChange={() => alternarContato(c._id)}
+                        className="mt-1 h-5 w-5 shrink-0 accent-[#193451] disabled:opacity-40" />
+                      <div className="min-w-0">
+                        <div className="break-words font-semibold text-[#193451]">{c.nome || "Sem nome"}</div>
+                        <div className="mt-0.5 break-all text-xs text-slate-500">{c.email}</div>
+                        <div className="mt-1 text-xs text-slate-500">{c.segmento || "Geral"}</div>
+                      </div>
+                    </div>
                     <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
                       <div><span className="block text-slate-500">Cidade</span><span>{c.cidade || "—"}</span></div>
                       <div><span className="block text-slate-500">Último contato</span><span>{dataLocal(c.ultimoContatoEm)}</span></div>
@@ -417,13 +438,17 @@ export default function EmailCRMClient() {
               <div className="hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[900px] text-left text-sm">
                   <thead><tr className="border-b text-xs uppercase text-slate-500">
+                    <th className="p-3"><input type="checkbox" aria-label="Selecionar contatos visíveis" checked={todosVisiveisSelecionados}
+                      onChange={alternarTodosVisiveis} className="h-4 w-4 accent-[#193451]" /></th>
                     <th className="p-3">Contato</th><th className="p-3">Cidade</th><th className="p-3">Status</th>
                     <th className="p-3">Último contato</th><th className="p-3">Follow-up</th><th className="p-3">Envio</th>
                   </tr></thead>
                   <tbody>
                     {filtrados.map((c) => (
-                      <tr key={c._id} className="border-b border-slate-100">
-                        <td className="p-3"><div className="font-semibold text-[#193451]">{c.nome || "Sem nome"}</div><div className="text-xs text-slate-500">{c.email}</div></td>
+                      <tr key={c._id} className={`border-b border-slate-100 ${selecionados.includes(c._id) ? "bg-[#fffaf0]" : ""}`}>
+                        <td className="p-3"><input type="checkbox" aria-label={`Selecionar ${c.nome}`} checked={selecionados.includes(c._id)}
+                          disabled={c.optOut} onChange={() => alternarContato(c._id)} className="h-4 w-4 accent-[#193451] disabled:opacity-40" /></td>
+                        <td className="p-3"><div className="font-semibold text-[#193451]">{c.nome || "Sem nome"}</div><div className="text-xs text-slate-500">{c.email}</div><div className="mt-1 text-xs text-slate-400">{c.segmento || "Geral"}</div></td>
                         <td className="p-3">{c.cidade || "—"}</td>
                         <td className="p-3"><select value={c.status} onChange={(e) => void atualizar(c._id,{status:e.target.value})} className="rounded-lg border p-2">
                           {STATUS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
