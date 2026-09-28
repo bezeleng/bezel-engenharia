@@ -29,7 +29,32 @@ const STATUS: Array<{ value: StatusContato; label: string }> = [
   { value: "CLIENTE", label: "Cliente" }, { value: "ARQUIVADO", label: "Arquivado" },
 ];
 
-const MENSAGEM_PADRAO = `Prezados(as), bom dia.
+const TEMPLATES = {
+  geral: {
+    label: "Prospecção geral",
+    assunto: "BEZEL — Engenharia, Arquitetura e Gestão de Obras",
+    mensagem: `Olá, {{nome}}.
+
+Meu nome é Diego e falo em nome da BEZEL Engenharia, Arquitetura e Gestão de Obras.
+
+Atuamos em Jacareí, São José dos Campos e região com construção, reformas, manutenção predial, mão de obra especializada e gerenciamento de obras.
+
+Estamos ampliando nossa rede de contatos e gostaríamos de nos colocar à disposição para futuras demandas, parcerias ou oportunidades em que a BEZEL possa contribuir.
+
+Podemos apoiar desde o levantamento inicial e planejamento até a execução e acompanhamento da obra, com organização de equipes, materiais, etapas, custos e cronograma.
+
+Se fizer sentido, fico à disposição para uma conversa ou visita técnica sem compromisso.
+
+Atenciosamente,
+BEZEL | Engenharia • Arquitetura • Gestão de Obras
+(12) 99183-6206
+@grupobezel
+bezel.com.br`,
+  },
+  escolas: {
+    label: "Escolas",
+    assunto: "Aos cuidados da Administração/Direção — manutenção predial para o recesso escolar",
+    mensagem: `Prezados(as), bom dia.
 
 Meu nome é Diego e falo em nome da BEZEL Engenharia, Arquitetura e Gestão de Obras.
 
@@ -41,9 +66,7 @@ Entre os serviços que podemos atender estão pintura interna e externa, recuper
 
 A BEZEL também realiza o planejamento e gerenciamento da execução, coordenando equipes, materiais, etapas e cronograma.
 
-Gostaríamos de nos colocar à disposição da {{nome}} para uma visita técnica sem compromisso, a fim de conhecer as necessidades atuais ou eventuais manutenções previstas para o próximo recesso e, havendo interesse, apresentar uma proposta.
-
-Caso este assunto seja tratado por outro responsável, poderiam, por gentileza, encaminhar este e-mail à Direção, Administração ou ao setor responsável pela manutenção predial e contratação de obras da instituição?
+Gostaríamos de nos colocar à disposição da {{nome}} para uma visita técnica sem compromisso.
 
 Agradeço pela atenção e fico à disposição.
 
@@ -51,7 +74,50 @@ Atenciosamente,
 BEZEL | Engenharia • Arquitetura • Gestão de Obras
 (12) 99183-6206
 @grupobezel
-bezel.com.br`;
+bezel.com.br`,
+  },
+  parceiros: {
+    label: "Arquitetos e engenheiros",
+    assunto: "BEZEL — parceria para execução e gestão de obras",
+    mensagem: `Olá, {{nome}}.
+
+Meu nome é Diego e falo em nome da BEZEL Engenharia, Arquitetura e Gestão de Obras.
+
+Estamos ampliando nossa rede de parceiros na região e gostaria de apresentar a BEZEL como apoio para execução, gerenciamento e acompanhamento de obras.
+
+Atendemos construção e reformas, mão de obra especializada e diferentes sistemas construtivos, sempre buscando preservar o projeto, o padrão de acabamento e a comunicação com o profissional responsável.
+
+Caso tenha projetos entrando em fase de orçamento ou execução, ficamos à disposição para conversar e avaliar uma possível parceria.
+
+Atenciosamente,
+BEZEL | Engenharia • Arquitetura • Gestão de Obras
+(12) 99183-6206
+@grupobezel
+bezel.com.br`,
+  },
+  empresas: {
+    label: "Empresas / comercial",
+    assunto: "BEZEL — manutenção, reformas e gestão de obras",
+    mensagem: `Olá, {{nome}}.
+
+Meu nome é Diego e falo em nome da BEZEL Engenharia, Arquitetura e Gestão de Obras.
+
+Atendemos empresas e imóveis comerciais com reformas, manutenção predial, pintura, impermeabilização, coberturas, pisos e revestimentos, elétrica, hidráulica e adequações de ambientes.
+
+Também podemos assumir o planejamento e gerenciamento da execução, coordenando equipes, materiais, etapas e cronograma para reduzir impactos na operação do cliente.
+
+Gostaríamos de deixar a BEZEL à disposição para demandas atuais ou futuras. Se houver alguma necessidade, podemos realizar uma visita técnica sem compromisso.
+
+Atenciosamente,
+BEZEL | Engenharia • Arquitetura • Gestão de Obras
+(12) 99183-6206
+@grupobezel
+bezel.com.br`,
+  },
+} as const;
+
+type TemplateKey = keyof typeof TEMPLATES;
+
 
 function interpretar(valor: string) {
   return valor.split(/\r?\n/).map((x) => x.trim()).filter(Boolean).map((linha) => {
@@ -76,13 +142,15 @@ export default function EmailCRMClient() {
   const [erroBase, setErroBase] = useState("");
   const [carregandoBase, setCarregandoBase] = useState(true);
   const [destinatarios, setDestinatarios] = useState("");
-  const [assunto, setAssunto] = useState("Aos cuidados da Administração/Direção — manutenção predial para o recesso escolar");
-  const [mensagem, setMensagem] = useState(MENSAGEM_PADRAO);
+  const [template, setTemplate] = useState<TemplateKey>("geral");
+  const [assunto, setAssunto] = useState(TEMPLATES.geral.assunto);
+  const [mensagem, setMensagem] = useState(TEMPLATES.geral.mensagem);
   const [confirmacao, setConfirmacao] = useState(false);
   const [enviando, setEnviando] = useState<"teste" | "envio" | null>(null);
   const [resultado, setResultado] = useState("");
   const [busca, setBusca] = useState("");
-  const [novo, setNovo] = useState({ nome: "", email: "", cidade: "", segmento: "Escola" });
+  const [novo, setNovo] = useState({ nome: "", email: "", cidade: "", segmento: "Geral" });
+  const [selecionados, setSelecionados] = useState<string[]>([]);
   const contatosDigitados = useMemo(() => interpretar(destinatarios), [destinatarios]);
 
   async function carregar() {
@@ -146,7 +214,7 @@ export default function EmailCRMClient() {
     const r = await fetch("/api/prospeccao/contatos", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(novo),
     });
-    if (r.ok) { setNovo({ nome: "", email: "", cidade: "", segmento: "Escola" }); await carregar(); }
+    if (r.ok) { setNovo({ nome: "", email: "", cidade: "", segmento: "Geral" }); await carregar(); }
   }
 
   async function atualizar(id: string, patch: Record<string, unknown>) {
