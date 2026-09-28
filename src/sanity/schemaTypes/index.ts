@@ -13,6 +13,9 @@ import { video } from './video'
 import { categoriaVideo } from './categoriaVideo'
 import { galeria } from './galeria'
 import { depoimento } from './depoimento'
+import { prospeccaoContato } from './prospeccaoContato'
+import { prospeccaoEnvio } from './prospeccaoEnvio'
+import { prospeccaoCampanha } from './prospeccaoCampanha'
 
 
 export const schema: { types: SchemaTypeDefinition[] } = {
@@ -31,5 +34,8 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     video,
     galeria,
     depoimento,
+    prospeccaoContato,
+    prospeccaoEnvio,
+    prospeccaoCampanha,
   ],
 }
