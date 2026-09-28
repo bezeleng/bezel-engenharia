@@ -1,11 +1,22 @@
-import { timingSafeEqual } from "crypto";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { enviarEmail } from "@/lib/email";
+import { EMAIL_SESSION_COOKIE, validarTokenSessao } from "@/lib/email-panel-session";
+import {
+  buscarContatoPorEmail,
+  finalizarCampanha,
+  registrarCampanha,
+  registrarContatoEnviado,
+  registrarEnvio,
+  salvarContato,
+  totalEnviadoHoje,
+} from "@/lib/prospeccao-store";
 
 export const runtime = "nodejs";
 
-const MAX_DESTINATARIOS = 20;
+const MAX_DIARIO = 20;
+const MAX_LOTE = 20;
 
 const contatoSchema = z.object({
   nome: z.string().trim().max(120).optional().default(""),
@@ -13,22 +24,12 @@ const contatoSchema = z.object({
 });
 
 const payloadSchema = z.object({
-  senha: z.string().min(1).max(200),
   assunto: z.string().trim().min(3).max(180),
   mensagem: z.string().trim().min(10).max(12000),
-  contatos: z.array(contatoSchema).min(1).max(MAX_DESTINATARIOS),
+  contatos: z.array(contatoSchema).min(1).max(MAX_LOTE),
   teste: z.boolean().optional().default(false),
   confirmacao: z.literal(true),
 });
-
-function senhaValida(recebida: string) {
-  const esperada = process.env.EMAIL_PANEL_PASSWORD;
-  if (!esperada) return false;
-
-  const a = Buffer.from(recebida);
-  const b = Buffer.from(esperada);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
 
 function escaparHtml(valor: string) {
   return valor
@@ -45,7 +46,6 @@ function personalizar(texto: string, nome: string) {
 
 function montarHtml(mensagem: string) {
   const corpo = escaparHtml(mensagem).replaceAll("\n", "<br />");
-
   return `
     <div style="margin:0;background:#f5f2ed;padding:28px 12px;font-family:Arial,Helvetica,sans-serif;color:#1c1c1c">
       <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e7e2da;border-radius:12px;overflow:hidden">
@@ -53,9 +53,7 @@ function montarHtml(mensagem: string) {
           <div style="color:#c3a06a;font-size:22px;font-weight:700;letter-spacing:.08em">BEZEL</div>
           <div style="color:#ffffff;font-size:12px;margin-top:4px">Engenharia • Arquitetura • Gestão de Obras</div>
         </div>
-        <div style="padding:28px;font-size:15px;line-height:1.7">
-          ${corpo}
-        </div>
+        <div style="padding:28px;font-size:15px;line-height:1.7">${corpo}</div>
         <div style="padding:18px 28px;background:#f5f2ed;color:#5f6368;font-size:11px;line-height:1.5">
           Mensagem comercial enviada pela BEZEL a um contato institucional.
           Se preferir não receber novos contatos, responda a este e-mail informando “remover”.
@@ -66,85 +64,140 @@ function montarHtml(mensagem: string) {
 }
 
 export async function POST(request: Request) {
-  let body: unknown;
-
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Requisição inválida." }, { status: 400 });
+  const cookieStore = await cookies();
+  if (!validarTokenSessao(cookieStore.get(EMAIL_SESSION_COOKIE)?.value)) {
+    return NextResponse.json({ error: "Sessão expirada. Entre novamente no painel." }, { status: 401 });
   }
 
-  const resultado = payloadSchema.safeParse(body);
-
-  if (!resultado.success) {
-    return NextResponse.json(
-      { error: "Dados inválidos.", detalhes: resultado.error.flatten() },
-      { status: 400 }
-    );
+  const parsed = payloadSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Dados inválidos.", detalhes: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { senha, assunto, mensagem, contatos, teste } = resultado.data;
-
-  if (!senhaValida(senha)) {
-    return NextResponse.json({ error: "Senha do painel inválida." }, { status: 401 });
-  }
+  const { assunto, mensagem, contatos, teste } = parsed.data;
+  const smtpUser = process.env.SMTP_USER;
+  if (!smtpUser) return NextResponse.json({ error: "E-mail remetente não configurado." }, { status: 500 });
 
   const unicos = Array.from(
     new Map(contatos.map((contato) => [contato.email.toLowerCase(), contato])).values()
   );
 
-  if (unicos.length > MAX_DESTINATARIOS) {
+  if (teste) {
+    const texto = personalizar(mensagem, "Instituição de teste");
+    const assuntoSeguro = personalizar(assunto, "Instituição de teste").replace(/[\r\n]+/g, " ").trim();
+    try {
+      await enviarEmail({
+        destinatario: smtpUser,
+        assunto: `[TESTE] ${assuntoSeguro}`,
+        html: montarHtml(texto),
+        texto,
+        nomeRemetente: "BEZEL Engenharia",
+      });
+      return NextResponse.json({ sucesso: true, teste: true, totalEnviados: 1, totalFalhas: 0 });
+    } catch (error) {
+      console.error("Falha no teste de prospecção:", error);
+      return NextResponse.json({ error: "Falha no envio do teste pelo SMTP." }, { status: 502 });
+    }
+  }
+
+  let enviadosHoje: number;
+  try {
+    enviadosHoje = await totalEnviadoHoje();
+  } catch (error) {
+    console.error("Falha ao consultar limite diário:", error);
     return NextResponse.json(
-      { error: `O limite por envio é de ${MAX_DESTINATARIOS} destinatários.` },
-      { status: 400 }
+      { error: "O controle de prospecção não está configurado. Verifique SANITY_API_WRITE_TOKEN." },
+      { status: 503 }
     );
   }
 
-  const smtpUser = process.env.SMTP_USER;
-  if (!smtpUser) {
+  const restantes = Math.max(0, MAX_DIARIO - enviadosHoje);
+  if (unicos.length > restantes) {
     return NextResponse.json(
-      { error: "E-mail remetente não configurado no servidor." },
-      { status: 500 }
+      { error: `Limite diário: restam ${restantes} envio(s) hoje. Ajuste a lista antes de continuar.` },
+      { status: 429 }
     );
   }
-
-  const destinatarios = teste
-    ? [{ nome: "TESTE — BEZEL", email: smtpUser }]
-    : unicos;
 
   const enviados: string[] = [];
   const falhas: Array<{ email: string; erro: string }> = [];
+  const bloqueados: string[] = [];
+  const campanha = await registrarCampanha({
+    assunto,
+    mensagem,
+    totalDestinatarios: unicos.length,
+  });
 
-  for (const contato of destinatarios) {
-    const textoPersonalizado = personalizar(mensagem, contato.nome);
-    const assuntoSeguro = personalizar(assunto, contato.nome)
+  for (const contatoEntrada of unicos) {
+    const email = contatoEntrada.email.toLowerCase();
+    const existente = await buscarContatoPorEmail(email);
+
+    if (existente?.optOut) {
+      bloqueados.push(email);
+      await registrarEnvio({
+        campanhaId: campanha._id,
+        nome: contatoEntrada.nome || existente.nome,
+        email,
+        assunto,
+        status: "BLOQUEADO",
+        erro: "Contato marcado como não enviar.",
+      });
+      continue;
+    }
+
+    const salvo = await salvarContato({
+      nome: contatoEntrada.nome || existente?.nome || "",
+      email,
+      status: existente?.status || "NOVO",
+    });
+
+    const textoPersonalizado = personalizar(mensagem, contatoEntrada.nome || existente?.nome || "");
+    const assuntoSeguro = personalizar(assunto, contatoEntrada.nome || existente?.nome || "")
       .replace(/[\r\n]+/g, " ")
       .trim();
 
     try {
       await enviarEmail({
-        destinatario: contato.email,
-        assunto: teste ? `[TESTE] ${assuntoSeguro}` : assuntoSeguro,
+        destinatario: email,
+        assunto: assuntoSeguro,
         html: montarHtml(textoPersonalizado),
         texto: textoPersonalizado,
         nomeRemetente: "BEZEL Engenharia",
       });
-      enviados.push(contato.email);
+      enviados.push(email);
+      await registrarEnvio({
+        campanhaId: campanha._id,
+        nome: contatoEntrada.nome || existente?.nome || "",
+        email,
+        assunto: assuntoSeguro,
+        status: "ENVIADO",
+      });
+      if (!existente || existente.status === "NOVO") await registrarContatoEnviado(salvo._id);
     } catch (error) {
-      console.error("Falha no envio de prospecção:", contato.email, error);
-      falhas.push({
-        email: contato.email,
+      console.error("Falha no envio de prospecção:", email, error);
+      falhas.push({ email, erro: "Falha no envio pelo servidor SMTP." });
+      await registrarEnvio({
+        campanhaId: campanha._id,
+        nome: contatoEntrada.nome || existente?.nome || "",
+        email,
+        assunto: assuntoSeguro,
+        status: "FALHA",
         erro: "Falha no envio pelo servidor SMTP.",
       });
     }
   }
 
+  await finalizarCampanha(campanha._id, enviados.length, falhas.length, bloqueados.length);
+
   return NextResponse.json({
     sucesso: falhas.length === 0,
-    teste,
+    teste: false,
     enviados,
     falhas,
+    bloqueados,
     totalEnviados: enviados.length,
     totalFalhas: falhas.length,
+    totalBloqueados: bloqueados.length,
+    restantesHoje: Math.max(0, restantes - enviados.length),
   });
 }
