@@ -5,7 +5,7 @@ export const prospeccaoContato = defineType({
   title: "Prospecção — Contato",
   type: "document",
   fields: [
-    defineField({ name: "nome", title: "Nome / Instituição", type: "string" }),
+    defineField({ name: "nome", title: "Nome / Empresa / Instituição", type: "string" }),
     defineField({ name: "email", title: "E-mail", type: "string", validation: (r) => r.required() }),
     defineField({ name: "cidade", title: "Cidade", type: "string" }),
     defineField({ name: "segmento", title: "Segmento", type: "string" }),
