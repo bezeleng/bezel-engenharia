@@ -161,9 +161,9 @@ export default function EmailCRMClient() {
   );
 
   return (
-    <main className="min-h-screen bg-[#f5f2ed] px-4 py-8 text-[#1c1c1c]">
-      <div className="mx-auto max-w-7xl">
-        <header className="rounded-2xl bg-[#193451] p-6 text-white shadow-sm">
+    <main className="min-h-screen overflow-x-hidden bg-[#f5f2ed] px-3 py-4 text-[#1c1c1c] sm:px-4 sm:py-8">
+      <div className="mx-auto w-full min-w-0 max-w-7xl">
+        <header className="rounded-2xl bg-[#193451] p-5 text-white shadow-sm sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="font-display text-3xl tracking-wider text-[#c3a06a]">BEZEL</div>
@@ -171,12 +171,12 @@ export default function EmailCRMClient() {
             </div>
             <button onClick={sair} className="rounded-lg border border-white/30 px-4 py-2 text-sm">Sair</button>
           </div>
-          <nav className="mt-6 flex flex-wrap gap-2">
+          <nav className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:flex-wrap">
             {[
               ["dashboard","Dashboard"],["enviar","Enviar e-mail"],["contatos","Contatos"],["historico","Histórico"]
             ].map(([id,label]) => (
               <button key={id} onClick={() => setAba(id as typeof aba)}
-                className={`rounded-lg px-4 py-2 text-sm font-semibold ${aba === id ? "bg-[#c3a06a] text-[#193451]" : "bg-white/10 text-white"}`}>
+                className={`min-w-0 rounded-lg px-3 py-2.5 text-sm font-semibold sm:px-4 sm:py-2 ${aba === id ? "bg-[#c3a06a] text-[#193451]" : "bg-white/10 text-white"}`}>
                 {label}
               </button>
             ))}
@@ -260,18 +260,45 @@ export default function EmailCRMClient() {
         )}
 
         {aba === "contatos" && (
-          <section className="mt-6 grid gap-5">
-            <form onSubmit={criarContato} className="grid gap-3 rounded-2xl bg-white p-5 shadow-sm md:grid-cols-5">
+          <section className="mt-6 grid min-w-0 gap-5">
+            <form onSubmit={criarContato} className="grid min-w-0 gap-3 rounded-2xl bg-white p-4 shadow-sm sm:p-5 md:grid-cols-5">
               <input required placeholder="Instituição" value={novo.nome} onChange={(e) => setNovo({...novo,nome:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <input required type="email" placeholder="E-mail" value={novo.email} onChange={(e) => setNovo({...novo,email:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <input placeholder="Cidade" value={novo.cidade} onChange={(e) => setNovo({...novo,cidade:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <input placeholder="Segmento" value={novo.segmento} onChange={(e) => setNovo({...novo,segmento:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <button className="rounded-lg bg-[#193451] px-4 py-3 text-sm font-semibold text-white">Adicionar contato</button>
             </form>
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="min-w-0 rounded-2xl bg-white p-4 shadow-sm sm:p-5">
               <input placeholder="Buscar contato..." value={busca} onChange={(e) => setBusca(e.target.value)}
-                className="mb-4 w-full rounded-lg border p-3 text-sm md:max-w-sm" />
-              <div className="overflow-x-auto">
+                className="mb-4 w-full min-w-0 rounded-lg border p-3 text-sm md:max-w-sm" />
+
+              <div className="grid gap-3 md:hidden">
+                {filtrados.map((c) => (
+                  <article key={c._id} className="min-w-0 rounded-xl border border-slate-200 p-4">
+                    <div className="break-words font-semibold text-[#193451]">{c.nome || "Sem nome"}</div>
+                    <div className="mt-0.5 break-all text-xs text-slate-500">{c.email}</div>
+                    <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+                      <div><span className="block text-slate-500">Cidade</span><span>{c.cidade || "—"}</span></div>
+                      <div><span className="block text-slate-500">Último contato</span><span>{dataLocal(c.ultimoContatoEm)}</span></div>
+                    </div>
+                    <label className="mt-3 block text-xs text-slate-500">Status</label>
+                    <select value={c.status} onChange={(e) => void atualizar(c._id,{status:e.target.value})}
+                      className="mt-1 w-full min-w-0 rounded-lg border p-2.5 text-sm">
+                      {STATUS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    </select>
+                    <label className="mt-3 block text-xs text-slate-500">Próximo follow-up</label>
+                    <input type="datetime-local" value={c.proximoFollowUpEm ? c.proximoFollowUpEm.slice(0,16) : ""}
+                      onChange={(e) => void atualizar(c._id,{proximoFollowUpEm:e.target.value ? new Date(e.target.value).toISOString() : null})}
+                      className="mt-1 w-full min-w-0 rounded-lg border p-2.5 text-sm" />
+                    <button type="button" onClick={() => void atualizar(c._id,{optOut:!c.optOut})}
+                      className={`mt-3 w-full rounded-lg px-3 py-2.5 text-xs font-semibold ${c.optOut ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"}`}>
+                      {c.optOut ? "Bloqueado para envio" : "Envio permitido"}
+                    </button>
+                  </article>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[900px] text-left text-sm">
                   <thead><tr className="border-b text-xs uppercase text-slate-500">
                     <th className="p-3">Contato</th><th className="p-3">Cidade</th><th className="p-3">Status</th>
@@ -303,9 +330,24 @@ export default function EmailCRMClient() {
         )}
 
         {aba === "historico" && (
-          <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm">
+          <section className="mt-6 min-w-0 rounded-2xl bg-white p-4 shadow-sm sm:p-5">
             <h2 className="font-semibold text-[#193451]">Últimos envios</h2>
-            <div className="mt-4 overflow-x-auto">
+            <div className="mt-4 grid gap-3 md:hidden">
+              {(dados?.historico || []).map((h) => (
+                <article key={h._id} className="min-w-0 rounded-xl border border-slate-200 p-4 text-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-[#193451]">{h.nome || "—"}</div>
+                      <div className="break-all text-xs text-slate-500">{h.email}</div>
+                    </div>
+                    <span className="shrink-0 text-xs font-semibold">{h.status}</span>
+                  </div>
+                  <div className="mt-3 text-xs text-slate-500">{dataLocal(h.enviadoEm)}</div>
+                  <div className="mt-2 break-words text-sm">{h.assunto || "—"}</div>
+                </article>
+              ))}
+            </div>
+            <div className="mt-4 hidden overflow-x-auto md:block">
               <table className="w-full min-w-[760px] text-left text-sm">
                 <thead><tr className="border-b text-xs uppercase text-slate-500">
                   <th className="p-3">Data</th><th className="p-3">Destinatário</th><th className="p-3">Assunto</th><th className="p-3">Status</th>
