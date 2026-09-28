@@ -37,10 +37,15 @@ export function validarTokenSessao(token?: string | null) {
   }
 }
 
+export function senhaPainelConfigurada() {
+  return Boolean(process.env.EMAIL_PANEL_PASSWORD?.trim());
+}
+
 export function senhaPainelValida(recebida: string) {
-  const esperada = process.env.EMAIL_PANEL_PASSWORD;
+  const esperada = process.env.EMAIL_PANEL_PASSWORD?.trim();
   if (!esperada) return false;
-  const a = Buffer.from(recebida);
+
+  const a = Buffer.from(recebida.trim());
   const b = Buffer.from(esperada);
   return a.length === b.length && timingSafeEqual(a, b);
 }
