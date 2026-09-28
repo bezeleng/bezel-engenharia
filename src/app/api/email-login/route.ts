@@ -4,6 +4,7 @@ import {
   criarTokenSessao,
   EMAIL_SESSION_COOKIE,
   EMAIL_SESSION_MAX_AGE,
+  senhaPainelConfigurada,
   senhaPainelValida,
 } from "@/lib/email-panel-session";
 
@@ -13,6 +14,14 @@ const schema = z.object({ senha: z.string().min(1).max(200) });
 
 export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
+
+  if (!senhaPainelConfigurada()) {
+    return NextResponse.json(
+      { error: "EMAIL_PANEL_PASSWORD não está disponível neste deployment." },
+      { status: 503 }
+    );
+  }
+
   if (!parsed.success || !senhaPainelValida(parsed.data.senha)) {
     return NextResponse.json({ error: "Senha inválida." }, { status: 401 });
   }
