@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { EMAIL_SESSION_COOKIE, validarTokenSessao } from "@/lib/email-panel-session";
-import { atualizarContato, salvarContato } from "@/lib/prospeccao-store";
+import { atualizarContato, excluirContato, salvarContato } from "@/lib/prospeccao-store";
 
 export const runtime = "nodejs";
 
@@ -56,5 +56,19 @@ export async function PATCH(request: Request) {
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Não foi possível atualizar o contato." }, { status: 500 });
+  }
+}
+
+
+export async function DELETE(request: Request) {
+  if (!(await autorizado())) return NextResponse.json({ error: "Sessão expirada." }, { status: 401 });
+  const parsed = z.object({ id: z.string().min(1) }).safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
+  try {
+    await excluirContato(parsed.data.id);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Não foi possível excluir o contato." }, { status: 500 });
   }
 }

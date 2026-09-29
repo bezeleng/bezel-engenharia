@@ -5,9 +5,18 @@ export type StatusContato = "NOVO" | "CONTATADO" | "RESPONDEU" | "VISITA" | "PRO
 export type ContatoProspeccao = {
   _id: string;
   nome: string;
-  email: string;
+  email?: string;
   cidade?: string;
   segmento?: string;
+  telefone?: string;
+  whatsapp?: string;
+  site?: string;
+  instagram?: string;
+  origem?: string;
+  pesquisaHunter?: string;
+  fonteUrl?: string;
+  dominio?: string;
+  encontradoEm?: string;
   status: StatusContato;
   optOut: boolean;
   ultimoContatoEm?: string;
@@ -28,7 +37,7 @@ export function normalizarEmail(email: string) {
 export async function listarContatos(): Promise<ContatoProspeccao[]> {
   return store().fetch(
     `*[_type == "prospeccaoContato"] | order(coalesce(ultimoContatoEm, _createdAt) desc) {
-      _id, nome, email, cidade, segmento, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
+      _id, nome, email, cidade, segmento, telefone, whatsapp, site, instagram, origem, pesquisaHunter, fonteUrl, dominio, encontradoEm, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
     }`
   );
 }
@@ -36,7 +45,7 @@ export async function listarContatos(): Promise<ContatoProspeccao[]> {
 export async function buscarContatoPorEmail(email: string): Promise<ContatoProspeccao | null> {
   return store().fetch(
     `*[_type == "prospeccaoContato" && email == $email][0]{
-      _id, nome, email, cidade, segmento, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
+      _id, nome, email, cidade, segmento, telefone, whatsapp, site, instagram, origem, pesquisaHunter, fonteUrl, dominio, encontradoEm, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
     }`,
     { email: normalizarEmail(email) }
   );
@@ -94,6 +103,41 @@ export async function atualizarContato(input: {
   if (input.observacoes !== undefined) patch.observacoes = input.observacoes;
   return store().patch(input.id).set(patch).commit();
 }
+
+export async function buscarContatoPorDominio(dominio: string): Promise<ContatoProspeccao | null> {
+  return store().fetch(
+    `*[_type == "prospeccaoContato" && dominio == $dominio][0]{
+      _id, nome, email, cidade, segmento, telefone, whatsapp, site, instagram, origem, pesquisaHunter, fonteUrl, dominio, encontradoEm, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
+    }`,
+    { dominio: dominio.trim().toLowerCase() }
+  );
+}
+
+export async function salvarContatoHunter(input: {
+  dominio: string; nome: string; email?: string; cidade: string; segmento: string;
+  telefone?: string; site: string; instagram?: string; fonteUrl?: string; pesquisaHunter: string;
+}) {
+  const c = store();
+  const dominio = input.dominio.trim().toLowerCase();
+  const existente = await buscarContatoPorDominio(dominio);
+  const dados = {
+    nome: input.nome.trim(), ...(input.email ? { email: normalizarEmail(input.email) } : {}),
+    cidade: input.cidade.trim(), segmento: input.segmento.trim(),
+    telefone: input.telefone?.trim() || "", site: input.site,
+    instagram: input.instagram || "", origem: "Hunter",
+    pesquisaHunter: input.pesquisaHunter, fonteUrl: input.fonteUrl || "Hunter.io",
+    dominio, encontradoEm: new Date().toISOString(),
+  };
+  if (existente) {
+    const patch = Object.fromEntries(Object.entries(dados).filter(([, value]) => value !== ""));
+    return { contato: await c.patch(existente._id).set(patch).commit(), novo: false };
+  }
+  return { contato: await c.create({
+    _type: "prospeccaoContato", ...dados, whatsapp: "", status: "NOVO", optOut: false, observacoes: "",
+  }), novo: true };
+}
+
+export async function excluirContato(id: string) { return store().delete(id); }
 
 function hojeSaoPaulo() {
   return new Intl.DateTimeFormat("en-CA", {

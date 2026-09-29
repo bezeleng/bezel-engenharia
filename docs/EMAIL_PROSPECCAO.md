@@ -71,3 +71,22 @@ O controle foi desenhado para uso interno por uma única equipe. Se no futuro ho
 4. Validar envio de teste para a própria BEZEL.
 5. Validar um envio real controlado e confirmar histórico/limite diário.
 6. Somente depois promover a V2 para produção.
+
+
+## Hunter de prospecção
+
+A aba `Hunter` pesquisa empresas por segmento e localidade usando a API oficial do Hunter.io. O fluxo usa Discover para localizar empresas e, quando solicitado, Domain Search e Company Enrichment para encontrar e-mail profissional, telefone, site e dados públicos da empresa.
+
+Variável adicional na Vercel:
+
+```
+HUNTER_API_KEY=<chave privada da API Hunter.io>
+```
+
+A chave deve existir apenas no servidor, sem prefixo `NEXT_PUBLIC_`. O Discover é uma chamada gratuita segundo a documentação atual do Hunter.io. A busca de e-mails e alguns enriquecimentos podem consumir créditos da conta, portanto a tela limita cada operação a no máximo 20 empresas.
+
+O CRM prioriza e-mails genéricos/profissionais quando disponíveis. Telefone é armazenado como telefone; o sistema não presume que um número seja WhatsApp. O campo WhatsApp permanece separado para confirmação explícita.
+
+Os resultados são cadastrados com origem `Hunter`, segmento, localidade e pesquisa de origem. A deduplicação usa o domínio da empresa. Contatos sem e-mail também podem permanecer na base para revisão, mas não podem ser selecionados para disparo de e-mail.
+
+Em `Contatos`, é possível filtrar por segmento, cidade, origem e presença de e-mail, arquivar, excluir definitivamente e selecionar em lote somente contatos aptos a receber e-mail.
