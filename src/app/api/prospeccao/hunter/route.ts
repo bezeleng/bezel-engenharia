@@ -34,6 +34,11 @@ type EmpresaEnriquecida = {
   phone?: string;
   site?: { phoneNumbers?: string[]; emailAddresses?: string[] };
   instagram?: { handle?: string | null };
+  category?: { sector?: string; industryGroup?: string; industry?: string; subIndustry?: string };
+  tags?: string[];
+  description?: string;
+  location?: string;
+  geo?: { city?: string; countryCode?: string };
 };
 
 type DiscoverPayload = {
@@ -41,31 +46,36 @@ type DiscoverPayload = {
   meta?: { results?: number; filters?: Record<string, unknown> };
 };
 
-const SINONIMOS_SEGMENTO: Array<{ termos: string[]; palavras: string[]; consulta: string }> = [
+const SINONIMOS_SEGMENTO: Array<{ termos: string[]; palavras: string[]; consulta: string; qualificacao: string[] }> = [
   {
     termos: ["síndico", "sindico", "síndicos", "sindicos", "condomínio", "condominio", "condomínios", "condominios"],
     palavras: ["administração de condomínios", "administradora de condomínios", "gestão condominial", "condomínios"],
     consulta: "empresas de administração de condomínios e gestão condominial",
+    qualificacao: ["condominio", "condominios", "condominial", "sindico", "sindicos", "gestao condominial", "administracao condominial", "property management"],
   },
   {
     termos: ["arquiteto", "arquitetos", "arquitetura"],
     palavras: ["arquitetura", "escritório de arquitetura", "projetos arquitetônicos"],
     consulta: "escritórios e empresas de arquitetura",
+    qualificacao: ["arquitetura", "arquiteto", "arquitetos", "architect", "architectural"],
   },
   {
     termos: ["engenheiro", "engenheiros", "engenharia"],
     palavras: ["engenharia", "empresa de engenharia", "projetos de engenharia"],
     consulta: "empresas e escritórios de engenharia",
+    qualificacao: ["engenharia", "engenheiro", "engenheiros", "engineering", "engineer"],
   },
   {
     termos: ["escola", "escolas", "colégio", "colegio", "colégios", "colegios"],
     palavras: ["escola", "colégio", "educação", "ensino"],
     consulta: "escolas e colégios particulares",
+    qualificacao: ["escola", "colegio", "ensino", "educacao", "school", "education"],
   },
   {
     termos: ["clínica", "clinica", "clínicas", "clinicas"],
     palavras: ["clínica", "consultório", "saúde"],
     consulta: "clínicas e centros de saúde",
+    qualificacao: ["clinica", "consultorio", "saude", "medicina", "odontologia", "medical", "health", "dental"],
   },
 ];
 
@@ -78,10 +88,43 @@ function termosDoSegmento(segmento: string) {
   const mapeado = SINONIMOS_SEGMENTO.find((grupo) =>
     grupo.termos.some((termo) => alvo.includes(normalizar(termo)))
   );
+  const palavrasGenericas = normalizar(segmento)
+    .split(/[^a-z0-9]+/)
+    .filter((x) => x.length >= 4 && !["para", "empresas", "empresa"].includes(x));
   return {
     palavras: mapeado?.palavras || [segmento],
     consulta: mapeado?.consulta || `empresas de ${segmento}`,
+    qualificacao: mapeado?.qualificacao || palavrasGenericas,
   };
+}
+
+function avaliarAderencia(segmento: string, empresa: EmpresaDescoberta, enriquecida?: EmpresaEnriquecida) {
+  const termos = termosDoSegmento(segmento).qualificacao.map(normalizar);
+  const nomeDominio = normalizar([enriquecida?.name, empresa.organization, empresa.domain].filter(Boolean).join(" "));
+  const contexto = normalizar([
+    enriquecida?.category?.sector,
+    enriquecida?.category?.industryGroup,
+    enriquecida?.category?.industry,
+    enriquecida?.category?.subIndustry,
+    ...(enriquecida?.tags || []),
+    enriquecida?.description,
+  ].filter(Boolean).join(" "));
+
+  const evidenciasFortes = termos.filter((termo) => nomeDominio.includes(termo));
+  const evidenciasContexto = termos.filter((termo) => contexto.includes(termo));
+  const pontuacao = evidenciasFortes.length * 3 + evidenciasContexto.length;
+
+  return {
+    aprovado: pontuacao >= 1,
+    pontuacao,
+    evidencias: [...new Set([...evidenciasFortes, ...evidenciasContexto])].slice(0, 5),
+  };
+}
+
+function cidadeCompativel(localidade: string, enriquecida?: EmpresaEnriquecida) {
+  if (!enriquecida?.geo?.city) return true;
+  if (enriquecida.geo.countryCode && enriquecida.geo.countryCode !== "BR") return false;
+  return normalizar(enriquecida.geo.city) === normalizar(cidadeDaLocalidade(localidade));
 }
 
 function cidadeDaLocalidade(localidade: string) {
@@ -215,13 +258,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const empresas = descoberta.empresas.slice(0, quantidade);
+    const empresas = descoberta.empresas;
 
     if (!empresas.length) {
       return NextResponse.json({
         cadastrados: 0,
         jaExistentes: 0,
         semEmail: 0,
+        descartados: 0,
+        analisados: 0,
         resultados: [],
         tentativas: descoberta.tentativas,
         estrategia: descoberta.estrategia,
@@ -234,12 +279,30 @@ export async function POST(request: Request) {
     let cadastrados = 0;
     let jaExistentes = 0;
     let semEmail = 0;
+    let descartados = 0;
+    let analisados = 0;
 
-    for (const empresa of empresas) {
+    // O Discover pode devolver empresas relacionadas, especialmente nos fallbacks.
+    // Antes de gastar uma busca de e-mail e antes de cadastrar no CRM, validamos
+    // a aderência usando nome, domínio, categoria, tags e descrição do Enrichment.
+    // Limitamos a análise para controlar tempo e consumo de créditos.
+    const limiteAnalise = Math.min(empresas.length, Math.max(quantidade * 2, 25));
+
+    for (const empresa of empresas.slice(0, limiteAnalise)) {
+      if (resultados.length >= quantidade) break;
       const dominio = empresa.domain!.trim().toLowerCase();
-      let email = buscarEmail ? await buscarEmailDominio(dominio, key) : undefined;
-      const enriquecida = buscarTelefone || (buscarEmail && !email) ? await enriquecerEmpresa(dominio, key) : undefined;
+      analisados++;
 
+      const enriquecida = await enriquecerEmpresa(dominio, key);
+      const aderencia = avaliarAderencia(segmento, empresa, enriquecida);
+      const localOk = cidadeCompativel(localidade, enriquecida);
+
+      if (!aderencia.aprovado || !localOk) {
+        descartados++;
+        continue;
+      }
+
+      let email = buscarEmail ? await buscarEmailDominio(dominio, key) : undefined;
       if (!email && buscarEmail) {
         email = enriquecida?.site?.emailAddresses?.find(Boolean)?.trim().toLowerCase();
       }
@@ -277,18 +340,26 @@ export async function POST(request: Request) {
         telefone,
         site,
         instagram,
-        motivo: !email ? "Empresa cadastrada, mas nenhum e-mail profissional foi encontrado." : undefined,
+        aderencia: aderencia.pontuacao,
+        evidencias: aderencia.evidencias,
+        motivo: !email ? "Empresa qualificada, mas nenhum e-mail profissional foi encontrado." : undefined,
       });
     }
 
+    const nenhumResultado = resultados.length === 0;
     return NextResponse.json({
       cadastrados,
       jaExistentes,
       semEmail,
+      descartados,
+      analisados,
       resultados,
       tentativas: descoberta.tentativas,
       estrategia: descoberta.estrategia,
-      nenhumResultado: false,
+      nenhumResultado,
+      mensagem: nenhumResultado
+        ? `Nenhuma empresa qualificada para “${segmento}” em ${cidadeDaLocalidade(localidade)}. ${descartados} resultado(s) foram descartados por baixa aderência ao segmento ou localidade.`
+        : undefined,
     });
   } catch (error) {
     console.error("Hunter CRM:", error);
