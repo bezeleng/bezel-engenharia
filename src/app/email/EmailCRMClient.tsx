@@ -457,7 +457,10 @@ export default function EmailCRMClient() {
                       <div className="min-w-0">
                         <div className="break-words font-semibold text-[#193451]">{c.nome || "Sem nome"}</div>
                         <div className="mt-0.5 break-all text-xs text-slate-500">{c.email || "Sem e-mail"}</div>
-                        <div className="mt-1 text-xs text-slate-500">{c.segmento || "Geral"}</div>
+                        <div className="mt-1 text-xs text-slate-500">{c.segmento || "Geral"} · {c.origem || "Manual"}</div>
+                        {c.telefone && <div className="mt-1 text-xs text-slate-500">Tel.: {c.telefone}</div>}
+                        {c.whatsapp && <div className="mt-1 text-xs text-slate-500">WhatsApp: {c.whatsapp}</div>}
+                        {c.site && <a href={c.site} target="_blank" rel="noreferrer" className="mt-1 block break-all text-xs font-semibold text-[#193451] underline">Abrir site</a>}
                       </div>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
@@ -498,7 +501,7 @@ export default function EmailCRMClient() {
                       <tr key={c._id} className={`border-b border-slate-100 ${selecionados.includes(c._id) ? "bg-[#fffaf0]" : ""}`}>
                         <td className="p-3"><input type="checkbox" aria-label={`Selecionar ${c.nome}`} checked={selecionados.includes(c._id)}
                           disabled={c.optOut || !c.email} onChange={() => alternarContato(c._id)} className="h-4 w-4 accent-[#193451] disabled:opacity-40" /></td>
-                        <td className="p-3"><div className="font-semibold text-[#193451]">{c.nome || "Sem nome"}</div><div className="text-xs text-slate-500">{c.email || "Sem e-mail"}</div><div className="mt-1 text-xs text-slate-400">{c.segmento || "Geral"}</div></td>
+                        <td className="p-3"><div className="font-semibold text-[#193451]">{c.nome || "Sem nome"}</div><div className="text-xs text-slate-500">{c.email || "Sem e-mail"}</div><div className="mt-1 text-xs text-slate-400">{c.segmento || "Geral"} · {c.origem || "Manual"}</div>{c.telefone && <div className="mt-1 text-xs text-slate-400">Tel.: {c.telefone}</div>}{c.site && <a href={c.site} target="_blank" rel="noreferrer" className="mt-1 block text-xs font-semibold text-[#193451] underline">Site</a>}</td>
                         <td className="p-3">{c.cidade || "—"}</td>
                         <td className="p-3"><select value={c.status} onChange={(e) => void atualizar(c._id,{status:e.target.value})} className="rounded-lg border p-2">
                           {STATUS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
