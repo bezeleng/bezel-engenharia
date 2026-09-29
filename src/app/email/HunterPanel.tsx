@@ -32,7 +32,8 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
         setMensagem(json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima.");
       } else {
         const detalhe = json.tentativas > 1 ? ` Busca ajustada automaticamente em ${json.tentativas} tentativas.` : "";
-        setMensagem(`Busca concluída: ${json.cadastrados} novo(s), ${json.jaExistentes} já existente(s) e ${json.semEmail} sem e-mail encontrado.${detalhe}`);
+        const descarte = json.descartados > 0 ? ` ${json.descartados} resultado(s) foram descartados por baixa aderência ao segmento ou localidade.` : "";
+        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s), ${json.jaExistentes} já existente(s) e ${json.semEmail} sem e-mail encontrado.${descarte}${detalhe}`);
       }
       await onAtualizar();
     } catch {
@@ -69,7 +70,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
         <button disabled={buscando} className="mt-5 rounded-xl bg-[#193451] px-6 py-3 text-sm font-semibold text-white disabled:opacity-50">
           {buscando ? "Buscando e cadastrando..." : "Buscar e cadastrar"}
         </button>
-        <p className="mt-3 text-xs text-slate-500">A busca combina localização estruturada e palavras-chave e, se necessário, amplia a consulta automaticamente. E-mails são priorizados como profissionais/genéricos. Telefone não é marcado como WhatsApp sem confirmação específica.</p>
+        <p className="mt-3 text-xs text-slate-500">A busca combina localização e palavras-chave e pode ampliar a descoberta automaticamente. Antes de cadastrar, o sistema valida nome, domínio, categoria, tags, descrição e localidade da empresa; resultados com baixa aderência são descartados. Telefone não é marcado como WhatsApp sem confirmação específica.</p>
         {mensagem && <div className="mt-4 rounded-xl bg-[#f5f2ed] p-4 text-sm text-[#193451]">{mensagem}</div>}
       </form>
 
