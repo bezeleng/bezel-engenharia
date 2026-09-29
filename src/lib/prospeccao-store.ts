@@ -15,7 +15,7 @@ export type ContatoProspeccao = {
   origem?: string;
   pesquisaHunter?: string;
   fonteUrl?: string;
-  googlePlaceId?: string;
+  dominio?: string;
   encontradoEm?: string;
   status: StatusContato;
   optOut: boolean;
@@ -37,7 +37,7 @@ export function normalizarEmail(email: string) {
 export async function listarContatos(): Promise<ContatoProspeccao[]> {
   return store().fetch(
     `*[_type == "prospeccaoContato"] | order(coalesce(ultimoContatoEm, _createdAt) desc) {
-      _id, nome, email, cidade, segmento, telefone, whatsapp, site, instagram, origem, pesquisaHunter, fonteUrl, googlePlaceId, encontradoEm, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
+      _id, nome, email, cidade, segmento, telefone, whatsapp, site, instagram, origem, pesquisaHunter, fonteUrl, dominio, encontradoEm, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
     }`
   );
 }
@@ -45,7 +45,7 @@ export async function listarContatos(): Promise<ContatoProspeccao[]> {
 export async function buscarContatoPorEmail(email: string): Promise<ContatoProspeccao | null> {
   return store().fetch(
     `*[_type == "prospeccaoContato" && email == $email][0]{
-      _id, nome, email, cidade, segmento, telefone, whatsapp, site, instagram, origem, pesquisaHunter, fonteUrl, googlePlaceId, encontradoEm, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
+      _id, nome, email, cidade, segmento, telefone, whatsapp, site, instagram, origem, pesquisaHunter, fonteUrl, dominio, encontradoEm, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
     }`,
     { email: normalizarEmail(email) }
   );
@@ -104,34 +104,37 @@ export async function atualizarContato(input: {
   return store().patch(input.id).set(patch).commit();
 }
 
-export async function buscarContatoPorPlaceId(googlePlaceId: string): Promise<ContatoProspeccao | null> {
+export async function buscarContatoPorDominio(dominio: string): Promise<ContatoProspeccao | null> {
   return store().fetch(
-    `*[_type == "prospeccaoContato" && googlePlaceId == $googlePlaceId][0]{
-      _id, nome, email, cidade, segmento, telefone, whatsapp, site, instagram, origem, pesquisaHunter, fonteUrl, googlePlaceId, encontradoEm, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
+    `*[_type == "prospeccaoContato" && dominio == $dominio][0]{
+      _id, nome, email, cidade, segmento, telefone, whatsapp, site, instagram, origem, pesquisaHunter, fonteUrl, dominio, encontradoEm, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
     }`,
-    { googlePlaceId }
+    { dominio: dominio.trim().toLowerCase() }
   );
 }
 
 export async function salvarContatoHunter(input: {
-  googlePlaceId: string; nome: string; email?: string; cidade: string; segmento: string;
-  telefone?: string; whatsapp?: string; site: string; instagram?: string; fonteUrl: string; pesquisaHunter: string;
+  dominio: string; nome: string; email?: string; cidade: string; segmento: string;
+  telefone?: string; site: string; instagram?: string; fonteUrl?: string; pesquisaHunter: string;
 }) {
   const c = store();
-  const existente = await buscarContatoPorPlaceId(input.googlePlaceId);
+  const dominio = input.dominio.trim().toLowerCase();
+  const existente = await buscarContatoPorDominio(dominio);
   const dados = {
     nome: input.nome.trim(), ...(input.email ? { email: normalizarEmail(input.email) } : {}),
     cidade: input.cidade.trim(), segmento: input.segmento.trim(),
-    telefone: input.telefone?.trim() || "", whatsapp: input.whatsapp?.trim() || "",
-    site: input.site, instagram: input.instagram || "", origem: "Hunter",
-    pesquisaHunter: input.pesquisaHunter, fonteUrl: input.fonteUrl,
-    googlePlaceId: input.googlePlaceId, encontradoEm: new Date().toISOString(),
+    telefone: input.telefone?.trim() || "", site: input.site,
+    instagram: input.instagram || "", origem: "Hunter",
+    pesquisaHunter: input.pesquisaHunter, fonteUrl: input.fonteUrl || "Hunter.io",
+    dominio, encontradoEm: new Date().toISOString(),
   };
   if (existente) {
     const patch = Object.fromEntries(Object.entries(dados).filter(([, value]) => value !== ""));
     return { contato: await c.patch(existente._id).set(patch).commit(), novo: false };
   }
-  return { contato: await c.create({ _type: "prospeccaoContato", ...dados, status: "NOVO", optOut: false, observacoes: "" }), novo: true };
+  return { contato: await c.create({
+    _type: "prospeccaoContato", ...dados, whatsapp: "", status: "NOVO", optOut: false, observacoes: "",
+  }), novo: true };
 }
 
 export async function excluirContato(id: string) { return store().delete(id); }
