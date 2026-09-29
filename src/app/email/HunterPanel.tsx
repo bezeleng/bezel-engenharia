@@ -3,8 +3,8 @@
 import { FormEvent, useState } from "react";
 
 type ResultadoHunter = {
-  placeId: string; cadastrado: boolean; novo?: boolean; nome?: string; email?: string;
-  telefone?: string; whatsapp?: string; site?: string; instagram?: string; motivo?: string;
+  dominio: string; cadastrado: boolean; novo?: boolean; nome: string; email?: string;
+  telefone?: string; site?: string; instagram?: string; motivo?: string;
 };
 
 export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promise<void> }) {
@@ -12,25 +12,29 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
   const [localidade, setLocalidade] = useState("São José dos Campos, SP");
   const [quantidade, setQuantidade] = useState(10);
   const [buscarEmail, setBuscarEmail] = useState(true);
-  const [buscarWhatsApp, setBuscarWhatsApp] = useState(true);
+  const [buscarTelefone, setBuscarTelefone] = useState(true);
   const [buscando, setBuscando] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [resultados, setResultados] = useState<ResultadoHunter[]>([]);
 
   async function buscar(e: FormEvent) {
-    e.preventDefault(); setBuscando(true); setMensagem(""); setResultados([]);
+    e.preventDefault();
+    setBuscando(true); setMensagem(""); setResultados([]);
     try {
       const r = await fetch("/api/prospeccao/hunter", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ segmento, localidade, quantidade, buscarEmail, buscarWhatsApp }),
+        body: JSON.stringify({ segmento, localidade, quantidade, buscarEmail, buscarTelefone }),
       });
       const json = await r.json();
       if (!r.ok) { setMensagem(json.error || "Não foi possível executar a busca."); return; }
       setResultados(json.resultados || []);
-      setMensagem(`Busca concluída: ${json.cadastrados} cadastrado(s), ${json.jaExistentes} já existente(s) e ${json.naoCadastrados} sem dados públicos suficientes para cadastro.`);
+      setMensagem(`Busca concluída: ${json.cadastrados} novo(s), ${json.jaExistentes} já existente(s) e ${json.semEmail} sem e-mail encontrado.`);
       await onAtualizar();
-    } catch { setMensagem("Erro de comunicação ao executar o Hunter."); }
-    finally { setBuscando(false); }
+    } catch {
+      setMensagem("Erro de comunicação ao executar o Hunter.");
+    } finally {
+      setBuscando(false);
+    }
   }
 
   return (
@@ -38,7 +42,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
       <form onSubmit={buscar} className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
         <div className="max-w-3xl">
           <h2 className="text-xl font-semibold text-[#193451]">Hunter de prospecção</h2>
-          <p className="mt-2 text-sm text-slate-600">Pesquise um segmento e uma localidade. O Hunter descobre empresas, consulta o site público e cadastra automaticamente na base os contatos confirmados.</p>
+          <p className="mt-2 text-sm text-slate-600">Informe o segmento e a localidade. O sistema encontra empresas e cadastra os resultados diretamente na base para você filtrar depois.</p>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           <label className="text-sm font-semibold text-[#193451]">Segmento
@@ -54,33 +58,34 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
           </label>
         </div>
         <div className="mt-4 flex flex-wrap gap-5 text-sm">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={buscarEmail} onChange={(e) => setBuscarEmail(e.target.checked)} className="accent-[#193451]" /> Procurar e-mail no site</label>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={buscarWhatsApp} onChange={(e) => setBuscarWhatsApp(e.target.checked)} className="accent-[#193451]" /> Procurar WhatsApp no site</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={buscarEmail} onChange={(e) => setBuscarEmail(e.target.checked)} className="accent-[#193451]" /> Buscar e-mail profissional</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={buscarTelefone} onChange={(e) => setBuscarTelefone(e.target.checked)} className="accent-[#193451]" /> Buscar telefone da empresa</label>
         </div>
         <button disabled={buscando} className="mt-5 rounded-xl bg-[#193451] px-6 py-3 text-sm font-semibold text-white disabled:opacity-50">
-          {buscando ? "Buscando e verificando sites..." : "Buscar e cadastrar"}
+          {buscando ? "Buscando e cadastrando..." : "Buscar e cadastrar"}
         </button>
-        <p className="mt-3 text-xs text-slate-500">O sistema não inventa e-mails ou WhatsApp. Os dados persistidos vêm do site público da empresa; o Google Place ID é usado somente para descoberta e deduplicação.</p>
+        <p className="mt-3 text-xs text-slate-500">A descoberta usa a API do Hunter.io. E-mails são priorizados como profissionais/genéricos. Telefone não é marcado como WhatsApp sem confirmação específica.</p>
         {mensagem && <div className="mt-4 rounded-xl bg-[#f5f2ed] p-4 text-sm text-[#193451]">{mensagem}</div>}
       </form>
+
       {resultados.length > 0 && (
         <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
           <h3 className="font-semibold text-[#193451]">Resultado da última busca</h3>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
             {resultados.map((r) => (
-              <article key={r.placeId} className="rounded-xl border border-slate-200 p-4">
+              <article key={r.dominio} className="rounded-xl border border-slate-200 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="break-words font-semibold text-[#193451]">{r.nome || "Empresa sem cadastro automático"}</div>
-                    {r.email && <div className="mt-1 break-all text-sm">{r.email}</div>}
-                    {r.telefone && <div className="mt-1 text-sm">{r.telefone}</div>}
-                    {r.whatsapp && <div className="mt-1 text-sm">WhatsApp: {r.whatsapp}</div>}
+                    <div className="break-words font-semibold text-[#193451]">{r.nome}</div>
+                    <div className="mt-1 break-all text-xs text-slate-500">{r.dominio}</div>
+                    <div className="mt-2 break-all text-sm">{r.email || "Sem e-mail encontrado"}</div>
+                    {r.telefone && <div className="mt-1 text-sm">Telefone: {r.telefone}</div>}
                   </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${r.cadastrado ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                    {r.cadastrado ? (r.novo ? "Novo" : "Já existia") : "Não cadastrado"}
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${r.novo ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-700"}`}>
+                    {r.novo ? "Novo" : "Já existia"}
                   </span>
                 </div>
-                {r.site && <a href={r.site} target="_blank" rel="noreferrer" className="mt-3 block break-all text-xs font-semibold text-[#193451] underline">Abrir site público</a>}
+                {r.site && <a href={r.site} target="_blank" rel="noreferrer" className="mt-3 block break-all text-xs font-semibold text-[#193451] underline">Abrir site</a>}
                 {r.instagram && <a href={r.instagram} target="_blank" rel="noreferrer" className="mt-2 block break-all text-xs font-semibold text-[#193451] underline">Abrir Instagram</a>}
                 {r.motivo && <p className="mt-3 text-xs text-slate-500">{r.motivo}</p>}
               </article>
