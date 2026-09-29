@@ -159,17 +159,19 @@ function ehBuscaCondominial(segmento: string) {
 }
 
 function htmlParaTexto(html: string) {
+  const semScripts = html
+    .replace(new RegExp("<script[\\\\s\\\\S]*?</script>", "gi"), " ")
+    .replace(new RegExp("<style[\\\\s\\\\S]*?</style>", "gi"), " ")
+    .replace(new RegExp("<noscript[\\\\s\\\\S]*?</noscript>", "gi"), " ");
+
   return normalizar(
-    html
-      .replace(/<script[\\s\\S]*?<\\/script>/gi, " ")
-      .replace(/<style[\\s\\S]*?<\\/style>/gi, " ")
-      .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, " ")
+    semScripts
       .replace(/<[^>]+>/g, " ")
       .replace(/&nbsp;|&#160;/gi, " ")
       .replace(/&amp;/gi, "&")
       .replace(/&#39;|&apos;/gi, "'")
       .replace(/&quot;/gi, '"')
-      .replace(/\\s+/g, " ")
+      .replace(/\s+/g, " ")
   );
 }
 
