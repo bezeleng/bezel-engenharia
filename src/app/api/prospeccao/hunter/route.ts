@@ -36,6 +36,58 @@ type EmpresaEnriquecida = {
   instagram?: { handle?: string | null };
 };
 
+type DiscoverPayload = {
+  data?: EmpresaDescoberta[];
+  meta?: { results?: number; filters?: Record<string, unknown> };
+};
+
+const SINONIMOS_SEGMENTO: Array<{ termos: string[]; palavras: string[]; consulta: string }> = [
+  {
+    termos: ["síndico", "sindico", "síndicos", "sindicos", "condomínio", "condominio", "condomínios", "condominios"],
+    palavras: ["administração de condomínios", "administradora de condomínios", "gestão condominial", "condomínios"],
+    consulta: "empresas de administração de condomínios e gestão condominial",
+  },
+  {
+    termos: ["arquiteto", "arquitetos", "arquitetura"],
+    palavras: ["arquitetura", "escritório de arquitetura", "projetos arquitetônicos"],
+    consulta: "escritórios e empresas de arquitetura",
+  },
+  {
+    termos: ["engenheiro", "engenheiros", "engenharia"],
+    palavras: ["engenharia", "empresa de engenharia", "projetos de engenharia"],
+    consulta: "empresas e escritórios de engenharia",
+  },
+  {
+    termos: ["escola", "escolas", "colégio", "colegio", "colégios", "colegios"],
+    palavras: ["escola", "colégio", "educação", "ensino"],
+    consulta: "escolas e colégios particulares",
+  },
+  {
+    termos: ["clínica", "clinica", "clínicas", "clinicas"],
+    palavras: ["clínica", "consultório", "saúde"],
+    consulta: "clínicas e centros de saúde",
+  },
+];
+
+function normalizar(valor: string) {
+  return valor.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+function termosDoSegmento(segmento: string) {
+  const alvo = normalizar(segmento);
+  const mapeado = SINONIMOS_SEGMENTO.find((grupo) =>
+    grupo.termos.some((termo) => alvo.includes(normalizar(termo)))
+  );
+  return {
+    palavras: mapeado?.palavras || [segmento],
+    consulta: mapeado?.consulta || `empresas de ${segmento}`,
+  };
+}
+
+function cidadeDaLocalidade(localidade: string) {
+  return localidade.split(",")[0]?.trim() || localidade.trim();
+}
+
 async function hunterFetch(url: string, key: string, init?: RequestInit) {
   return fetch(url, {
     ...init,
@@ -48,13 +100,67 @@ async function hunterFetch(url: string, key: string, init?: RequestInit) {
   });
 }
 
+async function executarDiscover(key: string, body: Record<string, unknown>) {
+  const r = await hunterFetch("https://api.hunter.io/v2/discover?locale=pt", key, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+  if (!r.ok) {
+    const detalhe = await r.text();
+    console.error("Hunter Discover:", r.status, detalhe.slice(0, 500));
+    return { ok: false as const, status: r.status, payload: undefined };
+  }
+
+  const payload = await r.json() as DiscoverPayload;
+  return { ok: true as const, status: r.status, payload };
+}
+
+async function descobrirEmpresas(segmento: string, localidade: string, key: string) {
+  const cidade = cidadeDaLocalidade(localidade);
+  const termos = termosDoSegmento(segmento);
+  let tentativas = 0;
+
+  const estruturada = await executarDiscover(key, {
+    headquarters_location: { include: [{ city: cidade, country: "BR" }] },
+    keywords: { match: "any", include: termos.palavras },
+  });
+  tentativas++;
+
+  if (!estruturada.ok) return { ...estruturada, empresas: [] as EmpresaDescoberta[], tentativas, estrategia: "estruturada" };
+  let empresas = (estruturada.payload?.data || []).filter((x) => x.domain);
+  if (empresas.length) {
+    return { ok: true as const, status: 200, empresas, tentativas, estrategia: "cidade + palavras-chave" };
+  }
+
+  const ampliada = await executarDiscover(key, {
+    query: `${termos.consulta} com sede em ${cidade}, Brasil`,
+  });
+  tentativas++;
+
+  if (!ampliada.ok) return { ...ampliada, empresas: [] as EmpresaDescoberta[], tentativas, estrategia: "ampliada" };
+  empresas = (ampliada.payload?.data || []).filter((x) => x.domain);
+  if (empresas.length) {
+    return { ok: true as const, status: 200, empresas, tentativas, estrategia: "busca ampliada" };
+  }
+
+  const alternativa = await executarDiscover(key, {
+    query: `${segmento}. Empresas localizadas em ${cidade}, Brasil. Inclua negócios relacionados e variações do segmento.`,
+  });
+  tentativas++;
+
+  if (!alternativa.ok) return { ...alternativa, empresas: [] as EmpresaDescoberta[], tentativas, estrategia: "alternativa" };
+  empresas = (alternativa.payload?.data || []).filter((x) => x.domain);
+
+  return { ok: true as const, status: 200, empresas, tentativas, estrategia: empresas.length ? "busca alternativa" : "sem resultados" };
+}
+
 async function buscarEmailDominio(domain: string, key: string) {
   const url = new URL("https://api.hunter.io/v2/domain-search");
   url.searchParams.set("domain", domain);
   url.searchParams.set("limit", "10");
   const r = await hunterFetch(url.toString(), key);
-  if (r.status === 451) return undefined;
-  if (!r.ok) return undefined;
+  if (r.status === 451 || !r.ok) return undefined;
   const json = await r.json() as { data?: { emails?: EmailHunter[] } };
   const emails = (json.data?.emails || []).filter((x) => x.value);
   emails.sort((a, b) => {
@@ -94,22 +200,36 @@ export async function POST(request: Request) {
   const pesquisaHunter = `${segmento} — ${localidade}`;
 
   try {
-    const descoberta = await hunterFetch("https://api.hunter.io/v2/discover", key, {
-      method: "POST",
-      body: JSON.stringify({ query: `${segmento} em ${localidade}, Brasil` }),
-    });
+    const descoberta = await descobrirEmpresas(segmento, localidade, key);
 
     if (!descoberta.ok) {
-      const detalhe = await descoberta.text();
-      console.error("Hunter Discover:", descoberta.status, detalhe.slice(0, 500));
       return NextResponse.json(
-        { error: descoberta.status === 429 ? "Limite da conta Hunter.io atingido." : "A busca no Hunter.io falhou. Verifique a chave e o acesso ao Discover." },
+        {
+          error: descoberta.status === 429
+            ? "Limite da conta Hunter.io atingido."
+            : descoberta.status === 403
+              ? "Sua conta Hunter.io não possui acesso ao Discover."
+              : "A busca no Hunter.io falhou. Verifique a chave e o acesso ao Discover.",
+        },
         { status: 502 }
       );
     }
 
-    const payload = await descoberta.json() as { data?: EmpresaDescoberta[] };
-    const empresas = (payload.data || []).filter((x) => x.domain).slice(0, quantidade);
+    const empresas = descoberta.empresas.slice(0, quantidade);
+
+    if (!empresas.length) {
+      return NextResponse.json({
+        cadastrados: 0,
+        jaExistentes: 0,
+        semEmail: 0,
+        resultados: [],
+        tentativas: descoberta.tentativas,
+        estrategia: descoberta.estrategia,
+        nenhumResultado: true,
+        mensagem: `Nenhuma empresa encontrada para “${segmento}” em ${cidadeDaLocalidade(localidade)} após ${descoberta.tentativas} estratégias de busca. Tente um segmento relacionado ou uma cidade próxima.`,
+      });
+    }
+
     const resultados: Array<Record<string, unknown>> = [];
     let cadastrados = 0;
     let jaExistentes = 0;
@@ -161,7 +281,15 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ cadastrados, jaExistentes, semEmail, resultados });
+    return NextResponse.json({
+      cadastrados,
+      jaExistentes,
+      semEmail,
+      resultados,
+      tentativas: descoberta.tentativas,
+      estrategia: descoberta.estrategia,
+      nenhumResultado: false,
+    });
   } catch (error) {
     console.error("Hunter CRM:", error);
     return NextResponse.json({ error: "Não foi possível concluir a busca do Hunter." }, { status: 500 });
