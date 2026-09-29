@@ -99,7 +99,6 @@ function termosDoSegmento(segmento: string) {
 }
 
 function avaliarAderencia(segmento: string, empresa: EmpresaDescoberta, enriquecida?: EmpresaEnriquecida) {
-  const alvo = normalizar(segmento);
   const termos = termosDoSegmento(segmento).qualificacao.map(normalizar);
   const nomeDominio = normalizar([enriquecida?.name, empresa.organization, empresa.domain].filter(Boolean).join(" "));
   const contexto = normalizar([
@@ -159,13 +158,8 @@ function ehBuscaCondominial(segmento: string) {
 }
 
 function htmlParaTexto(html: string) {
-  const semScripts = html
-    .replace(new RegExp("<script[\\\\s\\\\S]*?</script>", "gi"), " ")
-    .replace(new RegExp("<style[\\\\s\\\\S]*?</style>", "gi"), " ")
-    .replace(new RegExp("<noscript[\\\\s\\\\S]*?</noscript>", "gi"), " ");
-
   return normalizar(
-    semScripts
+    html
       .replace(/<[^>]+>/g, " ")
       .replace(/&nbsp;|&#160;/gi, " ")
       .replace(/&amp;/gi, "&")
