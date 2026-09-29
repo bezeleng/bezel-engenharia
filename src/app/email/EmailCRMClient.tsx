@@ -2,10 +2,12 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import HunterPanel from "./HunterPanel";
 
 type StatusContato = "NOVO" | "CONTATADO" | "RESPONDEU" | "VISITA" | "PROPOSTA" | "NEGOCIACAO" | "CLIENTE" | "ARQUIVADO";
 type Contato = {
-  _id: string; nome: string; email: string; cidade?: string; segmento?: string;
+  _id: string; nome: string; email?: string; cidade?: string; segmento?: string;
+  telefone?: string; whatsapp?: string; site?: string; instagram?: string; origem?: string;
   status: StatusContato; optOut: boolean; ultimoContatoEm?: string;
   proximoFollowUpEm?: string; observacoes?: string;
 };
@@ -137,7 +139,7 @@ function dataLocal(valor?: string) {
 
 export default function EmailCRMClient() {
   const router = useRouter();
-  const [aba, setAba] = useState<"dashboard" | "enviar" | "contatos" | "historico">("dashboard");
+  const [aba, setAba] = useState<"dashboard" | "hunter" | "enviar" | "contatos" | "historico">("dashboard");
   const [dados, setDados] = useState<Dashboard | null>(null);
   const [erroBase, setErroBase] = useState("");
   const [carregandoBase, setCarregandoBase] = useState(true);
@@ -149,6 +151,10 @@ export default function EmailCRMClient() {
   const [enviando, setEnviando] = useState<"teste" | "envio" | null>(null);
   const [resultado, setResultado] = useState("");
   const [busca, setBusca] = useState("");
+  const [filtroSegmento, setFiltroSegmento] = useState("");
+  const [filtroCidade, setFiltroCidade] = useState("");
+  const [filtroOrigem, setFiltroOrigem] = useState("");
+  const [filtroEmail, setFiltroEmail] = useState<"" | "com" | "sem">("");
   const [novo, setNovo] = useState({ nome: "", email: "", cidade: "", segmento: "Geral" });
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const contatosDigitados = useMemo(() => interpretar(destinatarios), [destinatarios]);
@@ -201,7 +207,7 @@ export default function EmailCRMClient() {
         ? "Teste enviado para a caixa configurada da BEZEL."
         : `Concluído: ${json.totalEnviados} enviado(s), ${json.totalFalhas} falha(s), ${json.totalBloqueados || 0} bloqueado(s). Restam ${json.restantesHoje} hoje.`
       );
-      if (!teste) { setDestinatarios(""); await carregar(); }
+      if (!teste) { setDestinatarios(""); setSelecionados([]); await carregar(); }
     } catch {
       setResultado("Erro de comunicação com o servidor.");
     } finally {
@@ -221,14 +227,38 @@ export default function EmailCRMClient() {
     const r = await fetch("/api/prospeccao/contatos", {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...patch }),
     });
-    if (r.ok) await carregar();
+    if (r.ok) {
+      if (patch.optOut === true) setSelecionados((atuais) => atuais.filter((x) => x !== id));
+      await carregar();
+    }
   }
 
-  const filtrados = (dados?.contatos || []).filter((c) =>
-    `${c.nome} ${c.email} ${c.cidade || ""} ${c.segmento || ""}`.toLowerCase().includes(busca.toLowerCase())
-  );
+  async function excluirContato(id: string, nome: string) {
+    if (!window.confirm(`Excluir "${nome || "este contato"}" definitivamente da base?`)) return;
+    const r = await fetch("/api/prospeccao/contatos", {
+      method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
+    });
+    if (r.ok) {
+      setSelecionados((atuais) => atuais.filter((x) => x !== id));
+      await carregar();
+    }
+  }
 
-  const selecionaveisVisiveis = filtrados.filter((c) => !c.optOut);
+  const segmentos = Array.from(new Set((dados?.contatos || []).map((c) => c.segmento).filter(Boolean) as string[])).sort();
+  const cidades = Array.from(new Set((dados?.contatos || []).map((c) => c.cidade).filter(Boolean) as string[])).sort();
+
+  const filtrados = (dados?.contatos || []).filter((c) => {
+    const texto = `${c.nome} ${c.email || ""} ${c.cidade || ""} ${c.segmento || ""} ${c.telefone || ""} ${c.whatsapp || ""}`.toLowerCase();
+    if (!texto.includes(busca.toLowerCase())) return false;
+    if (filtroSegmento && c.segmento !== filtroSegmento) return false;
+    if (filtroCidade && c.cidade !== filtroCidade) return false;
+    if (filtroOrigem && (c.origem || "Manual") !== filtroOrigem) return false;
+    if (filtroEmail === "com" && !c.email) return false;
+    if (filtroEmail === "sem" && c.email) return false;
+    return true;
+  });
+
+  const selecionaveisVisiveis = filtrados.filter((c) => !c.optOut && Boolean(c.email));
   const todosVisiveisSelecionados = selecionaveisVisiveis.length > 0 &&
     selecionaveisVisiveis.every((c) => selecionados.includes(c._id));
 
@@ -257,8 +287,8 @@ export default function EmailCRMClient() {
   }
 
   function prepararEnvioSelecionados() {
-    const contatos = (dados?.contatos || []).filter((c) => selecionados.includes(c._id) && !c.optOut);
-    setDestinatarios(contatos.map((c) => `${c.nome} | ${c.email}`).join("\n"));
+    const contatos = (dados?.contatos || []).filter((c) => selecionados.includes(c._id) && !c.optOut && Boolean(c.email));
+    setDestinatarios(contatos.map((c) => `${c.nome} | ${c.email!}`).join("\n"));
     setResultado("");
     setAba("enviar");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -283,7 +313,7 @@ export default function EmailCRMClient() {
           </div>
           <nav className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:flex-wrap">
             {[
-              ["dashboard","Dashboard"],["enviar","Enviar e-mail"],["contatos","Contatos"],["historico","Histórico"]
+              ["dashboard","Dashboard"],["hunter","Hunter"],["contatos","Contatos"],["enviar","Enviar e-mail"],["historico","Histórico"]
             ].map(([id,label]) => (
               <button key={id} onClick={() => setAba(id as typeof aba)}
                 className={`min-w-0 rounded-lg px-3 py-2.5 text-sm font-semibold sm:px-4 sm:py-2 ${aba === id ? "bg-[#c3a06a] text-[#193451]" : "bg-white/10 text-white"}`}>
@@ -326,6 +356,8 @@ export default function EmailCRMClient() {
             </div>
           </section>
         )}
+
+        {aba === "hunter" && <HunterPanel onAtualizar={carregar} />}
 
         {aba === "enviar" && (
           <form className="mt-6 grid gap-5" onSubmit={(e) => enviar(e, false)}>
@@ -399,18 +431,32 @@ export default function EmailCRMClient() {
                   </button>
                 </div>
               </div>
-              <p className="mb-4 text-xs text-slate-500">Selecione até 20 contatos. Contatos bloqueados não podem ser selecionados.</p>
+              <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <select value={filtroSegmento} onChange={(e) => setFiltroSegmento(e.target.value)} className="rounded-lg border p-2.5 text-sm">
+                  <option value="">Todos os segmentos</option>{segmentos.map((x) => <option key={x} value={x}>{x}</option>)}
+                </select>
+                <select value={filtroCidade} onChange={(e) => setFiltroCidade(e.target.value)} className="rounded-lg border p-2.5 text-sm">
+                  <option value="">Todas as cidades</option>{cidades.map((x) => <option key={x} value={x}>{x}</option>)}
+                </select>
+                <select value={filtroOrigem} onChange={(e) => setFiltroOrigem(e.target.value)} className="rounded-lg border p-2.5 text-sm">
+                  <option value="">Todas as origens</option><option value="Hunter">Hunter</option><option value="Manual">Manual</option>
+                </select>
+                <select value={filtroEmail} onChange={(e) => setFiltroEmail(e.target.value as "" | "com" | "sem")} className="rounded-lg border p-2.5 text-sm">
+                  <option value="">Com e sem e-mail</option><option value="com">Somente com e-mail</option><option value="sem">Somente sem e-mail</option>
+                </select>
+              </div>
+              <p className="mb-4 text-xs text-slate-500">Selecione até 20 contatos com e-mail. Contatos bloqueados ou sem e-mail não podem ser selecionados.</p>
 
               <div className="grid gap-3 md:hidden">
                 {filtrados.map((c) => (
                   <article key={c._id} className={`min-w-0 rounded-xl border p-4 ${selecionados.includes(c._id) ? "border-[#c3a06a] bg-[#fffaf0]" : "border-slate-200"}`}>
                     <div className="flex items-start gap-3">
                       <input type="checkbox" aria-label={`Selecionar ${c.nome}`} checked={selecionados.includes(c._id)}
-                        disabled={c.optOut} onChange={() => alternarContato(c._id)}
+                        disabled={c.optOut || !c.email} onChange={() => alternarContato(c._id)}
                         className="mt-1 h-5 w-5 shrink-0 accent-[#193451] disabled:opacity-40" />
                       <div className="min-w-0">
                         <div className="break-words font-semibold text-[#193451]">{c.nome || "Sem nome"}</div>
-                        <div className="mt-0.5 break-all text-xs text-slate-500">{c.email}</div>
+                        <div className="mt-0.5 break-all text-xs text-slate-500">{c.email || "Sem e-mail"}</div>
                         <div className="mt-1 text-xs text-slate-500">{c.segmento || "Geral"}</div>
                       </div>
                     </div>
@@ -431,6 +477,10 @@ export default function EmailCRMClient() {
                       className={`mt-3 w-full rounded-lg px-3 py-2.5 text-xs font-semibold ${c.optOut ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"}`}>
                       {c.optOut ? "Bloqueado para envio" : "Envio permitido"}
                     </button>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => void atualizar(c._id,{status:"ARQUIVADO"})} className="rounded-lg border px-3 py-2 text-xs font-semibold">Arquivar</button>
+                      <button type="button" onClick={() => void excluirContato(c._id,c.nome)} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">Excluir</button>
+                    </div>
                   </article>
                 ))}
               </div>
@@ -447,8 +497,8 @@ export default function EmailCRMClient() {
                     {filtrados.map((c) => (
                       <tr key={c._id} className={`border-b border-slate-100 ${selecionados.includes(c._id) ? "bg-[#fffaf0]" : ""}`}>
                         <td className="p-3"><input type="checkbox" aria-label={`Selecionar ${c.nome}`} checked={selecionados.includes(c._id)}
-                          disabled={c.optOut} onChange={() => alternarContato(c._id)} className="h-4 w-4 accent-[#193451] disabled:opacity-40" /></td>
-                        <td className="p-3"><div className="font-semibold text-[#193451]">{c.nome || "Sem nome"}</div><div className="text-xs text-slate-500">{c.email}</div><div className="mt-1 text-xs text-slate-400">{c.segmento || "Geral"}</div></td>
+                          disabled={c.optOut || !c.email} onChange={() => alternarContato(c._id)} className="h-4 w-4 accent-[#193451] disabled:opacity-40" /></td>
+                        <td className="p-3"><div className="font-semibold text-[#193451]">{c.nome || "Sem nome"}</div><div className="text-xs text-slate-500">{c.email || "Sem e-mail"}</div><div className="mt-1 text-xs text-slate-400">{c.segmento || "Geral"}</div></td>
                         <td className="p-3">{c.cidade || "—"}</td>
                         <td className="p-3"><select value={c.status} onChange={(e) => void atualizar(c._id,{status:e.target.value})} className="rounded-lg border p-2">
                           {STATUS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -460,7 +510,8 @@ export default function EmailCRMClient() {
                         <td className="p-3"><button type="button" onClick={() => void atualizar(c._id,{optOut:!c.optOut})}
                           className={`rounded-lg px-3 py-2 text-xs font-semibold ${c.optOut ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"}`}>
                           {c.optOut ? "Bloqueado" : "Permitido"}
-                        </button></td>
+                        </button>
+                        <button type="button" onClick={() => void excluirContato(c._id,c.nome)} className="ml-2 text-xs font-semibold text-red-700">Excluir</button></td>
                       </tr>
                     ))}
                   </tbody>
