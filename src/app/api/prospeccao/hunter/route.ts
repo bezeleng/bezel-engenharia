@@ -99,6 +99,7 @@ function termosDoSegmento(segmento: string) {
 }
 
 function avaliarAderencia(segmento: string, empresa: EmpresaDescoberta, enriquecida?: EmpresaEnriquecida) {
+  const alvo = normalizar(segmento);
   const termos = termosDoSegmento(segmento).qualificacao.map(normalizar);
   const nomeDominio = normalizar([enriquecida?.name, empresa.organization, empresa.domain].filter(Boolean).join(" "));
   const contexto = normalizar([
@@ -110,12 +111,43 @@ function avaliarAderencia(segmento: string, empresa: EmpresaDescoberta, enriquec
     enriquecida?.description,
   ].filter(Boolean).join(" "));
 
+  // Administração condominial exige evidência explícita da ATIVIDADE.
+  // Menções genéricas a "condomínio" não bastam: imobiliárias, engenharia,
+  // segurança, paisagismo e hotéis podem citar condomínios sem administrá-los.
+  const buscaCondominial = ["condominio", "condominial", "sindico"].some((x) => alvo.includes(x));
+  if (buscaCondominial) {
+    const nomeEspecialista = [
+      "administradora de condominio", "administracao de condominio", "administracao condominial",
+      "gestao condominial", "gestao de condominio", "condominios", "condominial",
+      "sindico", "sindicancia", "property management",
+    ].filter((termo) => nomeDominio.includes(termo));
+
+    const atividadeExplicita = [
+      "administracao de condominios", "administracao de condominio", "administracao condominial",
+      "administradora de condominios", "gestao de condominios", "gestao de condominio",
+      "gestao condominial", "gerenciamento de condominios", "gerenciamento condominial",
+      "servicos condominiais", "sindicancia profissional", "sindico profissional",
+      "condominium management", "property management",
+    ].filter((termo) => contexto.includes(termo));
+
+    const aprovado = nomeEspecialista.length > 0 || atividadeExplicita.length > 0;
+    return {
+      aprovado,
+      pontuacao: nomeEspecialista.length * 5 + atividadeExplicita.length * 4,
+      evidencias: [...new Set([...nomeEspecialista, ...atividadeExplicita])].slice(0, 5),
+    };
+  }
+
+  // Para os demais segmentos, nome/domínio é evidência forte. Quando a
+  // evidência aparece apenas no perfil da empresa, exigimos mais de um sinal
+  // para evitar que uma menção incidental classifique o lead no segmento.
   const evidenciasFortes = termos.filter((termo) => nomeDominio.includes(termo));
   const evidenciasContexto = termos.filter((termo) => contexto.includes(termo));
   const pontuacao = evidenciasFortes.length * 3 + evidenciasContexto.length;
+  const aprovado = evidenciasFortes.length > 0 || evidenciasContexto.length >= 2;
 
   return {
-    aprovado: pontuacao >= 1,
+    aprovado,
     pontuacao,
     evidencias: [...new Set([...evidenciasFortes, ...evidenciasContexto])].slice(0, 5),
   };
