@@ -114,7 +114,7 @@ function avaliarAderencia(segmento: string, empresa: EmpresaDescoberta, enriquec
   // Administração condominial exige evidência explícita da ATIVIDADE.
   // Menções genéricas a "condomínio" não bastam: imobiliárias, engenharia,
   // segurança, paisagismo e hotéis podem citar condomínios sem administrá-los.
-  const buscaCondominial = ["condominio", "condominial", "sindico"].some((x) => alvo.includes(x));
+  const buscaCondominial = ehBuscaCondominial(segmento);
   if (buscaCondominial) {
     const nomeEspecialista = [
       "administradora de condominio", "administracao de condominio", "administracao condominial",
@@ -150,6 +150,107 @@ function avaliarAderencia(segmento: string, empresa: EmpresaDescoberta, enriquec
     aprovado,
     pontuacao,
     evidencias: [...new Set([...evidenciasFortes, ...evidenciasContexto])].slice(0, 5),
+  };
+}
+
+function ehBuscaCondominial(segmento: string) {
+  const alvo = normalizar(segmento);
+  return ["condominio", "condominial", "sindico"].some((x) => alvo.includes(x));
+}
+
+function htmlParaTexto(html: string) {
+  return normalizar(
+    html
+      .replace(/<script[\\s\\S]*?<\\/script>/gi, " ")
+      .replace(/<style[\\s\\S]*?<\\/style>/gi, " ")
+      .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;|&#160;/gi, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&#39;|&apos;/gi, "'")
+      .replace(/&quot;/gi, '"')
+      .replace(/\\s+/g, " ")
+  );
+}
+
+function linksInternosRelevantes(html: string, base: URL) {
+  const encontrados: string[] = [];
+  const re = /href=["']([^"'#]+)["']/gi;
+  const palavras = ["condomin", "sindico", "servico", "administr", "gestao", "quem-somos", "sobre"];
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(html)) && encontrados.length < 3) {
+    try {
+      const url = new URL(match[1], base);
+      const mesmoHost = url.hostname === base.hostname || url.hostname === `www.${base.hostname}` || `www.${url.hostname}` === base.hostname;
+      if (url.protocol !== "https:" || !mesmoHost) continue;
+      const alvo = normalizar(url.pathname);
+      if (palavras.some((p) => alvo.includes(p)) && !encontrados.includes(url.toString())) encontrados.push(url.toString());
+    } catch {
+      // link inválido: ignora
+    }
+  }
+  return encontrados;
+}
+
+async function baixarPaginaPublica(url: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 4500);
+  try {
+    const r = await fetch(url, {
+      cache: "no-store",
+      redirect: "follow",
+      signal: controller.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; BEZEL-CRM/1.0)" },
+    });
+    if (!r.ok) return undefined;
+    const tipo = r.headers.get("content-type") || "";
+    if (!tipo.includes("text/html")) return undefined;
+    return (await r.text()).slice(0, 700_000);
+  } catch {
+    return undefined;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function validarAtividadeCondominialNoSite(domain: string) {
+  // Falha fechada: se não houver evidência pública no site, não cadastra como
+  // administradora. Isso privilegia precisão em vez de completar a quantidade.
+  if (!/^[a-z0-9.-]+$/i.test(domain) || domain.includes("..") || domain === "localhost") {
+    return { aprovado: false, evidencias: [] as string[] };
+  }
+
+  const base = new URL(`https://${domain}/`);
+  const home = await baixarPaginaPublica(base.toString());
+  if (!home) return { aprovado: false, evidencias: [] as string[] };
+
+  const paginas = [home];
+  const links = linksInternosRelevantes(home, base);
+  for (const link of links) {
+    const html = await baixarPaginaPublica(link);
+    if (html) paginas.push(html);
+  }
+
+  const texto = htmlParaTexto(paginas.join(" "));
+  const frasesFortes = [
+    "administracao de condominios", "administracao de condominio", "administracao condominial",
+    "administradora de condominios", "administradora condominial", "gestao de condominios",
+    "gestao de condominio", "gestao condominial", "gerenciamento de condominios",
+    "gerenciamento condominial", "sindico profissional", "sindicancia profissional",
+    "condominium management",
+  ];
+  const evidenciasFortes = frasesFortes.filter((x) => texto.includes(x));
+
+  const sinaisOperacionais = [
+    "prestacao de contas", "assembleia", "rateio", "boleto", "taxa condominial",
+    "gestao financeira", "gestao administrativa", "apoio ao sindico", "corpo diretivo",
+    "condominio residencial", "condominio comercial",
+  ].filter((x) => texto.includes(x));
+
+  const aprovado = evidenciasFortes.length > 0 || (texto.includes("condomin") && sinaisOperacionais.length >= 3);
+  return {
+    aprovado,
+    evidencias: [...new Set([...evidenciasFortes, ...sinaisOperacionais])].slice(0, 6),
   };
 }
 
@@ -328,8 +429,14 @@ export async function POST(request: Request) {
       const enriquecida = await enriquecerEmpresa(dominio, key);
       const aderencia = avaliarAderencia(segmento, empresa, enriquecida);
       const localOk = cidadeCompativel(localidade, enriquecida);
+      const validacaoSite = ehBuscaCondominial(segmento)
+        ? await validarAtividadeCondominialNoSite(dominio)
+        : undefined;
 
-      if (!aderencia.aprovado || !localOk) {
+      // Para administração condominial, os metadados do Hunter servem apenas
+      // para descoberta. A aprovação final exige evidência no site da empresa.
+      const atividadeOk = validacaoSite ? validacaoSite.aprovado : aderencia.aprovado;
+      if (!atividadeOk || !localOk) {
         descartados++;
         continue;
       }
@@ -373,7 +480,7 @@ export async function POST(request: Request) {
         site,
         instagram,
         aderencia: aderencia.pontuacao,
-        evidencias: aderencia.evidencias,
+        evidencias: validacaoSite?.evidencias || aderencia.evidencias,
         motivo: !email ? "Empresa qualificada, mas nenhum e-mail profissional foi encontrado." : undefined,
       });
     }
