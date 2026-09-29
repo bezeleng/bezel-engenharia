@@ -2,10 +2,12 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import HunterPanel from "./HunterPanel";
 
 type StatusContato = "NOVO" | "CONTATADO" | "RESPONDEU" | "VISITA" | "PROPOSTA" | "NEGOCIACAO" | "CLIENTE" | "ARQUIVADO";
 type Contato = {
-  _id: string; nome: string; email: string; cidade?: string; segmento?: string;
+  _id: string; nome: string; email?: string; cidade?: string; segmento?: string;
+  telefone?: string; whatsapp?: string; site?: string; instagram?: string; origem?: string;
   status: StatusContato; optOut: boolean; ultimoContatoEm?: string;
   proximoFollowUpEm?: string; observacoes?: string;
 };
@@ -29,7 +31,32 @@ const STATUS: Array<{ value: StatusContato; label: string }> = [
   { value: "CLIENTE", label: "Cliente" }, { value: "ARQUIVADO", label: "Arquivado" },
 ];
 
-const MENSAGEM_PADRAO = `Prezados(as), bom dia.
+const TEMPLATES = {
+  geral: {
+    label: "Prospecção geral",
+    assunto: "BEZEL — Engenharia, Arquitetura e Gestão de Obras",
+    mensagem: `Olá, {{nome}}.
+
+Meu nome é Diego e falo em nome da BEZEL Engenharia, Arquitetura e Gestão de Obras.
+
+Atuamos em Jacareí, São José dos Campos e região com construção, reformas, manutenção predial, mão de obra especializada e gerenciamento de obras.
+
+Estamos ampliando nossa rede de contatos e gostaríamos de nos colocar à disposição para futuras demandas, parcerias ou oportunidades em que a BEZEL possa contribuir.
+
+Podemos apoiar desde o levantamento inicial e planejamento até a execução e acompanhamento da obra, com organização de equipes, materiais, etapas, custos e cronograma.
+
+Se fizer sentido, fico à disposição para uma conversa ou visita técnica sem compromisso.
+
+Atenciosamente,
+BEZEL | Engenharia • Arquitetura • Gestão de Obras
+(12) 99183-6206
+@grupobezel
+bezel.com.br`,
+  },
+  escolas: {
+    label: "Escolas",
+    assunto: "Aos cuidados da Administração/Direção — manutenção predial para o recesso escolar",
+    mensagem: `Prezados(as), bom dia.
 
 Meu nome é Diego e falo em nome da BEZEL Engenharia, Arquitetura e Gestão de Obras.
 
@@ -41,9 +68,7 @@ Entre os serviços que podemos atender estão pintura interna e externa, recuper
 
 A BEZEL também realiza o planejamento e gerenciamento da execução, coordenando equipes, materiais, etapas e cronograma.
 
-Gostaríamos de nos colocar à disposição da {{nome}} para uma visita técnica sem compromisso, a fim de conhecer as necessidades atuais ou eventuais manutenções previstas para o próximo recesso e, havendo interesse, apresentar uma proposta.
-
-Caso este assunto seja tratado por outro responsável, poderiam, por gentileza, encaminhar este e-mail à Direção, Administração ou ao setor responsável pela manutenção predial e contratação de obras da instituição?
+Gostaríamos de nos colocar à disposição da {{nome}} para uma visita técnica sem compromisso.
 
 Agradeço pela atenção e fico à disposição.
 
@@ -51,7 +76,50 @@ Atenciosamente,
 BEZEL | Engenharia • Arquitetura • Gestão de Obras
 (12) 99183-6206
 @grupobezel
-bezel.com.br`;
+bezel.com.br`,
+  },
+  parceiros: {
+    label: "Arquitetos e engenheiros",
+    assunto: "BEZEL — parceria para execução e gestão de obras",
+    mensagem: `Olá, {{nome}}.
+
+Meu nome é Diego e falo em nome da BEZEL Engenharia, Arquitetura e Gestão de Obras.
+
+Estamos ampliando nossa rede de parceiros na região e gostaria de apresentar a BEZEL como apoio para execução, gerenciamento e acompanhamento de obras.
+
+Atendemos construção e reformas, mão de obra especializada e diferentes sistemas construtivos, sempre buscando preservar o projeto, o padrão de acabamento e a comunicação com o profissional responsável.
+
+Caso tenha projetos entrando em fase de orçamento ou execução, ficamos à disposição para conversar e avaliar uma possível parceria.
+
+Atenciosamente,
+BEZEL | Engenharia • Arquitetura • Gestão de Obras
+(12) 99183-6206
+@grupobezel
+bezel.com.br`,
+  },
+  empresas: {
+    label: "Empresas / comercial",
+    assunto: "BEZEL — manutenção, reformas e gestão de obras",
+    mensagem: `Olá, {{nome}}.
+
+Meu nome é Diego e falo em nome da BEZEL Engenharia, Arquitetura e Gestão de Obras.
+
+Atendemos empresas e imóveis comerciais com reformas, manutenção predial, pintura, impermeabilização, coberturas, pisos e revestimentos, elétrica, hidráulica e adequações de ambientes.
+
+Também podemos assumir o planejamento e gerenciamento da execução, coordenando equipes, materiais, etapas e cronograma para reduzir impactos na operação do cliente.
+
+Gostaríamos de deixar a BEZEL à disposição para demandas atuais ou futuras. Se houver alguma necessidade, podemos realizar uma visita técnica sem compromisso.
+
+Atenciosamente,
+BEZEL | Engenharia • Arquitetura • Gestão de Obras
+(12) 99183-6206
+@grupobezel
+bezel.com.br`,
+  },
+} as const;
+
+type TemplateKey = keyof typeof TEMPLATES;
+
 
 function interpretar(valor: string) {
   return valor.split(/\r?\n/).map((x) => x.trim()).filter(Boolean).map((linha) => {
@@ -71,18 +139,24 @@ function dataLocal(valor?: string) {
 
 export default function EmailCRMClient() {
   const router = useRouter();
-  const [aba, setAba] = useState<"dashboard" | "enviar" | "contatos" | "historico">("dashboard");
+  const [aba, setAba] = useState<"dashboard" | "hunter" | "enviar" | "contatos" | "historico">("dashboard");
   const [dados, setDados] = useState<Dashboard | null>(null);
   const [erroBase, setErroBase] = useState("");
   const [carregandoBase, setCarregandoBase] = useState(true);
   const [destinatarios, setDestinatarios] = useState("");
-  const [assunto, setAssunto] = useState("Aos cuidados da Administração/Direção — manutenção predial para o recesso escolar");
-  const [mensagem, setMensagem] = useState(MENSAGEM_PADRAO);
+  const [template, setTemplate] = useState<TemplateKey>("geral");
+  const [assunto, setAssunto] = useState<string>(TEMPLATES.geral.assunto);
+  const [mensagem, setMensagem] = useState<string>(TEMPLATES.geral.mensagem);
   const [confirmacao, setConfirmacao] = useState(false);
   const [enviando, setEnviando] = useState<"teste" | "envio" | null>(null);
   const [resultado, setResultado] = useState("");
   const [busca, setBusca] = useState("");
-  const [novo, setNovo] = useState({ nome: "", email: "", cidade: "", segmento: "Escola" });
+  const [filtroSegmento, setFiltroSegmento] = useState("");
+  const [filtroCidade, setFiltroCidade] = useState("");
+  const [filtroOrigem, setFiltroOrigem] = useState("");
+  const [filtroEmail, setFiltroEmail] = useState<"" | "com" | "sem">("");
+  const [novo, setNovo] = useState({ nome: "", email: "", cidade: "", segmento: "Geral" });
+  const [selecionados, setSelecionados] = useState<string[]>([]);
   const contatosDigitados = useMemo(() => interpretar(destinatarios), [destinatarios]);
 
   async function carregar() {
@@ -122,7 +196,7 @@ export default function EmailCRMClient() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           assunto, mensagem,
-          contatos: teste ? [{ nome: "Instituição de teste", email: "teste@bezel.com.br" }] : contatosDigitados,
+          contatos: teste ? [{ nome: "Contato de teste", email: "teste@bezel.com.br" }] : contatosDigitados,
           teste, confirmacao,
         }),
       });
@@ -133,7 +207,7 @@ export default function EmailCRMClient() {
         ? "Teste enviado para a caixa configurada da BEZEL."
         : `Concluído: ${json.totalEnviados} enviado(s), ${json.totalFalhas} falha(s), ${json.totalBloqueados || 0} bloqueado(s). Restam ${json.restantesHoje} hoje.`
       );
-      if (!teste) { setDestinatarios(""); await carregar(); }
+      if (!teste) { setDestinatarios(""); setSelecionados([]); await carregar(); }
     } catch {
       setResultado("Erro de comunicação com o servidor.");
     } finally {
@@ -146,19 +220,85 @@ export default function EmailCRMClient() {
     const r = await fetch("/api/prospeccao/contatos", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(novo),
     });
-    if (r.ok) { setNovo({ nome: "", email: "", cidade: "", segmento: "Escola" }); await carregar(); }
+    if (r.ok) { setNovo({ nome: "", email: "", cidade: "", segmento: "Geral" }); await carregar(); }
   }
 
   async function atualizar(id: string, patch: Record<string, unknown>) {
     const r = await fetch("/api/prospeccao/contatos", {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...patch }),
     });
-    if (r.ok) await carregar();
+    if (r.ok) {
+      if (patch.optOut === true) setSelecionados((atuais) => atuais.filter((x) => x !== id));
+      await carregar();
+    }
   }
 
-  const filtrados = (dados?.contatos || []).filter((c) =>
-    `${c.nome} ${c.email} ${c.cidade || ""}`.toLowerCase().includes(busca.toLowerCase())
-  );
+  async function excluirContato(id: string, nome: string) {
+    if (!window.confirm(`Excluir "${nome || "este contato"}" definitivamente da base?`)) return;
+    const r = await fetch("/api/prospeccao/contatos", {
+      method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
+    });
+    if (r.ok) {
+      setSelecionados((atuais) => atuais.filter((x) => x !== id));
+      await carregar();
+    }
+  }
+
+  const segmentos = Array.from(new Set((dados?.contatos || []).map((c) => c.segmento).filter(Boolean) as string[])).sort();
+  const cidades = Array.from(new Set((dados?.contatos || []).map((c) => c.cidade).filter(Boolean) as string[])).sort();
+
+  const filtrados = (dados?.contatos || []).filter((c) => {
+    const texto = `${c.nome} ${c.email || ""} ${c.cidade || ""} ${c.segmento || ""} ${c.telefone || ""} ${c.whatsapp || ""}`.toLowerCase();
+    if (!texto.includes(busca.toLowerCase())) return false;
+    if (filtroSegmento && c.segmento !== filtroSegmento) return false;
+    if (filtroCidade && c.cidade !== filtroCidade) return false;
+    if (filtroOrigem && (c.origem || "Manual") !== filtroOrigem) return false;
+    if (filtroEmail === "com" && !c.email) return false;
+    if (filtroEmail === "sem" && c.email) return false;
+    return true;
+  });
+
+  const selecionaveisVisiveis = filtrados.filter((c) => !c.optOut && Boolean(c.email));
+  const todosVisiveisSelecionados = selecionaveisVisiveis.length > 0 &&
+    selecionaveisVisiveis.every((c) => selecionados.includes(c._id));
+
+  function alternarContato(id: string) {
+    setSelecionados((atuais) => {
+      if (atuais.includes(id)) return atuais.filter((x) => x !== id);
+      if (atuais.length >= 20) return atuais;
+      return [...atuais, id];
+    });
+  }
+
+  function alternarTodosVisiveis() {
+    if (todosVisiveisSelecionados) {
+      const idsVisiveis = new Set(selecionaveisVisiveis.map((c) => c._id));
+      setSelecionados((atuais) => atuais.filter((id) => !idsVisiveis.has(id)));
+      return;
+    }
+    setSelecionados((atuais) => {
+      const novos = [...atuais];
+      for (const contato of selecionaveisVisiveis) {
+        if (novos.length >= 20) break;
+        if (!novos.includes(contato._id)) novos.push(contato._id);
+      }
+      return novos;
+    });
+  }
+
+  function prepararEnvioSelecionados() {
+    const contatos = (dados?.contatos || []).filter((c) => selecionados.includes(c._id) && !c.optOut && Boolean(c.email));
+    setDestinatarios(contatos.map((c) => `${c.nome} | ${c.email!}`).join("\n"));
+    setResultado("");
+    setAba("enviar");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function aplicarTemplate(chave: TemplateKey) {
+    setTemplate(chave);
+    setAssunto(TEMPLATES[chave].assunto);
+    setMensagem(TEMPLATES[chave].mensagem);
+  }
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f5f2ed] px-3 py-4 text-[#1c1c1c] sm:px-4 sm:py-8">
@@ -173,7 +313,7 @@ export default function EmailCRMClient() {
           </div>
           <nav className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:flex-wrap">
             {[
-              ["dashboard","Dashboard"],["enviar","Enviar e-mail"],["contatos","Contatos"],["historico","Histórico"]
+              ["dashboard","Dashboard"],["hunter","Hunter"],["contatos","Contatos"],["enviar","Enviar e-mail"],["historico","Histórico"]
             ].map(([id,label]) => (
               <button key={id} onClick={() => setAba(id as typeof aba)}
                 className={`min-w-0 rounded-lg px-3 py-2.5 text-sm font-semibold sm:px-4 sm:py-2 ${aba === id ? "bg-[#c3a06a] text-[#193451]" : "bg-white/10 text-white"}`}>
@@ -217,13 +357,15 @@ export default function EmailCRMClient() {
           </section>
         )}
 
+        {aba === "hunter" && <HunterPanel onAtualizar={carregar} />}
+
         {aba === "enviar" && (
           <form className="mt-6 grid gap-5" onSubmit={(e) => enviar(e, false)}>
             <section className="rounded-2xl bg-white p-6 shadow-sm">
               <div className="flex justify-between gap-3">
                 <div>
                   <label className="text-sm font-semibold text-[#193451]">Destinatários</label>
-                  <p className="mt-1 text-xs text-slate-500">Um por linha: Instituição | email@dominio.com</p>
+                  <p className="mt-1 text-xs text-slate-500">Um por linha: Nome ou empresa | email@dominio.com</p>
                 </div>
                 <span className="text-sm font-semibold text-[#193451]">{contatosDigitados.length}/20</span>
               </div>
@@ -231,7 +373,13 @@ export default function EmailCRMClient() {
                 className="mt-3 w-full rounded-xl border border-slate-300 px-4 py-3 font-mono text-sm outline-none focus:border-[#c3a06a]" />
             </section>
             <section className="rounded-2xl bg-white p-6 shadow-sm">
-              <label className="text-sm font-semibold text-[#193451]">Assunto</label>
+              <label className="text-sm font-semibold text-[#193451]">Modelo de mensagem</label>
+              <select value={template} onChange={(e) => aplicarTemplate(e.target.value as TemplateKey)}
+                className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#c3a06a]">
+                {Object.entries(TEMPLATES).map(([key, item]) => <option key={key} value={key}>{item.label}</option>)}
+              </select>
+              <p className="mt-2 text-xs text-slate-500">O modelo preenche assunto e mensagem; você pode editar tudo antes de enviar.</p>
+              <label className="mt-5 block text-sm font-semibold text-[#193451]">Assunto</label>
               <input value={assunto} onChange={(e) => setAssunto(e.target.value)} maxLength={180}
                 className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#c3a06a]" />
               <label className="mt-5 block text-sm font-semibold text-[#193451]">Mensagem</label>
@@ -242,7 +390,7 @@ export default function EmailCRMClient() {
             <section className="rounded-2xl bg-white p-6 shadow-sm">
               <label className="flex gap-3 text-sm text-slate-700">
                 <input type="checkbox" checked={confirmacao} onChange={(e) => setConfirmacao(e.target.checked)} className="mt-1 accent-[#193451]" />
-                <span>Confirmo que são contatos institucionais selecionados para prospecção comercial da BEZEL.</span>
+                <span>Confirmo que estes contatos foram selecionados para prospecção comercial ou relacionamento profissional da BEZEL.</span>
               </label>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button type="button" disabled={!!enviando || !confirmacao} onClick={(e) => void enviar(e as unknown as FormEvent, true)}
@@ -262,21 +410,59 @@ export default function EmailCRMClient() {
         {aba === "contatos" && (
           <section className="mt-6 grid min-w-0 gap-5">
             <form onSubmit={criarContato} className="grid min-w-0 gap-3 rounded-2xl bg-white p-4 shadow-sm sm:p-5 md:grid-cols-5">
-              <input required placeholder="Instituição" value={novo.nome} onChange={(e) => setNovo({...novo,nome:e.target.value})} className="rounded-lg border p-3 text-sm" />
+              <input required placeholder="Nome / empresa" value={novo.nome} onChange={(e) => setNovo({...novo,nome:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <input required type="email" placeholder="E-mail" value={novo.email} onChange={(e) => setNovo({...novo,email:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <input placeholder="Cidade" value={novo.cidade} onChange={(e) => setNovo({...novo,cidade:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <input placeholder="Segmento" value={novo.segmento} onChange={(e) => setNovo({...novo,segmento:e.target.value})} className="rounded-lg border p-3 text-sm" />
               <button className="rounded-lg bg-[#193451] px-4 py-3 text-sm font-semibold text-white">Adicionar contato</button>
             </form>
             <div className="min-w-0 rounded-2xl bg-white p-4 shadow-sm sm:p-5">
-              <input placeholder="Buscar contato..." value={busca} onChange={(e) => setBusca(e.target.value)}
-                className="mb-4 w-full min-w-0 rounded-lg border p-3 text-sm md:max-w-sm" />
+              <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <input placeholder="Buscar por nome, e-mail, cidade ou segmento..." value={busca} onChange={(e) => setBusca(e.target.value)}
+                  className="w-full min-w-0 rounded-lg border p-3 text-sm lg:max-w-md" />
+                <div className="flex flex-wrap items-center gap-2">
+                  <button type="button" onClick={alternarTodosVisiveis}
+                    className="rounded-lg border border-[#193451] px-3 py-2 text-xs font-semibold text-[#193451]">
+                    {todosVisiveisSelecionados ? "Desmarcar visíveis" : "Selecionar visíveis"}
+                  </button>
+                  <button type="button" disabled={selecionados.length === 0} onClick={prepararEnvioSelecionados}
+                    className="rounded-lg bg-[#193451] px-4 py-2 text-xs font-semibold text-white disabled:opacity-40">
+                    Enviar e-mail para selecionados ({selecionados.length})
+                  </button>
+                </div>
+              </div>
+              <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <select value={filtroSegmento} onChange={(e) => setFiltroSegmento(e.target.value)} className="rounded-lg border p-2.5 text-sm">
+                  <option value="">Todos os segmentos</option>{segmentos.map((x) => <option key={x} value={x}>{x}</option>)}
+                </select>
+                <select value={filtroCidade} onChange={(e) => setFiltroCidade(e.target.value)} className="rounded-lg border p-2.5 text-sm">
+                  <option value="">Todas as cidades</option>{cidades.map((x) => <option key={x} value={x}>{x}</option>)}
+                </select>
+                <select value={filtroOrigem} onChange={(e) => setFiltroOrigem(e.target.value)} className="rounded-lg border p-2.5 text-sm">
+                  <option value="">Todas as origens</option><option value="Hunter">Hunter</option><option value="Manual">Manual</option>
+                </select>
+                <select value={filtroEmail} onChange={(e) => setFiltroEmail(e.target.value as "" | "com" | "sem")} className="rounded-lg border p-2.5 text-sm">
+                  <option value="">Com e sem e-mail</option><option value="com">Somente com e-mail</option><option value="sem">Somente sem e-mail</option>
+                </select>
+              </div>
+              <p className="mb-4 text-xs text-slate-500">Selecione até 20 contatos com e-mail. Contatos bloqueados ou sem e-mail não podem ser selecionados.</p>
 
               <div className="grid gap-3 md:hidden">
                 {filtrados.map((c) => (
-                  <article key={c._id} className="min-w-0 rounded-xl border border-slate-200 p-4">
-                    <div className="break-words font-semibold text-[#193451]">{c.nome || "Sem nome"}</div>
-                    <div className="mt-0.5 break-all text-xs text-slate-500">{c.email}</div>
+                  <article key={c._id} className={`min-w-0 rounded-xl border p-4 ${selecionados.includes(c._id) ? "border-[#c3a06a] bg-[#fffaf0]" : "border-slate-200"}`}>
+                    <div className="flex items-start gap-3">
+                      <input type="checkbox" aria-label={`Selecionar ${c.nome}`} checked={selecionados.includes(c._id)}
+                        disabled={c.optOut || !c.email} onChange={() => alternarContato(c._id)}
+                        className="mt-1 h-5 w-5 shrink-0 accent-[#193451] disabled:opacity-40" />
+                      <div className="min-w-0">
+                        <div className="break-words font-semibold text-[#193451]">{c.nome || "Sem nome"}</div>
+                        <div className="mt-0.5 break-all text-xs text-slate-500">{c.email || "Sem e-mail"}</div>
+                        <div className="mt-1 text-xs text-slate-500">{c.segmento || "Geral"} · {c.origem || "Manual"}</div>
+                        {c.telefone && <div className="mt-1 text-xs text-slate-500">Tel.: {c.telefone}</div>}
+                        {c.whatsapp && <div className="mt-1 text-xs text-slate-500">WhatsApp: {c.whatsapp}</div>}
+                        {c.site && <a href={c.site} target="_blank" rel="noreferrer" className="mt-1 block break-all text-xs font-semibold text-[#193451] underline">Abrir site</a>}
+                      </div>
+                    </div>
                     <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
                       <div><span className="block text-slate-500">Cidade</span><span>{c.cidade || "—"}</span></div>
                       <div><span className="block text-slate-500">Último contato</span><span>{dataLocal(c.ultimoContatoEm)}</span></div>
@@ -294,6 +480,10 @@ export default function EmailCRMClient() {
                       className={`mt-3 w-full rounded-lg px-3 py-2.5 text-xs font-semibold ${c.optOut ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"}`}>
                       {c.optOut ? "Bloqueado para envio" : "Envio permitido"}
                     </button>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => void atualizar(c._id,{status:"ARQUIVADO"})} className="rounded-lg border px-3 py-2 text-xs font-semibold">Arquivar</button>
+                      <button type="button" onClick={() => void excluirContato(c._id,c.nome)} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">Excluir</button>
+                    </div>
                   </article>
                 ))}
               </div>
@@ -301,13 +491,17 @@ export default function EmailCRMClient() {
               <div className="hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[900px] text-left text-sm">
                   <thead><tr className="border-b text-xs uppercase text-slate-500">
+                    <th className="p-3"><input type="checkbox" aria-label="Selecionar contatos visíveis" checked={todosVisiveisSelecionados}
+                      onChange={alternarTodosVisiveis} className="h-4 w-4 accent-[#193451]" /></th>
                     <th className="p-3">Contato</th><th className="p-3">Cidade</th><th className="p-3">Status</th>
                     <th className="p-3">Último contato</th><th className="p-3">Follow-up</th><th className="p-3">Envio</th>
                   </tr></thead>
                   <tbody>
                     {filtrados.map((c) => (
-                      <tr key={c._id} className="border-b border-slate-100">
-                        <td className="p-3"><div className="font-semibold text-[#193451]">{c.nome || "Sem nome"}</div><div className="text-xs text-slate-500">{c.email}</div></td>
+                      <tr key={c._id} className={`border-b border-slate-100 ${selecionados.includes(c._id) ? "bg-[#fffaf0]" : ""}`}>
+                        <td className="p-3"><input type="checkbox" aria-label={`Selecionar ${c.nome}`} checked={selecionados.includes(c._id)}
+                          disabled={c.optOut || !c.email} onChange={() => alternarContato(c._id)} className="h-4 w-4 accent-[#193451] disabled:opacity-40" /></td>
+                        <td className="p-3"><div className="font-semibold text-[#193451]">{c.nome || "Sem nome"}</div><div className="text-xs text-slate-500">{c.email || "Sem e-mail"}</div><div className="mt-1 text-xs text-slate-400">{c.segmento || "Geral"} · {c.origem || "Manual"}</div>{c.telefone && <div className="mt-1 text-xs text-slate-400">Tel.: {c.telefone}</div>}{c.site && <a href={c.site} target="_blank" rel="noreferrer" className="mt-1 block text-xs font-semibold text-[#193451] underline">Site</a>}</td>
                         <td className="p-3">{c.cidade || "—"}</td>
                         <td className="p-3"><select value={c.status} onChange={(e) => void atualizar(c._id,{status:e.target.value})} className="rounded-lg border p-2">
                           {STATUS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -319,7 +513,8 @@ export default function EmailCRMClient() {
                         <td className="p-3"><button type="button" onClick={() => void atualizar(c._id,{optOut:!c.optOut})}
                           className={`rounded-lg px-3 py-2 text-xs font-semibold ${c.optOut ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"}`}>
                           {c.optOut ? "Bloqueado" : "Permitido"}
-                        </button></td>
+                        </button>
+                        <button type="button" onClick={() => void excluirContato(c._id,c.nome)} className="ml-2 text-xs font-semibold text-red-700">Excluir</button></td>
                       </tr>
                     ))}
                   </tbody>
