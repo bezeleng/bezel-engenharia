@@ -6,9 +6,18 @@ export const prospeccaoContato = defineType({
   type: "document",
   fields: [
     defineField({ name: "nome", title: "Nome / Empresa / Instituição", type: "string" }),
-    defineField({ name: "email", title: "E-mail", type: "string", validation: (r) => r.required() }),
+    defineField({ name: "email", title: "E-mail", type: "string" }),
     defineField({ name: "cidade", title: "Cidade", type: "string" }),
     defineField({ name: "segmento", title: "Segmento", type: "string" }),
+    defineField({ name: "telefone", title: "Telefone", type: "string" }),
+    defineField({ name: "whatsapp", title: "WhatsApp confirmado", type: "string" }),
+    defineField({ name: "site", title: "Site", type: "url" }),
+    defineField({ name: "instagram", title: "Instagram", type: "url" }),
+    defineField({ name: "origem", title: "Origem", type: "string" }),
+    defineField({ name: "pesquisaHunter", title: "Pesquisa Hunter", type: "string" }),
+    defineField({ name: "fonteUrl", title: "Fonte", type: "string" }),
+    defineField({ name: "dominio", title: "Domínio", type: "string" }),
+    defineField({ name: "encontradoEm", title: "Encontrado em", type: "datetime" }),
     defineField({
       name: "status", title: "Status", type: "string", initialValue: "NOVO",
       options: { list: [
