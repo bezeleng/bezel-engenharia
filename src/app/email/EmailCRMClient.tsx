@@ -143,8 +143,8 @@ export default function EmailCRMClient() {
   const [carregandoBase, setCarregandoBase] = useState(true);
   const [destinatarios, setDestinatarios] = useState("");
   const [template, setTemplate] = useState<TemplateKey>("geral");
-  const [assunto, setAssunto] = useState(TEMPLATES.geral.assunto);
-  const [mensagem, setMensagem] = useState(TEMPLATES.geral.mensagem);
+  const [assunto, setAssunto] = useState<string>(TEMPLATES.geral.assunto);
+  const [mensagem, setMensagem] = useState<string>(TEMPLATES.geral.mensagem);
   const [confirmacao, setConfirmacao] = useState(false);
   const [enviando, setEnviando] = useState<"teste" | "envio" | null>(null);
   const [resultado, setResultado] = useState("");
@@ -190,7 +190,7 @@ export default function EmailCRMClient() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           assunto, mensagem,
-          contatos: teste ? [{ nome: "Instituição de teste", email: "teste@bezel.com.br" }] : contatosDigitados,
+          contatos: teste ? [{ nome: "Contato de teste", email: "teste@bezel.com.br" }] : contatosDigitados,
           teste, confirmacao,
         }),
       });
