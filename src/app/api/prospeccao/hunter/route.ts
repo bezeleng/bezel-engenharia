@@ -440,7 +440,9 @@ async function descobrirEmpresasGoogle(segmento: string, localidade: string, hun
         } satisfies EmpresaDescoberta;
       })
     );
-    empresas.push(...resolvidas.filter((x): x is EmpresaDescoberta => Boolean(x?.domain)));
+    for (const resolvida of resolvidas) {
+      if (resolvida?.domain) empresas.push(resolvida);
+    }
   }
 
   return empresas;
