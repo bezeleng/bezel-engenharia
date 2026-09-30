@@ -9,7 +9,8 @@ const ALIASES_SEGMENTO: Array<{ nome: string; termos: string[] }> = [
   {
     nome: "Administradoras de condomínios",
     termos: [
-      "administradora de condominio", "administradoras de condominio",
+      "administradora de condominio", "administradora de condominios",
+      "administradoras de condominio", "administradoras de condominios",
       "administracao de condominio", "administracao de condominios",
       "administracao condominial", "gestao condominial", "gestao de condominio",
       "gestao de condominios", "sindico", "sindicos", "sindico profissional",
