@@ -240,12 +240,12 @@ async function validarAtividadeCondominialNoSite(domain: string) {
   // Falha fechada: se não houver evidência pública no site, não cadastra como
   // administradora. Isso privilegia precisão em vez de completar a quantidade.
   if (!/^[a-z0-9.-]+$/i.test(domain) || domain.includes("..") || domain === "localhost") {
-    return { aprovado: false, evidencias: [] as string[] };
+    return { aprovado: false, evidencias: [] as string[], motivo: "dominio_invalido" as const };
   }
 
   const base = new URL(`https://${domain}/`);
   const home = await baixarPaginaPublica(base.toString());
-  if (!home) return { aprovado: false, evidencias: [] as string[] };
+  if (!home) return { aprovado: false, evidencias: [] as string[], motivo: "site_indisponivel" as const };
 
   const links = linksInternosRelevantes(home, base);
   const internas = await Promise.all(links.map((link) => baixarPaginaPublica(link)));
@@ -271,6 +271,7 @@ async function validarAtividadeCondominialNoSite(domain: string) {
   return {
     aprovado,
     evidencias: [...new Set([...evidenciasFortes, ...sinaisOperacionais])].slice(0, 6),
+    motivo: aprovado ? "atividade_comprovada" as const : "sem_evidencia_condominial" as const,
   };
 }
 
@@ -732,6 +733,10 @@ export async function POST(request: Request) {
     let jaExistentes = 0;
     let semEmail = 0;
     let descartados = 0;
+    let descartadosSiteIndisponivel = 0;
+    let descartadosSemEvidenciaCondominial = 0;
+    let descartadosAderencia = 0;
+    let descartadosLocalidade = 0;
     let analisados = 0;
 
     // O pool pode variar entre chamadas do Hunter/Foursquare. Por isso a
@@ -771,6 +776,8 @@ export async function POST(request: Request) {
       // descoberta sem desperdiçar créditos do Hunter em falsos positivos.
       if (buscaCondominial && !validacaoSite?.aprovado) {
         descartados++;
+        if (validacaoSite?.motivo === "site_indisponivel") descartadosSiteIndisponivel++;
+        else descartadosSemEvidenciaCondominial++;
         continue;
       }
 
@@ -781,6 +788,8 @@ export async function POST(request: Request) {
 
       if (!atividadeOk || !localOk) {
         descartados++;
+        if (!localOk) descartadosLocalidade++;
+        else descartadosAderencia++;
         continue;
       }
 
@@ -842,6 +851,10 @@ export async function POST(request: Request) {
       jaExistentes,
       semEmail,
       descartados,
+      descartadosSiteIndisponivel,
+      descartadosSemEvidenciaCondominial,
+      descartadosAderencia,
+      descartadosLocalidade,
       analisados,
       qualificados: resultados.length,
       candidatosUnicos: empresas.length,
