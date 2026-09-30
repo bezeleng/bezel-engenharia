@@ -16,7 +16,7 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const MAX_DIARIO = 20;
+const MAX_DIARIO = 50;
 const MAX_LOTE = 20;
 
 const contatoSchema = z.object({
