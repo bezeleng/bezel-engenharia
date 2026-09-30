@@ -79,6 +79,12 @@ const SINONIMOS_SEGMENTO: Array<{ termos: string[]; palavras: string[]; consulta
     qualificacao: ["condominio", "condominios", "condominial", "sindico", "sindicos", "gestao condominial", "administracao condominial", "property management"],
   },
   {
+    termos: ["imobiliária", "imobiliaria", "imobiliárias", "imobiliarias", "corretora de imóveis", "corretora de imoveis"],
+    palavras: ["imobiliária", "imóveis", "corretora de imóveis", "administração de imóveis", "real estate"],
+    consulta: "imobiliárias, corretoras e empresas de administração de imóveis",
+    qualificacao: ["imobiliaria", "imoveis", "corretora de imoveis", "corretagem imobiliaria", "administracao de imoveis", "real estate", "realty"],
+  },
+  {
     termos: ["arquiteto", "arquitetos", "arquitetura"],
     palavras: ["arquitetura", "escritório de arquitetura", "projetos arquitetônicos"],
     consulta: "escritórios e empresas de arquitetura",
@@ -180,6 +186,11 @@ function avaliarAderencia(segmento: string, empresa: EmpresaDescoberta, enriquec
 function ehBuscaCondominial(segmento: string) {
   const alvo = normalizar(segmento);
   return ["condominio", "condominial", "sindico"].some((x) => alvo.includes(x));
+}
+
+function ehBuscaImobiliaria(segmento: string) {
+  const alvo = normalizar(segmento);
+  return ["imobiliaria", "corretora de imoveis", "corretagem imobiliaria"].some((x) => alvo.includes(x));
 }
 
 function htmlParaTexto(html: string) {
@@ -427,7 +438,14 @@ async function buscarFoursquarePlaces(segmento: string, localidade: string, apiK
         { query: "gestão condominial" },
         { query: "síndico profissional" },
       ]
-    : [...new Set([segmento, ...termos.palavras])].slice(0, 4).map((query) => ({ query }));
+    : ehBuscaImobiliaria(segmento)
+      ? [
+          { query: "imobiliária", categoria: "5032885091d4c4b30a586d66" },
+          { query: "imobiliária" },
+          { query: "corretora de imóveis" },
+          { query: "administração de imóveis" },
+        ]
+      : [...new Set([segmento, ...termos.palavras])].slice(0, 4).map((query) => ({ query }));
 
   const porIdOuNome = new Map<string, FoursquarePlace>();
   const erros: string[] = [];
@@ -609,6 +627,12 @@ async function descobrirEmpresas(segmento: string, localidade: string, key: stri
       { query: `gestão condominial e síndico profissional em ${cidade}, SP, Brasil` },
       { query: `empresa que administra condomínios em ${cidade}, SP, Brasil` },
     );
+  } else if (ehBuscaImobiliaria(segmento)) {
+    consultas.push(
+      { query: `imobiliárias e corretoras de imóveis em ${cidade}, SP, Brasil` },
+      { query: `empresas de venda e locação de imóveis em ${cidade}, SP, Brasil` },
+      { query: `administração e locação de imóveis em ${cidade}, SP, Brasil` },
+    );
   }
 
   const resultados = await Promise.all(consultas.map((body) => executarDiscover(key, body)));
@@ -625,7 +649,7 @@ async function descobrirEmpresas(segmento: string, localidade: string, key: stri
     status: 200,
     empresas,
     tentativas: consultas.length,
-    estrategia: condominial ? "multiconsulta condominial" : "multiconsulta",
+    estrategia: condominial ? "multiconsulta condominial" : ehBuscaImobiliaria(segmento) ? "multiconsulta imobiliaria" : "multiconsulta",
   };
 }
 
