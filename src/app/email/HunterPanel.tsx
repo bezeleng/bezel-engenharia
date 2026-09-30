@@ -46,7 +46,9 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
           ? ` Entre os ${qualificados} qualificado(s), ${json.semEmail} ${json.semEmail === 1 ? "ficou" : "ficaram"} sem e-mail profissional.`
           : "";
         const pool = json.candidatosUnicos > 0
-          ? ` Pool combinado: ${json.candidatosUnicos} candidato(s) único(s) com domínio.`
+          ? json.priorizouNaoCadastrados
+            ? ` Pool combinado: ${json.candidatosUnicos} candidato(s) único(s) com domínio — ${json.candidatosNovosNoPool || 0} ainda não cadastrado(s) e ${json.candidatosJaCadastradosNoPool || 0} já no CRM. Os não cadastrados foram priorizados nesta rodada.`
+            : ` Pool combinado: ${json.candidatosUnicos} candidato(s) único(s) com domínio.`
           : "";
         const limite = json.limiteAnaliseAtingido
           ? ` A rodada atingiu o limite seguro de ${json.limiteAnalise} análises antes de completar a quantidade pedida.`
