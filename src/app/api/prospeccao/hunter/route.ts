@@ -20,6 +20,10 @@ type EmpresaDescoberta = {
   domain?: string;
   organization?: string;
   emails_count?: { personal?: number; generic?: number; total?: number };
+  telefoneGoogle?: string;
+  siteGoogle?: string;
+  localidadeConfirmadaGoogle?: boolean;
+  origemGoogle?: boolean;
 };
 
 type EmailHunter = {
@@ -49,6 +53,9 @@ type DiscoverPayload = {
 type GooglePlace = {
   displayName?: { text?: string };
   formattedAddress?: string;
+  websiteUri?: string;
+  nationalPhoneNumber?: string;
+  internationalPhoneNumber?: string;
 };
 
 type GooglePlacesPayload = {
@@ -329,7 +336,7 @@ async function buscarGooglePlaces(segmento: string, localidade: string, apiKey: 
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "places.displayName,places.formattedAddress",
+        "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.internationalPhoneNumber",
       },
       body: JSON.stringify({
         textQuery,
@@ -350,11 +357,25 @@ async function buscarGooglePlaces(segmento: string, localidade: string, apiKey: 
       const endereco = normalizar(place.formattedAddress || "");
       if (!nome || !endereco.includes(normalizar(cidade))) continue;
       const chave = normalizar(nome);
-      if (!porNome.has(chave)) porNome.set(chave, place);
+      const anterior = porNome.get(chave);
+      if (!anterior || (!anterior.websiteUri && place.websiteUri)) porNome.set(chave, place);
     }
   }
 
   return [...porNome.values()];
+}
+
+function dominioDoSite(site?: string) {
+  if (!site) return undefined;
+  try {
+    const url = new URL(site);
+    if (!["http:", "https:"].includes(url.protocol)) return undefined;
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    if (!host || host === "localhost" || host.includes("..") || !/^[a-z0-9.-]+$/i.test(host)) return undefined;
+    return host;
+  } catch {
+    return undefined;
+  }
 }
 
 async function resolverDominioEmpresa(nome: string, key: string): Promise<EmpresaDescoberta | undefined> {
@@ -370,7 +391,7 @@ async function resolverDominioEmpresa(nome: string, key: string): Promise<Empres
   return {
     domain: item.domain.trim().toLowerCase(),
     organization: item.company_name?.trim() || nome,
-  } satisfies EmpresaDescoberta;
+  };
 }
 
 async function descobrirEmpresasGoogle(segmento: string, localidade: string, hunterKey: string, googleKey?: string) {
@@ -378,14 +399,45 @@ async function descobrirEmpresasGoogle(segmento: string, localidade: string, hun
 
   const places = await buscarGooglePlaces(segmento, localidade, googleKey);
   const empresas: EmpresaDescoberta[] = [];
-  const lote = 5;
+  const semSite: GooglePlace[] = [];
 
-  for (let i = 0; i < places.length; i += lote) {
-    const parte = places.slice(i, i + lote);
+  // O Google passa a ser a fonte primária do domínio, telefone e localidade.
+  // Hunter Domain Finder é apenas fallback para empresas que o Places encontrou
+  // mas que não possuem website cadastrado.
+  for (const place of places) {
+    const nome = place.displayName?.text?.trim();
+    if (!nome) continue;
+    const dominio = dominioDoSite(place.websiteUri);
+    if (!dominio) {
+      semSite.push(place);
+      continue;
+    }
+    empresas.push({
+      domain: dominio,
+      organization: nome,
+      telefoneGoogle: place.nationalPhoneNumber?.trim() || place.internationalPhoneNumber?.trim(),
+      siteGoogle: place.websiteUri,
+      localidadeConfirmadaGoogle: true,
+      origemGoogle: true,
+    });
+  }
+
+  const lote = 5;
+  for (let i = 0; i < semSite.length; i += lote) {
+    const parte = semSite.slice(i, i + lote);
     const resolvidas = await Promise.all(
       parte.map(async (place) => {
         const nome = place.displayName?.text?.trim();
-        return nome ? resolverDominioEmpresa(nome, hunterKey) : undefined;
+        if (!nome) return undefined;
+        const resolvida = await resolverDominioEmpresa(nome, hunterKey);
+        if (!resolvida) return undefined;
+        return {
+          ...resolvida,
+          organization: nome,
+          telefoneGoogle: place.nationalPhoneNumber?.trim() || place.internationalPhoneNumber?.trim(),
+          localidadeConfirmadaGoogle: true,
+          origemGoogle: true,
+        } satisfies EmpresaDescoberta;
       })
     );
     empresas.push(...resolvidas.filter((x): x is EmpresaDescoberta => Boolean(x?.domain)));
@@ -519,8 +571,8 @@ export async function POST(request: Request) {
 
     const empresasGoogle = await descobrirEmpresasGoogle(segmento, localidade, key, googlePlacesKey);
     const empresas = juntarEmpresas([
-      { ok: true, payload: { data: descoberta.empresas } },
       { ok: true, payload: { data: empresasGoogle } },
+      { ok: true, payload: { data: descoberta.empresas } },
     ]);
 
     if (!empresas.length) {
@@ -574,7 +626,7 @@ export async function POST(request: Request) {
 
       const enriquecida = await enriquecerEmpresa(dominio, key);
       const aderencia = avaliarAderencia(segmento, empresa, enriquecida);
-      const localOk = cidadeCompativel(localidade, enriquecida);
+      const localOk = empresa.localidadeConfirmadaGoogle || cidadeCompativel(localidade, enriquecida);
       const atividadeOk = buscaCondominial ? Boolean(validacaoSite?.aprovado) : aderencia.aprovado;
 
       if (!atividadeOk || !localOk) {
@@ -587,13 +639,13 @@ export async function POST(request: Request) {
         email = enriquecida?.site?.emailAddresses?.find(Boolean)?.trim().toLowerCase();
       }
 
-      const nome = enriquecida?.name?.trim() || empresa.organization?.trim() || dominio;
+      const nome = empresa.organization?.trim() || enriquecida?.name?.trim() || dominio;
       const telefone = buscarTelefone
-        ? (enriquecida?.site?.phoneNumbers?.find(Boolean) || enriquecida?.phone || undefined)
+        ? (empresa.telefoneGoogle || enriquecida?.site?.phoneNumbers?.find(Boolean) || enriquecida?.phone || undefined)
         : undefined;
       const handleInstagram = enriquecida?.instagram?.handle?.replace(/^@/, "");
       const instagram = handleInstagram ? `https://www.instagram.com/${handleInstagram}/` : undefined;
-      const site = `https://${dominio}`;
+      const site = empresa.siteGoogle || `https://${dominio}`;
 
       const salvo = await salvarContatoHunter({
         dominio,
@@ -604,7 +656,7 @@ export async function POST(request: Request) {
         telefone,
         site,
         instagram,
-        fonteUrl: "Hunter.io API",
+        fonteUrl: empresa.origemGoogle ? "Google Places + Hunter.io" : "Hunter.io API",
         pesquisaHunter,
       });
 
