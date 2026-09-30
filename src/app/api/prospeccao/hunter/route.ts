@@ -46,6 +46,15 @@ type DiscoverPayload = {
   meta?: { results?: number; filters?: Record<string, unknown> };
 };
 
+type GooglePlace = {
+  displayName?: { text?: string };
+  formattedAddress?: string;
+};
+
+type GooglePlacesPayload = {
+  places?: GooglePlace[];
+};
+
 const SINONIMOS_SEGMENTO: Array<{ termos: string[]; palavras: string[]; consulta: string; qualificacao: string[] }> = [
   {
     termos: ["síndico", "sindico", "síndicos", "sindicos", "condomínio", "condominio", "condomínios", "condominios"],
@@ -301,6 +310,90 @@ function juntarEmpresas(resultados: Array<{ ok: boolean; payload?: DiscoverPaylo
   return [...porDominio.values()];
 }
 
+async function buscarGooglePlaces(segmento: string, localidade: string, apiKey: string) {
+  const cidade = cidadeDaLocalidade(localidade);
+  const consultas = ehBuscaCondominial(segmento)
+    ? [
+        `administradora de condomínios em ${cidade}, SP`,
+        `gestão condominial em ${cidade}, SP`,
+        `síndico profissional em ${cidade}, SP`,
+      ]
+    : [`${segmento} em ${cidade}, SP`];
+
+  const porNome = new Map<string, GooglePlace>();
+
+  for (const textQuery of consultas) {
+    const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "places.displayName,places.formattedAddress",
+      },
+      body: JSON.stringify({
+        textQuery,
+        languageCode: "pt-BR",
+        regionCode: "BR",
+        pageSize: 20,
+      }),
+    });
+
+    if (!r.ok) {
+      console.error("Google Places Text Search:", r.status, (await r.text()).slice(0, 500));
+      continue;
+    }
+
+    const payload = await r.json() as GooglePlacesPayload;
+    for (const place of payload.places || []) {
+      const nome = place.displayName?.text?.trim();
+      const endereco = normalizar(place.formattedAddress || "");
+      if (!nome || !endereco.includes(normalizar(cidade))) continue;
+      const chave = normalizar(nome);
+      if (!porNome.has(chave)) porNome.set(chave, place);
+    }
+  }
+
+  return [...porNome.values()];
+}
+
+async function resolverDominioEmpresa(nome: string, key: string): Promise<EmpresaDescoberta | undefined> {
+  const url = new URL("https://api.hunter.io/v2/domain-finder");
+  url.searchParams.set("company", nome);
+  url.searchParams.set("limit", "1");
+  url.searchParams.set("perfect_match", "true");
+  const r = await hunterFetch(url.toString(), key);
+  if (!r.ok) return undefined;
+  const json = await r.json() as { data?: Array<{ domain?: string; company_name?: string }> };
+  const item = json.data?.[0];
+  if (!item?.domain) return undefined;
+  return {
+    domain: item.domain.trim().toLowerCase(),
+    organization: item.company_name?.trim() || nome,
+  } satisfies EmpresaDescoberta;
+}
+
+async function descobrirEmpresasGoogle(segmento: string, localidade: string, hunterKey: string, googleKey?: string) {
+  if (!googleKey) return [] as EmpresaDescoberta[];
+
+  const places = await buscarGooglePlaces(segmento, localidade, googleKey);
+  const empresas: EmpresaDescoberta[] = [];
+  const lote = 5;
+
+  for (let i = 0; i < places.length; i += lote) {
+    const parte = places.slice(i, i + lote);
+    const resolvidas = await Promise.all(
+      parte.map(async (place) => {
+        const nome = place.displayName?.text?.trim();
+        return nome ? resolverDominioEmpresa(nome, hunterKey) : undefined;
+      })
+    );
+    empresas.push(...resolvidas.filter((x): x is EmpresaDescoberta => Boolean(x?.domain)));
+  }
+
+  return empresas;
+}
+
 async function descobrirEmpresas(segmento: string, localidade: string, key: string) {
   const cidade = cidadeDaLocalidade(localidade);
   const termos = termosDoSegmento(segmento);
@@ -403,6 +496,7 @@ export async function POST(request: Request) {
   if (!key) {
     return NextResponse.json({ error: "HUNTER_API_KEY ainda não foi configurada na Vercel." }, { status: 503 });
   }
+  const googlePlacesKey = process.env.GOOGLE_PLACES_API_KEY?.trim();
 
   const { segmento, localidade, quantidade, buscarEmail, buscarTelefone } = parsed.data;
   const pesquisaHunter = `${segmento} — ${localidade}`;
@@ -423,7 +517,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const empresas = descoberta.empresas;
+    const empresasGoogle = await descobrirEmpresasGoogle(segmento, localidade, key, googlePlacesKey);
+    const empresas = juntarEmpresas([
+      { ok: true, payload: { data: descoberta.empresas } },
+      { ok: true, payload: { data: empresasGoogle } },
+    ]);
 
     if (!empresas.length) {
       return NextResponse.json({
@@ -435,6 +533,8 @@ export async function POST(request: Request) {
         resultados: [],
         tentativas: descoberta.tentativas,
         estrategia: descoberta.estrategia,
+        googlePlacesConfigurado: Boolean(googlePlacesKey),
+        encontradosGooglePlaces: empresasGoogle.length,
         nenhumResultado: true,
         mensagem: `Nenhuma empresa encontrada para “${segmento}” em ${cidadeDaLocalidade(localidade)} após ${descoberta.tentativas} estratégias de busca. Tente um segmento relacionado ou uma cidade próxima.`,
       });
@@ -536,6 +636,8 @@ export async function POST(request: Request) {
       resultados,
       tentativas: descoberta.tentativas,
       estrategia: descoberta.estrategia,
+      googlePlacesConfigurado: Boolean(googlePlacesKey),
+      encontradosGooglePlaces: empresasGoogle.length,
       nenhumResultado,
       mensagem: nenhumResultado
         ? `Nenhuma empresa qualificada para “${segmento}” em ${cidadeDaLocalidade(localidade)}. ${descartados} resultado(s) foram descartados por baixa aderência ao segmento ou localidade.`
