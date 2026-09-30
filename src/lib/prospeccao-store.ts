@@ -157,6 +157,14 @@ export async function salvarContatoHunter(input: {
 
 export async function excluirContato(id: string) { return store().delete(id); }
 
+export async function excluirContatos(ids: string[]) {
+  const unicos = [...new Set(ids.filter(Boolean))];
+  const transacao = store().transaction();
+  for (const id of unicos) transacao.delete(id);
+  await transacao.commit();
+  return unicos.length;
+}
+
 function hojeSaoPaulo() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
