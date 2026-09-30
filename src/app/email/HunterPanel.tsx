@@ -55,8 +55,11 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
         : dominiosAnalisados.length > 0
           ? " O pool chegou ao fim; a próxima busca reiniciará um novo ciclo."
           : "";
+      const diagnosticoDescarte = (json.descartados || 0) > 0
+        ? ` Motivos do descarte: ${json.descartadosSiteIndisponivel || 0} site(s) indisponível(is) para validação, ${json.descartadosSemEvidenciaCondominial || 0} sem evidência de administração condominial no site, ${json.descartadosAderencia || 0} por aderência insuficiente e ${json.descartadosLocalidade || 0} por localidade incompatível.`
+        : "";
       if (json.nenhumResultado) {
-        setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${continuacaoLote}${foursquare}${erroFoursquare}`);
+        setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${diagnosticoDescarte}${continuacaoLote}${foursquare}${erroFoursquare}`);
       } else {
         const qualificados = json.qualificados ?? ((json.cadastrados || 0) + (json.jaExistentes || 0));
         const detalhe = json.tentativas > 1 ? ` Hunter consultado em ${json.tentativas} estratégias.` : "";
@@ -72,7 +75,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
         const limite = json.limiteAnaliseAtingido
           ? ` A rodada atingiu o limite seguro de ${json.limiteAnalise} análises antes de completar a quantidade pedida.`
           : "";
-        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s) e ${json.jaExistentes} já existente(s).${semEmail}${funil}${pool}${limite}${continuacaoLote}${detalhe}${foursquare}${erroFoursquare}`);
+        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s) e ${json.jaExistentes} já existente(s).${semEmail}${funil}${diagnosticoDescarte}${pool}${limite}${continuacaoLote}${detalhe}${foursquare}${erroFoursquare}`);
       }
       await onAtualizar();
     } catch {
