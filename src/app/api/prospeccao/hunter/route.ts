@@ -349,7 +349,7 @@ const DOMINIOS_EMAIL_PUBLICO = new Set([
 function dominioDoEmailCorporativo(email?: string) {
   if (!email) return undefined;
   const valor = email.trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\\.[^@\s]+$/.test(valor)) return undefined;
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(valor)) return undefined;
   const dominio = valor.split("@")[1]?.replace(/^www\./, "");
   if (!dominio || DOMINIOS_EMAIL_PUBLICO.has(dominio)) return undefined;
   if (!/^[a-z0-9.-]+$/i.test(dominio) || dominio.includes("..")) return undefined;
