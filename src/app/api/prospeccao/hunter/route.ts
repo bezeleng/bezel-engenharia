@@ -14,6 +14,7 @@ const schema = z.object({
   quantidade: z.number().int().min(1).max(20).default(10),
   buscarEmail: z.boolean().default(true),
   buscarTelefone: z.boolean().default(true),
+  offset: z.number().int().min(0).max(10000).default(0),
 });
 
 type EmpresaDescoberta = {
@@ -667,7 +668,7 @@ export async function POST(request: Request) {
   }
   const foursquareKey = process.env.FOURSQUARE_API_KEY?.trim();
 
-  const { segmento, localidade, quantidade, buscarEmail, buscarTelefone } = parsed.data;
+  const { segmento, localidade, quantidade, buscarEmail, buscarTelefone, offset } = parsed.data;
   const pesquisaHunter = `${segmento} — ${localidade}`;
 
   try {
@@ -726,12 +727,6 @@ export async function POST(request: Request) {
         empresas.map((empresa) => empresa.domain?.trim().toLowerCase()).filter((dominio): dominio is string => Boolean(dominio))
       )
     );
-    const empresasOrdenadas = [...empresas].sort((a, b) => {
-      const aExiste = dominiosExistentes.has(a.domain?.trim().toLowerCase() || "");
-      const bExiste = dominiosExistentes.has(b.domain?.trim().toLowerCase() || "");
-      return Number(aExiste) - Number(bExiste);
-    });
-
     const resultados: Array<Record<string, unknown>> = [];
     let cadastrados = 0;
     let jaExistentes = 0;
@@ -743,16 +738,19 @@ export async function POST(request: Request) {
     // Antes de gastar uma busca de e-mail e antes de cadastrar no CRM, validamos
     // a aderência usando nome, domínio, categoria, tags e descrição do Enrichment.
     // Limitamos a análise para controlar tempo e consumo de créditos.
-    // Quando a taxa de descarte é alta, 3x a quantidade pode encerrar a rodada
-    // antes de alcançar novos leads. Analisamos uma janela maior, ainda limitada
-    // a 50 candidatos para respeitar o tempo máximo da função e o consumo de API.
-    const limiteAnalise = Math.min(empresas.length, Math.max(quantidade * 5, 40), 50);
+    // A busca usa continuação por lote. Se uma rodada analisar 50 de 125
+    // candidatos, a próxima começa no ponto seguinte em vez de repetir os
+    // mesmos descartados. Quando segmento/localidade mudam, o cliente zera o offset.
+    const inicioAnalise = offset < empresas.length ? offset : 0;
+    const limiteBase = Math.max(quantidade * 5, 40);
+    const limiteAnalise = Math.min(empresas.length - inicioAnalise, limiteBase, 50);
+    const empresasDoLote = empresas.slice(inicioAnalise, inicioAnalise + limiteAnalise);
     const buscaCondominial = ehBuscaCondominial(segmento);
     const validacoesSite = buscaCondominial
-      ? await validarSitesCondominiais(empresasOrdenadas, limiteAnalise)
+      ? await validarSitesCondominiais(empresasDoLote, limiteAnalise)
       : undefined;
 
-    for (const empresa of empresasOrdenadas.slice(0, limiteAnalise)) {
+    for (const empresa of empresasDoLote) {
       if (resultados.length >= quantidade) break;
       const dominio = empresa.domain!.trim().toLowerCase();
       analisados++;
@@ -828,6 +826,8 @@ export async function POST(request: Request) {
     }
 
     const nenhumResultado = resultados.length === 0;
+    const fimAnalisado = inicioAnalise + analisados;
+    const proximoOffset = fimAnalisado >= empresas.length ? 0 : fimAnalisado;
     return NextResponse.json({
       cadastrados,
       jaExistentes,
@@ -838,9 +838,11 @@ export async function POST(request: Request) {
       candidatosUnicos: empresas.length,
       candidatosJaCadastradosNoPool: dominiosExistentes.size,
       candidatosNovosNoPool: Math.max(0, empresas.length - dominiosExistentes.size),
-      priorizouNaoCadastrados: true,
+      inicioAnalise,
+      proximoOffset,
+      continuacaoDisponivel: proximoOffset > 0,
       limiteAnalise,
-      limiteAnaliseAtingido: analisados >= limiteAnalise && resultados.length < quantidade && empresas.length > limiteAnalise,
+      limiteAnaliseAtingido: analisados >= limiteAnalise && resultados.length < quantidade && proximoOffset > 0,
       resultados,
       tentativas: descoberta.tentativas,
       estrategia: descoberta.estrategia,
