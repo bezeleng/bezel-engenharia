@@ -183,6 +183,8 @@ export async function registrarEnvio(input: {
   status: "ENVIADO" | "FALHA" | "BLOQUEADO";
   erro?: string;
   teste?: boolean;
+  smtpMessageId?: string;
+  smtpResponse?: string;
 }) {
   return store().create({
     _type: "prospeccaoEnvio",
@@ -215,7 +217,7 @@ export async function registrarContatoEnviado(id: string) {
 export async function listarHistorico(limite = 100) {
   return store().fetch(
     `*[_type == "prospeccaoEnvio"] | order(enviadoEm desc)[0...$limite]{
-      _id, nome, email, assunto, status, erro, teste, enviadoEm
+      _id, nome, email, assunto, status, erro, teste, enviadoEm, smtpMessageId, smtpResponse
     }`,
     { limite }
   );
