@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 type ResultadoHunter = {
   dominio: string; cadastrado: boolean; novo?: boolean; nome: string; email?: string;
@@ -17,6 +17,35 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
   const [mensagem, setMensagem] = useState("");
   const [resultados, setResultados] = useState<ResultadoHunter[]>([]);
   const [continuacao, setContinuacao] = useState<{ chave: string; dominios: string[] }>({ chave: "", dominios: [] });
+
+  useEffect(() => {
+    try {
+      const salvo = sessionStorage.getItem("bezel-prospeccao-continuacao");
+      if (!salvo) return;
+      const parsed = JSON.parse(salvo) as { chave?: unknown; dominios?: unknown };
+      if (typeof parsed.chave === "string" && Array.isArray(parsed.dominios)) {
+        setContinuacao({
+          chave: parsed.chave,
+          dominios: parsed.dominios.filter((dominio): dominio is string => typeof dominio === "string"),
+        });
+      }
+    } catch {
+      sessionStorage.removeItem("bezel-prospeccao-continuacao");
+    }
+  }, []);
+
+  function salvarContinuacao(proxima: { chave: string; dominios: string[] }) {
+    setContinuacao(proxima);
+    try {
+      if (proxima.dominios.length) {
+        sessionStorage.setItem("bezel-prospeccao-continuacao", JSON.stringify(proxima));
+      } else {
+        sessionStorage.removeItem("bezel-prospeccao-continuacao");
+      }
+    } catch {
+      // A busca continua funcionando mesmo se o navegador bloquear sessionStorage.
+    }
+  }
 
   async function buscar(e: FormEvent) {
     e.preventDefault();
@@ -38,7 +67,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
       if (!r.ok) { setMensagem(json.error || "Não foi possível executar a busca."); return; }
       setResultados(json.resultados || []);
       const analisadosNestaRodada = Array.isArray(json.dominiosAnalisadosRodada) ? json.dominiosAnalisadosRodada : [];
-      setContinuacao({
+      salvarContinuacao({
         chave: chaveBusca,
         dominios: json.continuacaoDisponivel
           ? [...new Set([...dominiosAnalisados, ...analisadosNestaRodada])]
