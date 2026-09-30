@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { EMAIL_SESSION_COOKIE, validarTokenSessao } from "@/lib/email-panel-session";
-import { atualizarContato, excluirContato, salvarContato } from "@/lib/prospeccao-store";
+import { atualizarContato, excluirContato, excluirContatos, salvarContato } from "@/lib/prospeccao-store";
 
 export const runtime = "nodejs";
 
@@ -62,11 +62,18 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   if (!(await autorizado())) return NextResponse.json({ error: "Sessão expirada." }, { status: 401 });
-  const parsed = z.object({ id: z.string().min(1) }).safeParse(await request.json().catch(() => null));
+  const parsed = z.union([
+    z.object({ id: z.string().min(1) }),
+    z.object({ ids: z.array(z.string().min(1)).min(1).max(500) }),
+  ]).safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
   try {
+    if ("ids" in parsed.data) {
+      const excluidos = await excluirContatos(parsed.data.ids);
+      return NextResponse.json({ ok: true, excluidos });
+    }
     await excluirContato(parsed.data.id);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, excluidos: 1 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Não foi possível excluir o contato." }, { status: 500 });
