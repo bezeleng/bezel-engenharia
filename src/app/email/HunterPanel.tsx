@@ -117,7 +117,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
         const limite = json.limiteAnaliseAtingido
           ? ` A rodada atingiu o limite seguro de ${json.limiteAnalise} análises antes de completar a quantidade pedida.`
           : "";
-        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s) e ${json.jaExistentes} já existente(s).${semEmail}${funil}${diagnosticoDescarte}${pool}${limite}${continuacaoLote}${detalhe}${foursquare}${erroFoursquare}`);
+        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s) e ${json.jaExistentes} já existente(s).${semEmail}${funil}${diagnosticoDescarte}${pool}${limite}${continuacaoLote}${detalhe}${foursquare}${erroFoursquare}${diagnosticoDomainFinder}`);
       }
       await onAtualizar();
     } catch {
