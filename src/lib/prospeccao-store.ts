@@ -113,6 +113,18 @@ export async function buscarContatoPorDominio(dominio: string): Promise<ContatoP
   );
 }
 
+export async function buscarDominiosExistentes(dominios: string[]): Promise<string[]> {
+  const normalizados = [...new Set(
+    dominios.map((dominio) => dominio.trim().toLowerCase()).filter(Boolean)
+  )];
+  if (!normalizados.length) return [];
+
+  return store().fetch<string[]>(
+    `array::unique(*[_type == "prospeccaoContato" && dominio in $dominios].dominio)`,
+    { dominios: normalizados }
+  );
+}
+
 export async function salvarContatoHunter(input: {
   dominio: string; nome: string; email?: string; cidade: string; segmento: string;
   telefone?: string; site: string; instagram?: string; origem?: string; fonteUrl?: string; pesquisaHunter: string;
