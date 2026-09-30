@@ -16,7 +16,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
   const [buscando, setBuscando] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [resultados, setResultados] = useState<ResultadoHunter[]>([]);
-  const [continuacao, setContinuacao] = useState({ chave: "", offset: 0 });
+  const [continuacao, setContinuacao] = useState<{ chave: string; dominios: string[] }>({ chave: "", dominios: [] });
 
   async function buscar(e: FormEvent) {
     e.preventDefault();
@@ -28,16 +28,22 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
       buscarEmail,
       buscarTelefone,
     });
-    const offset = continuacao.chave === chaveBusca ? continuacao.offset : 0;
+    const dominiosAnalisados = continuacao.chave === chaveBusca ? continuacao.dominios : [];
     try {
       const r = await fetch("/api/prospeccao/hunter", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ segmento, localidade, quantidade, buscarEmail, buscarTelefone, offset }),
+        body: JSON.stringify({ segmento, localidade, quantidade, buscarEmail, buscarTelefone, dominiosAnalisados }),
       });
       const json = await r.json();
       if (!r.ok) { setMensagem(json.error || "Não foi possível executar a busca."); return; }
       setResultados(json.resultados || []);
-      setContinuacao({ chave: chaveBusca, offset: json.proximoOffset || 0 });
+      const analisadosNestaRodada = Array.isArray(json.dominiosAnalisadosRodada) ? json.dominiosAnalisadosRodada : [];
+      setContinuacao({
+        chave: chaveBusca,
+        dominios: json.continuacaoDisponivel
+          ? [...new Set([...dominiosAnalisados, ...analisadosNestaRodada])]
+          : [],
+      });
       const foursquare = json.foursquareConfigurado
         ? ` Foursquare encontrou ${json.fichasFoursquareEncontradas || 0} ficha(s): ${json.fichasFoursquareComSite || 0} com site, ${json.fichasFoursquareComEmailCorporativo || 0} via e-mail corporativo e ${json.dominiosFoursquareViaHunter || 0} via Domain Finder. Total: ${json.encontradosFoursquare || 0} candidato(s) com domínio.`
         : " Foursquare ainda não está configurado; a descoberta ficou limitada ao Hunter.";
@@ -45,9 +51,9 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
         ? ` Atenção Foursquare: ${json.errosFoursquare[0]}`
         : "";
       const continuacaoLote = json.continuacaoDisponivel
-        ? ` A próxima busca com estes mesmos filtros continuará a partir do candidato ${json.proximoOffset + 1}, sem voltar ao início do pool.`
-        : json.inicioAnalise > 0
-          ? " O pool chegou ao fim; a próxima busca reiniciará do começo."
+        ? ` A próxima busca com estes mesmos filtros ignorará os ${json.totalDominiosAnalisados || 0} domínio(s) já analisado(s) e seguirá pelos ${json.candidatosRestantes || 0} restante(s), mesmo que o pool mude de ordem.`
+        : dominiosAnalisados.length > 0
+          ? " O pool chegou ao fim; a próxima busca reiniciará um novo ciclo."
           : "";
       if (json.nenhumResultado) {
         setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${continuacaoLote}${foursquare}${erroFoursquare}`);
