@@ -29,7 +29,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
       if (!r.ok) { setMensagem(json.error || "Não foi possível executar a busca."); return; }
       setResultados(json.resultados || []);
       const foursquare = json.foursquareConfigurado
-        ? ` Foursquare encontrou ${json.fichasFoursquareEncontradas || 0} ficha(s), encontrou site oficial em ${json.fichasFoursquareComSite || 0} e entregou ${json.encontradosFoursquare || 0} candidato(s) com domínio.`
+        ? ` Foursquare encontrou ${json.fichasFoursquareEncontradas || 0} ficha(s): ${json.fichasFoursquareComSite || 0} com site, ${json.fichasFoursquareComEmailCorporativo || 0} via e-mail corporativo e ${json.dominiosFoursquareViaHunter || 0} via Domain Finder. Total: ${json.encontradosFoursquare || 0} candidato(s) com domínio.`
         : " Foursquare ainda não está configurado; a descoberta ficou limitada ao Hunter.";
       const erroFoursquare = Array.isArray(json.errosFoursquare) && json.errosFoursquare.length
         ? ` Atenção Foursquare: ${json.errosFoursquare[0]}`
