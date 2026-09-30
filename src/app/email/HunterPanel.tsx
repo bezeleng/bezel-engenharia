@@ -28,18 +28,18 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
       const json = await r.json();
       if (!r.ok) { setMensagem(json.error || "Não foi possível executar a busca."); return; }
       setResultados(json.resultados || []);
-      const google = json.googlePlacesConfigurado
-        ? ` Google Places encontrou ${json.fichasGoogleEncontradas || 0} ficha(s), detalhou ${json.fichasGoogleDetalhadas || 0}, encontrou site oficial em ${json.fichasGoogleComSite || 0} e entregou ${json.encontradosGooglePlaces || 0} candidato(s) com domínio.`
-        : " Google Places ainda não está configurado; a descoberta ficou limitada ao Hunter.";
-      const erroGoogle = Array.isArray(json.errosGooglePlaces) && json.errosGooglePlaces.length
-        ? ` Atenção Google Places: ${json.errosGooglePlaces[0]}`
+      const foursquare = json.foursquareConfigurado
+        ? ` Foursquare encontrou ${json.fichasFoursquareEncontradas || 0} ficha(s), encontrou site oficial em ${json.fichasFoursquareComSite || 0} e entregou ${json.encontradosFoursquare || 0} candidato(s) com domínio.`
+        : " Foursquare ainda não está configurado; a descoberta ficou limitada ao Hunter.";
+      const erroFoursquare = Array.isArray(json.errosFoursquare) && json.errosFoursquare.length
+        ? ` Atenção Foursquare: ${json.errosFoursquare[0]}`
         : "";
       if (json.nenhumResultado) {
-        setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${google}${erroGoogle}`);
+        setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${foursquare}${erroFoursquare}`);
       } else {
         const detalhe = json.tentativas > 1 ? ` Hunter consultado em ${json.tentativas} estratégias.` : "";
         const descarte = json.descartados > 0 ? ` ${json.descartados} resultado(s) foram descartados por baixa aderência ao segmento ou localidade.` : "";
-        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s), ${json.jaExistentes} já existente(s) e ${json.semEmail} sem e-mail encontrado.${descarte}${detalhe}${google}${erroGoogle}`);
+        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s), ${json.jaExistentes} já existente(s) e ${json.semEmail} sem e-mail encontrado.${descarte}${detalhe}${foursquare}${erroFoursquare}`);
       }
       await onAtualizar();
     } catch {
@@ -53,7 +53,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
     <section className="mt-6 grid gap-5">
       <form onSubmit={buscar} className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
         <div className="max-w-3xl">
-          <h2 className="text-xl font-semibold text-[#193451]">Hunter de prospecção</h2>
+          <h2 className="text-xl font-semibold text-[#193451]">Busca de prospecção</h2>
           <p className="mt-2 text-sm text-slate-600">Informe o segmento e a localidade. O sistema encontra empresas e cadastra os resultados diretamente na base para você filtrar depois.</p>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -76,7 +76,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
         <button disabled={buscando} className="mt-5 rounded-xl bg-[#193451] px-6 py-3 text-sm font-semibold text-white disabled:opacity-50">
           {buscando ? "Buscando e cadastrando..." : "Buscar e cadastrar"}
         </button>
-        <p className="mt-3 text-xs text-slate-500">A descoberta combina Hunter e, quando configurado, Google Places por localização e atividade. Antes de cadastrar, o sistema valida a aderência da empresa. Em buscas de administração condominial, a atividade precisa estar comprovada no próprio site; resultados apenas relacionados a condomínios são descartados. Se houver poucas empresas realmente qualificadas, o sistema retorna menos resultados em vez de completar com leads ruins. Telefone não é marcado como WhatsApp sem confirmação específica.</p>
+        <p className="mt-3 text-xs text-slate-500">A descoberta combina Foursquare Places para localizar empresas e Hunter para enriquecer domínio, e-mail e dados profissionais. Antes de cadastrar, o sistema valida a aderência da empresa. Em buscas de administração condominial, a atividade precisa estar comprovada no próprio site; resultados apenas relacionados a condomínios são descartados. Se houver poucas empresas realmente qualificadas, o sistema retorna menos resultados em vez de completar com leads ruins. Telefone não é marcado como WhatsApp sem confirmação específica.</p>
         {mensagem && <div className="mt-4 rounded-xl bg-[#f5f2ed] p-4 text-sm text-[#193451]">{mensagem}</div>}
       </form>
 
