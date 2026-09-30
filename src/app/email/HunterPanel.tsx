@@ -43,7 +43,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
           ? ` Foram analisados ${json.analisados} candidato(s): ${qualificados} qualificado(s) e ${json.descartados || 0} descartado(s) por baixa aderência ao segmento ou localidade.`
           : "";
         const semEmail = json.semEmail > 0
-          ? ` Entre os ${qualificados} qualificado(s), ${json.semEmail} ficou/ficaram sem e-mail profissional.`
+          ? ` Entre os ${qualificados} qualificado(s), ${json.semEmail} ${json.semEmail === 1 ? "ficou" : "ficaram"} sem e-mail profissional.`
           : "";
         const pool = json.candidatosUnicos > 0
           ? ` Pool combinado: ${json.candidatosUnicos} candidato(s) único(s) com domínio.`
