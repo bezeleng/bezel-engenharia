@@ -15,6 +15,7 @@ type Contato = {
 type Historico = {
   _id: string; nome?: string; email: string; assunto?: string;
   status: "ENVIADO" | "FALHA" | "BLOQUEADO"; erro?: string; teste?: boolean; enviadoEm: string;
+  smtpMessageId?: string; smtpResponse?: string;
 };
 type Dashboard = {
   contatos: Contato[];
@@ -151,6 +152,7 @@ export default function EmailCRMClient() {
   const [confirmacao, setConfirmacao] = useState(false);
   const [enviando, setEnviando] = useState<"teste" | "envio" | null>(null);
   const [resultado, setResultado] = useState("");
+  const [emailTeste, setEmailTeste] = useState("");
   const [busca, setBusca] = useState("");
   const [filtroSegmento, setFiltroSegmento] = useState("");
   const [filtroCidade, setFiltroCidade] = useState("");
@@ -197,16 +199,18 @@ export default function EmailCRMClient() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           assunto, mensagem,
-          contatos: teste ? [{ nome: "Contato de teste", email: "teste@bezel.com.br" }] : contatosDigitados,
-          teste, confirmacao,
+          contatos: teste ? [{ nome: "Contato de teste", email: emailTeste || "teste@bezel.com.br" }] : contatosDigitados,
+          teste,
+          emailTeste: teste && emailTeste.trim() ? emailTeste.trim() : undefined,
+          confirmacao,
         }),
       });
       if (r.status === 401) { router.replace("/email/login"); return; }
       const json = await r.json();
       if (!r.ok) { setResultado(json.error || "Não foi possível realizar o envio."); return; }
       setResultado(teste
-        ? "Teste enviado para a caixa configurada da BEZEL."
-        : `Concluído: ${json.totalEnviados} enviado(s), ${json.totalFalhas} falha(s), ${json.totalBloqueados || 0} bloqueado(s). Restam ${json.restantesHoje} hoje.`
+        ? `SMTP aceitou o teste para ${json.destinatarioTeste || "a caixa da BEZEL"}. Isso confirma o aceite pelo servidor de saída; confira também spam/lixo eletrônico no destinatário.`
+        : `Processado: ${json.totalEnviados} aceito(s) pelo SMTP, ${json.totalFalhas} falha(s), ${json.totalBloqueados || 0} bloqueado(s). Restam ${json.restantesHoje} hoje.${json.totalFalhas ? ` Falhas: ${(json.falhas || []).map((item: { email: string; erro: string }) => `${item.email}: ${item.erro}`).join(" | ")}` : ""}`
       );
       if (!teste) { setDestinatarios(""); setSelecionados([]); await carregar(); }
     } catch {
@@ -395,6 +399,14 @@ export default function EmailCRMClient() {
                 <input type="checkbox" checked={confirmacao} onChange={(e) => setConfirmacao(e.target.checked)} className="mt-1 accent-[#193451]" />
                 <span>Confirmo que estes contatos foram selecionados para prospecção comercial ou relacionamento profissional da BEZEL.</span>
               </label>
+              <div className="mt-5">
+                <label className="block max-w-md text-sm font-semibold text-[#193451]">E-mail para teste
+                  <input type="email" value={emailTeste} onChange={(e) => setEmailTeste(e.target.value)}
+                    placeholder="Deixe vazio para testar na própria caixa BEZEL"
+                    className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none focus:border-[#c3a06a]" />
+                </label>
+                <p className="mt-2 text-xs text-slate-500">Para validar entrega externa, informe aqui um Gmail, Outlook ou outro endereço fora da caixa remetente.</p>
+              </div>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button type="button" disabled={!!enviando || !confirmacao} onClick={(e) => void enviar(e as unknown as FormEvent, true)}
                   className="rounded-xl border border-[#193451] px-5 py-3 text-sm font-semibold text-[#193451] disabled:opacity-40">
@@ -542,6 +554,8 @@ export default function EmailCRMClient() {
                   </div>
                   <div className="mt-3 text-xs text-slate-500">{dataLocal(h.enviadoEm)}</div>
                   <div className="mt-2 break-words text-sm">{h.assunto || "—"}</div>
+                  {h.erro && <div className="mt-2 break-words text-xs text-red-700">{h.erro}</div>}
+                  {h.smtpResponse && <div className="mt-2 break-words text-xs text-slate-500">SMTP: {h.smtpResponse}</div>}
                 </article>
               ))}
             </div>
@@ -555,7 +569,7 @@ export default function EmailCRMClient() {
                     <td className="p-3">{dataLocal(h.enviadoEm)}</td>
                     <td className="p-3"><div>{h.nome || "—"}</div><div className="text-xs text-slate-500">{h.email}</div></td>
                     <td className="p-3">{h.assunto || "—"}</td>
-                    <td className="p-3 font-semibold">{h.status}</td>
+                    <td className="p-3"><div className="font-semibold">{h.status}</div>{h.erro && <div className="mt-1 max-w-xs text-xs text-red-700">{h.erro}</div>}{h.smtpResponse && <div className="mt-1 max-w-xs text-xs text-slate-500">SMTP: {h.smtpResponse}</div>}</td>
                   </tr>
                 ))}</tbody>
               </table>
