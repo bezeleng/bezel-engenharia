@@ -14,7 +14,7 @@ const schema = z.object({
   quantidade: z.number().int().min(1).max(20).default(10),
   buscarEmail: z.boolean().default(true),
   buscarTelefone: z.boolean().default(true),
-  offset: z.number().int().min(0).max(10000).default(0),
+  dominiosAnalisados: z.array(z.string().trim().min(1).max(253)).max(500).default([]),
 });
 
 type EmpresaDescoberta = {
@@ -668,7 +668,7 @@ export async function POST(request: Request) {
   }
   const foursquareKey = process.env.FOURSQUARE_API_KEY?.trim();
 
-  const { segmento, localidade, quantidade, buscarEmail, buscarTelefone, offset } = parsed.data;
+  const { segmento, localidade, quantidade, buscarEmail, buscarTelefone, dominiosAnalisados } = parsed.data;
   const pesquisaHunter = `${segmento} — ${localidade}`;
 
   try {
@@ -734,17 +734,25 @@ export async function POST(request: Request) {
     let descartados = 0;
     let analisados = 0;
 
-    // O Discover pode devolver empresas relacionadas, especialmente nos fallbacks.
-    // Antes de gastar uma busca de e-mail e antes de cadastrar no CRM, validamos
-    // a aderência usando nome, domínio, categoria, tags e descrição do Enrichment.
-    // Limitamos a análise para controlar tempo e consumo de créditos.
-    // A busca usa continuação por lote. Se uma rodada analisar 50 de 125
-    // candidatos, a próxima começa no ponto seguinte em vez de repetir os
-    // mesmos descartados. Quando segmento/localidade mudam, o cliente zera o offset.
-    const inicioAnalise = offset < empresas.length ? offset : 0;
+    // O pool pode variar entre chamadas do Hunter/Foursquare. Por isso a
+    // continuação não depende mais de posição numérica: o cliente devolve os
+    // domínios já analisados e esta rodada trabalha apenas com os restantes.
+    // Também priorizamos domínios ainda não cadastrados no CRM.
+    const jaAnalisados = new Set(dominiosAnalisados.map((dominio) => dominio.trim().toLowerCase()));
+    const empresasPendentes = empresas
+      .filter((empresa) => {
+        const dominio = empresa.domain?.trim().toLowerCase();
+        return Boolean(dominio) && !jaAnalisados.has(dominio!);
+      })
+      .sort((a, b) => {
+        const aExiste = dominiosExistentes.has(a.domain?.trim().toLowerCase() || "");
+        const bExiste = dominiosExistentes.has(b.domain?.trim().toLowerCase() || "");
+        return Number(aExiste) - Number(bExiste);
+      });
     const limiteBase = Math.max(quantidade * 5, 40);
-    const limiteAnalise = Math.min(empresas.length - inicioAnalise, limiteBase, 50);
-    const empresasDoLote = empresas.slice(inicioAnalise, inicioAnalise + limiteAnalise);
+    const limiteAnalise = Math.min(empresasPendentes.length, limiteBase, 50);
+    const empresasDoLote = empresasPendentes.slice(0, limiteAnalise);
+    const dominiosAnalisadosRodada: string[] = [];
     const buscaCondominial = ehBuscaCondominial(segmento);
     const validacoesSite = buscaCondominial
       ? await validarSitesCondominiais(empresasDoLote, limiteAnalise)
@@ -753,6 +761,7 @@ export async function POST(request: Request) {
     for (const empresa of empresasDoLote) {
       if (resultados.length >= quantidade) break;
       const dominio = empresa.domain!.trim().toLowerCase();
+      dominiosAnalisadosRodada.push(dominio);
       analisados++;
 
       const validacaoSite = buscaCondominial ? validacoesSite?.get(dominio) : undefined;
@@ -826,8 +835,8 @@ export async function POST(request: Request) {
     }
 
     const nenhumResultado = resultados.length === 0;
-    const fimAnalisado = inicioAnalise + analisados;
-    const proximoOffset = fimAnalisado >= empresas.length ? 0 : fimAnalisado;
+    const candidatosRestantes = Math.max(0, empresasPendentes.length - analisados);
+    const continuacaoDisponivel = candidatosRestantes > 0;
     return NextResponse.json({
       cadastrados,
       jaExistentes,
@@ -838,11 +847,12 @@ export async function POST(request: Request) {
       candidatosUnicos: empresas.length,
       candidatosJaCadastradosNoPool: dominiosExistentes.size,
       candidatosNovosNoPool: Math.max(0, empresas.length - dominiosExistentes.size),
-      inicioAnalise,
-      proximoOffset,
-      continuacaoDisponivel: proximoOffset > 0,
+      dominiosAnalisadosRodada,
+      totalDominiosAnalisados: jaAnalisados.size + dominiosAnalisadosRodada.length,
+      candidatosRestantes,
+      continuacaoDisponivel,
       limiteAnalise,
-      limiteAnaliseAtingido: analisados >= limiteAnalise && resultados.length < quantidade && proximoOffset > 0,
+      limiteAnaliseAtingido: analisados >= limiteAnalise && resultados.length < quantidade && continuacaoDisponivel,
       resultados,
       tentativas: descoberta.tentativas,
       estrategia: descoberta.estrategia,
