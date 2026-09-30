@@ -44,8 +44,13 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
       const erroFoursquare = Array.isArray(json.errosFoursquare) && json.errosFoursquare.length
         ? ` Atenção Foursquare: ${json.errosFoursquare[0]}`
         : "";
+      const continuacaoLote = json.continuacaoDisponivel
+        ? ` A próxima busca com estes mesmos filtros continuará a partir do candidato ${json.proximoOffset + 1}, sem voltar ao início do pool.`
+        : json.inicioAnalise > 0
+          ? " O pool chegou ao fim; a próxima busca reiniciará do começo."
+          : "";
       if (json.nenhumResultado) {
-        setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${foursquare}${erroFoursquare}`);
+        setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${continuacaoLote}${foursquare}${erroFoursquare}`);
       } else {
         const qualificados = json.qualificados ?? ((json.cadastrados || 0) + (json.jaExistentes || 0));
         const detalhe = json.tentativas > 1 ? ` Hunter consultado em ${json.tentativas} estratégias.` : "";
@@ -58,11 +63,6 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
         const pool = json.candidatosUnicos > 0
           ? ` Pool combinado: ${json.candidatosUnicos} candidato(s) único(s) com domínio — ${json.candidatosNovosNoPool || 0} ainda não cadastrado(s) e ${json.candidatosJaCadastradosNoPool || 0} já no CRM.`
           : "";
-        const continuacaoLote = json.continuacaoDisponivel
-          ? ` A próxima busca com estes mesmos filtros continuará a partir do candidato ${json.proximoOffset + 1}, sem voltar ao início do pool.`
-          : json.inicioAnalise > 0
-            ? " O pool chegou ao fim; a próxima busca reiniciará do começo."
-            : "";
         const limite = json.limiteAnaliseAtingido
           ? ` A rodada atingiu o limite seguro de ${json.limiteAnalise} análises antes de completar a quantidade pedida.`
           : "";
