@@ -247,8 +247,8 @@ export async function obterDashboard() {
     metricas: {
       totalContatos: contatos.length,
       enviadosHoje,
-      limiteDiario: 20,
-      restantesHoje: Math.max(0, 20 - enviadosHoje),
+      limiteDiario: 50,
+      restantesHoje: Math.max(0, 50 - enviadosHoje),
       optOut: contatos.filter((x) => x.optOut).length,
       followUpsPendentes,
       porStatus,
