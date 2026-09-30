@@ -1,4 +1,5 @@
 import { client } from "@/sanity/lib/client";
+import { normalizarSegmento } from "@/lib/prospeccao-segmentos";
 
 export type StatusContato = "NOVO" | "CONTATADO" | "RESPONDEU" | "VISITA" | "PROPOSTA" | "NEGOCIACAO" | "CLIENTE" | "ARQUIVADO";
 
@@ -35,11 +36,15 @@ export function normalizarEmail(email: string) {
 }
 
 export async function listarContatos(): Promise<ContatoProspeccao[]> {
-  return store().fetch(
+  const contatos = await store().fetch<ContatoProspeccao[]>(
     `*[_type == "prospeccaoContato"] | order(coalesce(ultimoContatoEm, _createdAt) desc) {
       _id, nome, email, cidade, segmento, telefone, whatsapp, site, instagram, origem, pesquisaHunter, fonteUrl, dominio, encontradoEm, status, optOut, ultimoContatoEm, proximoFollowUpEm, observacoes
     }`
   );
+  return contatos.map((contato) => ({
+    ...contato,
+    segmento: normalizarSegmento(contato.segmento),
+  }));
 }
 
 export async function buscarContatoPorEmail(email: string): Promise<ContatoProspeccao | null> {
@@ -68,7 +73,7 @@ export async function salvarContato(input: {
     const patch: Record<string, unknown> = {
       nome: input.nome?.trim() || existente.nome || "",
       cidade: input.cidade?.trim() || existente.cidade || "",
-      segmento: input.segmento?.trim() || existente.segmento || "",
+      segmento: input.segmento ? normalizarSegmento(input.segmento) : normalizarSegmento(existente.segmento),
       status: input.status || existente.status || "NOVO",
       observacoes: input.observacoes ?? existente.observacoes ?? "",
     };
@@ -81,7 +86,7 @@ export async function salvarContato(input: {
     nome: input.nome?.trim() || "",
     email,
     cidade: input.cidade?.trim() || "",
-    segmento: input.segmento?.trim() || "",
+    segmento: normalizarSegmento(input.segmento),
     status: input.status || "NOVO",
     optOut: false,
     proximoFollowUpEm: input.proximoFollowUpEm || null,
@@ -134,7 +139,7 @@ export async function salvarContatoHunter(input: {
   const existente = await buscarContatoPorDominio(dominio);
   const dados = {
     nome: input.nome.trim(), ...(input.email ? { email: normalizarEmail(input.email) } : {}),
-    cidade: input.cidade.trim(), segmento: input.segmento.trim(),
+    cidade: input.cidade.trim(), segmento: normalizarSegmento(input.segmento),
     telefone: input.telefone?.trim() || "", site: input.site,
     instagram: input.instagram || "", origem: input.origem?.trim() || "Hunter",
     pesquisaHunter: input.pesquisaHunter, fonteUrl: input.fonteUrl || "Hunter.io",
