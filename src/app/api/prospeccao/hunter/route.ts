@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { EMAIL_SESSION_COOKIE, validarTokenSessao } from "@/lib/email-panel-session";
-import { salvarContatoHunter } from "@/lib/prospeccao-store";
+import { buscarDominiosExistentes, salvarContatoHunter } from "@/lib/prospeccao-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -721,6 +721,17 @@ export async function POST(request: Request) {
       });
     }
 
+    const dominiosExistentes = new Set(
+      await buscarDominiosExistentes(
+        empresas.map((empresa) => empresa.domain?.trim().toLowerCase()).filter((dominio): dominio is string => Boolean(dominio))
+      )
+    );
+    const empresasOrdenadas = [...empresas].sort((a, b) => {
+      const aExiste = dominiosExistentes.has(a.domain?.trim().toLowerCase() || "");
+      const bExiste = dominiosExistentes.has(b.domain?.trim().toLowerCase() || "");
+      return Number(aExiste) - Number(bExiste);
+    });
+
     const resultados: Array<Record<string, unknown>> = [];
     let cadastrados = 0;
     let jaExistentes = 0;
@@ -738,10 +749,10 @@ export async function POST(request: Request) {
     const limiteAnalise = Math.min(empresas.length, Math.max(quantidade * 5, 40), 50);
     const buscaCondominial = ehBuscaCondominial(segmento);
     const validacoesSite = buscaCondominial
-      ? await validarSitesCondominiais(empresas, limiteAnalise)
+      ? await validarSitesCondominiais(empresasOrdenadas, limiteAnalise)
       : undefined;
 
-    for (const empresa of empresas.slice(0, limiteAnalise)) {
+    for (const empresa of empresasOrdenadas.slice(0, limiteAnalise)) {
       if (resultados.length >= quantidade) break;
       const dominio = empresa.domain!.trim().toLowerCase();
       analisados++;
@@ -825,6 +836,9 @@ export async function POST(request: Request) {
       analisados,
       qualificados: resultados.length,
       candidatosUnicos: empresas.length,
+      candidatosJaCadastradosNoPool: dominiosExistentes.size,
+      candidatosNovosNoPool: Math.max(0, empresas.length - dominiosExistentes.size),
+      priorizouNaoCadastrados: true,
       limiteAnalise,
       limiteAnaliseAtingido: analisados >= limiteAnalise && resultados.length < quantidade && empresas.length > limiteAnalise,
       resultados,
