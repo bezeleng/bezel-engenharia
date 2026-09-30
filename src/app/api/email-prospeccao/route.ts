@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { enviarEmail } from "@/lib/email";
 import { EMAIL_SESSION_COOKIE, validarTokenSessao } from "@/lib/email-panel-session";
+import { LIMITE_DIARIO_PROSPECCAO, LIMITE_LOTE_PROSPECCAO } from "@/lib/prospeccao-config";
 import {
   buscarContatoPorEmail,
   finalizarCampanha,
@@ -16,8 +17,8 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const MAX_DIARIO = 50;
-const MAX_LOTE = 20;
+const MAX_DIARIO = LIMITE_DIARIO_PROSPECCAO;
+const MAX_LOTE = LIMITE_LOTE_PROSPECCAO;
 
 const contatoSchema = z.object({
   nome: z.string().trim().max(120).optional().default(""),
