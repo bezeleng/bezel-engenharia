@@ -43,7 +43,13 @@ function escaparHtml(valor: string) {
 }
 
 function personalizar(texto: string, nome: string) {
-  return texto.replaceAll("{{nome}}", nome || "contato");
+  const nomeLimpo = nome.trim();
+  if (nomeLimpo) return texto.replaceAll("{{nome}}", nomeLimpo);
+
+  return texto
+    .replace(/Olá,\s*{{nome}}\s*([.!?])/gi, "Olá$1")
+    .replace(/Oi,\s*{{nome}}\s*([.!?])/gi, "Oi$1")
+    .replaceAll("{{nome}}", "");
 }
 
 function montarHtml(mensagem: string) {
@@ -85,8 +91,9 @@ export async function POST(request: Request) {
   );
 
   if (teste) {
-    const texto = personalizar(mensagem, "Contato de teste");
-    const assuntoSeguro = personalizar(assunto, "Contato de teste").replace(/[\r\n]+/g, " ").trim();
+    const nomeTeste = unicos[0]?.nome?.trim() || "";
+    const texto = personalizar(mensagem, nomeTeste);
+    const assuntoSeguro = personalizar(assunto, nomeTeste).replace(/[\r\n]+/g, " ").trim();
     const destinatarioTeste = emailTeste?.toLowerCase() || smtpUser.toLowerCase();
     try {
       const info = await enviarEmail({
