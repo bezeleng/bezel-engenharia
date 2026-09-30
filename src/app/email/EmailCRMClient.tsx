@@ -36,16 +36,18 @@ const STATUS: Array<{ value: StatusContato; label: string }> = [
 const TEMPLATES = {
   geral: {
     label: "Prospecção geral",
-    assunto: "BEZEL — Engenharia, Arquitetura e Gestão de Obras",
+    assunto: "Parceria para obras, reformas e manutenção predial",
     mensagem: `Olá, {{nome}}.
 
 Meu nome é Diego e falo em nome da BEZEL Engenharia, Arquitetura e Gestão de Obras.
 
 Atuamos em Jacareí, São José dos Campos e região com construção, reformas, manutenção predial, mão de obra especializada e gerenciamento de obras.
 
-Estamos ampliando nossa rede de contatos e gostaríamos de nos colocar à disposição para futuras demandas, parcerias ou oportunidades em que a BEZEL possa contribuir.
+Estamos ampliando nossa rede de parceiros na região e gostaríamos de colocar a BEZEL à disposição para demandas de obras, reformas e manutenção de seus clientes, imóveis ou condomínios atendidos por vocês.
 
-Podemos apoiar desde o levantamento inicial e planejamento até a execução e acompanhamento da obra, com organização de equipes, materiais, etapas, custos e cronograma.
+Podemos apoiar desde o levantamento e orçamento inicial até a execução e acompanhamento da obra, organizando equipes, materiais, etapas, custos e cronograma.
+
+Também estamos abertos a parcerias comerciais por indicação, com condições de comissionamento previamente alinhadas quando uma oportunidade indicada se converte em contrato.
 
 Se fizer sentido, fico à disposição para uma conversa ou visita técnica sem compromisso.
 
@@ -160,6 +162,7 @@ export default function EmailCRMClient() {
   const [filtroEmail, setFiltroEmail] = useState<"" | "com" | "sem">("");
   const [novo, setNovo] = useState({ nome: "", email: "", cidade: "", segmento: "Geral" });
   const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [excluindoSelecionados, setExcluindoSelecionados] = useState(false);
   const contatosDigitados = useMemo(() => interpretar(destinatarios), [destinatarios]);
 
   async function carregar() {
@@ -254,6 +257,32 @@ export default function EmailCRMClient() {
     }
   }
 
+  async function excluirSelecionados() {
+    if (selecionados.length === 0 || excluindoSelecionados) return;
+    const quantidade = selecionados.length;
+    if (!window.confirm(
+      `Excluir definitivamente ${quantidade} contato(s) selecionado(s)? Esta ação não pode ser desfeita.`
+    )) return;
+
+    setExcluindoSelecionados(true);
+    try {
+      const r = await fetch("/api/prospeccao/contatos", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selecionados }),
+      });
+      if (!r.ok) {
+        const json = await r.json().catch(() => ({}));
+        window.alert(json.error || "Não foi possível excluir os contatos selecionados.");
+        return;
+      }
+      setSelecionados([]);
+      await carregar();
+    } finally {
+      setExcluindoSelecionados(false);
+    }
+  }
+
   const segmentos = Array.from(new Set(
     (dados?.contatos || []).map((c) => normalizarSegmento(c.segmento))
   )).sort((a, b) => a.localeCompare(b, "pt-BR"));
@@ -270,37 +299,30 @@ export default function EmailCRMClient() {
     return true;
   });
 
-  const selecionaveisVisiveis = filtrados.filter((c) => !c.optOut && Boolean(c.email));
-  const todosVisiveisSelecionados = selecionaveisVisiveis.length > 0 &&
-    selecionaveisVisiveis.every((c) => selecionados.includes(c._id));
+  const todosVisiveisSelecionados = filtrados.length > 0 &&
+    filtrados.every((c) => selecionados.includes(c._id));
+  const selecionadosParaEnvio = (dados?.contatos || []).filter(
+    (c) => selecionados.includes(c._id) && !c.optOut && Boolean(c.email)
+  );
 
   function alternarContato(id: string) {
-    setSelecionados((atuais) => {
-      if (atuais.includes(id)) return atuais.filter((x) => x !== id);
-      if (atuais.length >= 20) return atuais;
-      return [...atuais, id];
-    });
+    setSelecionados((atuais) =>
+      atuais.includes(id) ? atuais.filter((x) => x !== id) : [...atuais, id]
+    );
   }
 
   function alternarTodosVisiveis() {
+    const idsVisiveis = new Set(filtrados.map((c) => c._id));
     if (todosVisiveisSelecionados) {
-      const idsVisiveis = new Set(selecionaveisVisiveis.map((c) => c._id));
       setSelecionados((atuais) => atuais.filter((id) => !idsVisiveis.has(id)));
       return;
     }
-    setSelecionados((atuais) => {
-      const novos = [...atuais];
-      for (const contato of selecionaveisVisiveis) {
-        if (novos.length >= 20) break;
-        if (!novos.includes(contato._id)) novos.push(contato._id);
-      }
-      return novos;
-    });
+    setSelecionados((atuais) => [...new Set([...atuais, ...idsVisiveis])]);
   }
 
   function prepararEnvioSelecionados() {
-    const contatos = (dados?.contatos || []).filter((c) => selecionados.includes(c._id) && !c.optOut && Boolean(c.email));
-    setDestinatarios(contatos.map((c) => `${c.nome} | ${c.email!}`).join("\n"));
+    if (selecionadosParaEnvio.length < 1 || selecionadosParaEnvio.length > 20) return;
+    setDestinatarios(selecionadosParaEnvio.map((c) => `${c.nome} | ${c.email!}`).join("\n"));
     setResultado("");
     setAba("enviar");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -450,9 +472,16 @@ export default function EmailCRMClient() {
                     className="rounded-lg border border-[#193451] px-3 py-2 text-xs font-semibold text-[#193451]">
                     {todosVisiveisSelecionados ? "Desmarcar visíveis" : "Selecionar visíveis"}
                   </button>
-                  <button type="button" disabled={selecionados.length === 0} onClick={prepararEnvioSelecionados}
+                  <button type="button"
+                    disabled={selecionadosParaEnvio.length === 0 || selecionadosParaEnvio.length > 20}
+                    onClick={prepararEnvioSelecionados}
                     className="rounded-lg bg-[#193451] px-4 py-2 text-xs font-semibold text-white disabled:opacity-40">
-                    Enviar e-mail para selecionados ({selecionados.length})
+                    Enviar e-mail ({selecionadosParaEnvio.length} apto(s))
+                  </button>
+                  <button type="button" disabled={selecionados.length === 0 || excluindoSelecionados}
+                    onClick={() => void excluirSelecionados()}
+                    className="rounded-lg border border-red-300 px-4 py-2 text-xs font-semibold text-red-700 disabled:opacity-40">
+                    {excluindoSelecionados ? "Excluindo..." : `Excluir selecionados (${selecionados.length})`}
                   </button>
                 </div>
               </div>
@@ -470,15 +499,15 @@ export default function EmailCRMClient() {
                   <option value="">Com e sem e-mail</option><option value="com">Somente com e-mail</option><option value="sem">Somente sem e-mail</option>
                 </select>
               </div>
-              <p className="mb-4 text-xs text-slate-500">Selecione até 20 contatos com e-mail. Contatos bloqueados ou sem e-mail não podem ser selecionados.</p>
+              <p className="mb-4 text-xs text-slate-500">A seleção serve para envio e exclusão. Para e-mail, o máximo continua sendo 20 por disparo e somente contatos com e-mail e envio permitido são considerados.</p>
 
               <div className="grid gap-3 md:hidden">
                 {filtrados.map((c) => (
                   <article key={c._id} className={`min-w-0 rounded-xl border p-4 ${selecionados.includes(c._id) ? "border-[#c3a06a] bg-[#fffaf0]" : "border-slate-200"}`}>
                     <div className="flex items-start gap-3">
                       <input type="checkbox" aria-label={`Selecionar ${c.nome}`} checked={selecionados.includes(c._id)}
-                        disabled={c.optOut || !c.email} onChange={() => alternarContato(c._id)}
-                        className="mt-1 h-5 w-5 shrink-0 accent-[#193451] disabled:opacity-40" />
+                        onChange={() => alternarContato(c._id)}
+                        className="mt-1 h-5 w-5 shrink-0 accent-[#193451]" />
                       <div className="min-w-0">
                         <div className="break-words font-semibold text-[#193451]">{c.nome || "Sem nome"}</div>
                         <div className="mt-0.5 break-all text-xs text-slate-500">{c.email || "Sem e-mail"}</div>
@@ -525,7 +554,7 @@ export default function EmailCRMClient() {
                     {filtrados.map((c) => (
                       <tr key={c._id} className={`border-b border-slate-100 ${selecionados.includes(c._id) ? "bg-[#fffaf0]" : ""}`}>
                         <td className="p-3"><input type="checkbox" aria-label={`Selecionar ${c.nome}`} checked={selecionados.includes(c._id)}
-                          disabled={c.optOut || !c.email} onChange={() => alternarContato(c._id)} className="h-4 w-4 accent-[#193451] disabled:opacity-40" /></td>
+                          onChange={() => alternarContato(c._id)} className="h-4 w-4 accent-[#193451]" /></td>
                         <td className="p-3"><div className="font-semibold text-[#193451]">{c.nome || "Sem nome"}</div><div className="text-xs text-slate-500">{c.email || "Sem e-mail"}</div><div className="mt-1 text-xs text-slate-400">{c.segmento || "Geral"} · {c.origem || "Manual"}</div>{c.telefone && <div className="mt-1 text-xs text-slate-400">Tel.: {c.telefone}</div>}{c.site && <a href={c.site} target="_blank" rel="noreferrer" className="mt-1 block text-xs font-semibold text-[#193451] underline">Site</a>}</td>
                         <td className="p-3">{c.cidade || "—"}</td>
                         <td className="p-3"><select value={c.status} onChange={(e) => void atualizar(c._id,{status:e.target.value})} className="rounded-lg border p-2">
