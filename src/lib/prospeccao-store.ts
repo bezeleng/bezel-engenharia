@@ -115,7 +115,7 @@ export async function buscarContatoPorDominio(dominio: string): Promise<ContatoP
 
 export async function salvarContatoHunter(input: {
   dominio: string; nome: string; email?: string; cidade: string; segmento: string;
-  telefone?: string; site: string; instagram?: string; fonteUrl?: string; pesquisaHunter: string;
+  telefone?: string; site: string; instagram?: string; origem?: string; fonteUrl?: string; pesquisaHunter: string;
 }) {
   const c = store();
   const dominio = input.dominio.trim().toLowerCase();
@@ -124,7 +124,7 @@ export async function salvarContatoHunter(input: {
     nome: input.nome.trim(), ...(input.email ? { email: normalizarEmail(input.email) } : {}),
     cidade: input.cidade.trim(), segmento: input.segmento.trim(),
     telefone: input.telefone?.trim() || "", site: input.site,
-    instagram: input.instagram || "", origem: "Hunter",
+    instagram: input.instagram || "", origem: input.origem?.trim() || "Hunter",
     pesquisaHunter: input.pesquisaHunter, fonteUrl: input.fonteUrl || "Hunter.io",
     dominio, encontradoEm: new Date().toISOString(),
   };
