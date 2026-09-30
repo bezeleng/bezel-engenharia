@@ -1,0 +1,2 @@
+export const LIMITE_DIARIO_PROSPECCAO = 50;
+export const LIMITE_LOTE_PROSPECCAO = 20;
