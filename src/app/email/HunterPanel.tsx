@@ -79,6 +79,19 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
       const erroFoursquare = Array.isArray(json.errosFoursquare) && json.errosFoursquare.length
         ? ` Atenção Foursquare: ${json.errosFoursquare[0]}`
         : "";
+      const falhasDomainFinder = Array.isArray(json.falhasDomainFinder) ? json.falhasDomainFinder : [];
+      const diagnosticoDomainFinder = falhasDomainFinder.length
+        ? ` Atenção Domain Finder: ${falhasDomainFinder.map((item: { status?: number; quantidade?: number }) => {
+            const status = Number(item.status || 0);
+            const quantidadeFalhas = Number(item.quantidade || 0);
+            const motivo = status === 429
+              ? "limite de uso/créditos do Hunter"
+              : status === 403
+                ? "limite de requisições do Hunter"
+                : `HTTP ${status || "desconhecido"}`;
+            return `${quantidadeFalhas} falha(s) por ${motivo}`;
+          }).join(", ")}.`
+        : "";
       const continuacaoLote = json.continuacaoDisponivel
         ? ` A próxima busca com estes mesmos filtros ignorará os ${json.totalDominiosAnalisados || 0} domínio(s) já analisado(s) e seguirá pelos ${json.candidatosRestantes || 0} restante(s), mesmo que o pool mude de ordem.`
         : dominiosAnalisados.length > 0
@@ -88,7 +101,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
         ? ` Motivos do descarte: ${json.descartadosSiteIndisponivel || 0} site(s) indisponível(is) para validação, ${json.descartadosSemEvidenciaCondominial || 0} sem evidência de administração condominial no site, ${json.descartadosAderencia || 0} por aderência insuficiente e ${json.descartadosLocalidade || 0} por localidade incompatível.`
         : "";
       if (json.nenhumResultado) {
-        setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${diagnosticoDescarte}${continuacaoLote}${foursquare}${erroFoursquare}`);
+        setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${diagnosticoDescarte}${continuacaoLote}${foursquare}${erroFoursquare}${diagnosticoDomainFinder}`);
       } else {
         const qualificados = json.qualificados ?? ((json.cadastrados || 0) + (json.jaExistentes || 0));
         const detalhe = json.tentativas > 1 ? ` Hunter consultado em ${json.tentativas} estratégias.` : "";
