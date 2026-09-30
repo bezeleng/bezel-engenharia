@@ -51,6 +51,7 @@ type DiscoverPayload = {
 };
 
 type GooglePlace = {
+  id?: string;
   displayName?: { text?: string };
   formattedAddress?: string;
   websiteUri?: string;
@@ -327,8 +328,12 @@ async function buscarGooglePlaces(segmento: string, localidade: string, apiKey: 
       ]
     : [`${segmento} em ${cidade}, SP`];
 
-  const porNome = new Map<string, GooglePlace>();
+  const porIdOuNome = new Map<string, GooglePlace>();
+  const erros: string[] = [];
 
+  // Primeiro fazemos somente a descoberta (campos Pro). Site e telefone são
+  // buscados depois via Place Details. Assim uma falha nos campos Enterprise
+  // não transforma silenciosamente toda a pesquisa do Google em zero.
   for (const textQuery of consultas) {
     const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
       method: "POST",
@@ -336,18 +341,21 @@ async function buscarGooglePlaces(segmento: string, localidade: string, apiKey: 
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.internationalPhoneNumber",
+        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress",
       },
       body: JSON.stringify({
         textQuery,
         languageCode: "pt-BR",
         regionCode: "BR",
         pageSize: 20,
+        includePureServiceAreaBusinesses: true,
       }),
     });
 
     if (!r.ok) {
-      console.error("Google Places Text Search:", r.status, (await r.text()).slice(0, 500));
+      const detalhe = await r.text();
+      console.error("Google Places Text Search:", r.status, detalhe.slice(0, 500));
+      erros.push(`Text Search HTTP ${r.status}: ${detalhe.slice(0, 180)}`);
       continue;
     }
 
@@ -355,14 +363,39 @@ async function buscarGooglePlaces(segmento: string, localidade: string, apiKey: 
     for (const place of payload.places || []) {
       const nome = place.displayName?.text?.trim();
       const endereco = normalizar(place.formattedAddress || "");
-      if (!nome || !endereco.includes(normalizar(cidade))) continue;
-      const chave = normalizar(nome);
-      const anterior = porNome.get(chave);
-      if (!anterior || (!anterior.websiteUri && place.websiteUri)) porNome.set(chave, place);
+      // Empresas de área de serviço podem não trazer endereço. Quando há
+      // endereço, ele precisa bater com a cidade pedida.
+      if (!nome || (endereco && !endereco.includes(normalizar(cidade)))) continue;
+      const chave = place.id || normalizar(nome);
+      if (!porIdOuNome.has(chave)) porIdOuNome.set(chave, place);
     }
   }
 
-  return [...porNome.values()];
+  return { places: [...porIdOuNome.values()], erros };
+}
+
+async function detalharGooglePlace(place: GooglePlace, apiKey: string) {
+  if (!place.id) return { place, erro: "Place sem ID." };
+  const url = new URL(`https://places.googleapis.com/v1/places/${encodeURIComponent(place.id)}`);
+  url.searchParams.set("languageCode", "pt-BR");
+  url.searchParams.set("regionCode", "BR");
+
+  const r = await fetch(url.toString(), {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": "id,displayName,formattedAddress,websiteUri,nationalPhoneNumber,internationalPhoneNumber",
+    },
+  });
+
+  if (!r.ok) {
+    const detalhe = await r.text();
+    console.error("Google Place Details:", r.status, detalhe.slice(0, 500));
+    return { place, erro: `Place Details HTTP ${r.status}: ${detalhe.slice(0, 180)}` };
+  }
+
+  return { place: await r.json() as GooglePlace };
 }
 
 function dominioDoSite(site?: string) {
@@ -394,17 +427,44 @@ async function resolverDominioEmpresa(nome: string, key: string): Promise<Empres
   };
 }
 
-async function descobrirEmpresasGoogle(segmento: string, localidade: string, hunterKey: string, googleKey?: string) {
-  if (!googleKey) return [] as EmpresaDescoberta[];
+async function descobrirEmpresasGoogle(
+  segmento: string,
+  localidade: string,
+  hunterKey: string,
+  googleKey: string | undefined,
+  quantidade: number
+) {
+  if (!googleKey) {
+    return {
+      empresas: [] as EmpresaDescoberta[],
+      encontrados: 0,
+      detalhados: 0,
+      comSite: 0,
+      resolvidosHunter: 0,
+      erros: [] as string[],
+    };
+  }
 
-  const places = await buscarGooglePlaces(segmento, localidade, googleKey);
+  const busca = await buscarGooglePlaces(segmento, localidade, googleKey);
+  const limiteDetalhes = Math.min(busca.places.length, Math.max(quantidade * 2, 20), 30);
+  const alvos = busca.places.slice(0, limiteDetalhes);
+  const detalhes: GooglePlace[] = [];
+  const erros = [...busca.erros];
+
+  for (let i = 0; i < alvos.length; i += 5) {
+    const lote = await Promise.all(alvos.slice(i, i + 5).map((p) => detalharGooglePlace(p, googleKey)));
+    for (const item of lote) {
+      detalhes.push(item.place);
+      if (item.erro) erros.push(item.erro);
+    }
+  }
+
   const empresas: EmpresaDescoberta[] = [];
   const semSite: GooglePlace[] = [];
+  let comSite = 0;
+  let resolvidosHunter = 0;
 
-  // O Google passa a ser a fonte primária do domínio, telefone e localidade.
-  // Hunter Domain Finder é apenas fallback para empresas que o Places encontrou
-  // mas que não possuem website cadastrado.
-  for (const place of places) {
+  for (const place of detalhes) {
     const nome = place.displayName?.text?.trim();
     if (!nome) continue;
     const dominio = dominioDoSite(place.websiteUri);
@@ -412,6 +472,7 @@ async function descobrirEmpresasGoogle(segmento: string, localidade: string, hun
       semSite.push(place);
       continue;
     }
+    comSite++;
     empresas.push({
       domain: dominio,
       organization: nome,
@@ -422,11 +483,11 @@ async function descobrirEmpresasGoogle(segmento: string, localidade: string, hun
     });
   }
 
-  const lote = 5;
-  for (let i = 0; i < semSite.length; i += lote) {
-    const parte = semSite.slice(i, i + lote);
-    const resolvidas = await Promise.all(
-      parte.map(async (place) => {
+  // Se o Google encontrou a empresa mas ela não publicou site na ficha,
+  // tentamos resolver o domínio no Hunter. Isso é fallback, não filtro.
+  for (let i = 0; i < semSite.length; i += 5) {
+    const lote = await Promise.all(
+      semSite.slice(i, i + 5).map(async (place) => {
         const nome = place.displayName?.text?.trim();
         if (!nome) return undefined;
         const resolvida = await resolverDominioEmpresa(nome, hunterKey);
@@ -440,12 +501,22 @@ async function descobrirEmpresasGoogle(segmento: string, localidade: string, hun
         } satisfies EmpresaDescoberta;
       })
     );
-    for (const resolvida of resolvidas) {
-      if (resolvida?.domain) empresas.push(resolvida);
+    for (const resolvida of lote) {
+      if (resolvida?.domain) {
+        resolvidosHunter++;
+        empresas.push(resolvida);
+      }
     }
   }
 
-  return empresas;
+  return {
+    empresas,
+    encontrados: busca.places.length,
+    detalhados: detalhes.length,
+    comSite,
+    resolvidosHunter,
+    erros: [...new Set(erros)].slice(0, 3),
+  };
 }
 
 async function descobrirEmpresas(segmento: string, localidade: string, key: string) {
@@ -571,7 +642,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const empresasGoogle = await descobrirEmpresasGoogle(segmento, localidade, key, googlePlacesKey);
+    const google = await descobrirEmpresasGoogle(segmento, localidade, key, googlePlacesKey, quantidade);
+    const empresasGoogle = google.empresas;
     const empresas = juntarEmpresas([
       { ok: true, payload: { data: empresasGoogle } },
       { ok: true, payload: { data: descoberta.empresas } },
@@ -589,6 +661,11 @@ export async function POST(request: Request) {
         estrategia: descoberta.estrategia,
         googlePlacesConfigurado: Boolean(googlePlacesKey),
         encontradosGooglePlaces: empresasGoogle.length,
+        fichasGoogleEncontradas: google.encontrados,
+        fichasGoogleDetalhadas: google.detalhados,
+        fichasGoogleComSite: google.comSite,
+        dominiosGoogleViaHunter: google.resolvidosHunter,
+        errosGooglePlaces: google.erros,
         nenhumResultado: true,
         mensagem: `Nenhuma empresa encontrada para “${segmento}” em ${cidadeDaLocalidade(localidade)} após ${descoberta.tentativas} estratégias de busca. Tente um segmento relacionado ou uma cidade próxima.`,
       });
@@ -692,6 +769,11 @@ export async function POST(request: Request) {
       estrategia: descoberta.estrategia,
       googlePlacesConfigurado: Boolean(googlePlacesKey),
       encontradosGooglePlaces: empresasGoogle.length,
+      fichasGoogleEncontradas: google.encontrados,
+      fichasGoogleDetalhadas: google.detalhados,
+      fichasGoogleComSite: google.comSite,
+      dominiosGoogleViaHunter: google.resolvidosHunter,
+      errosGooglePlaces: google.erros,
       nenhumResultado,
       mensagem: nenhumResultado
         ? `Nenhuma empresa qualificada para “${segmento}” em ${cidadeDaLocalidade(localidade)}. ${descartados} resultado(s) foram descartados por baixa aderência ao segmento ou localidade.`
