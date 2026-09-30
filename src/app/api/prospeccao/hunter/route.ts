@@ -357,7 +357,7 @@ async function buscarGooglePlaces(segmento: string, localidade: string, apiKey: 
   return [...porNome.values()];
 }
 
-async function resolverDominioEmpresa(nome: string, key: string) {
+async function resolverDominioEmpresa(nome: string, key: string): Promise<EmpresaDescoberta | undefined> {
   const url = new URL("https://api.hunter.io/v2/domain-finder");
   url.searchParams.set("company", nome);
   url.searchParams.set("limit", "1");
