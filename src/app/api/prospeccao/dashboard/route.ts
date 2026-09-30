@@ -13,7 +13,13 @@ export async function GET() {
   }
 
   try {
-    return NextResponse.json(await obterDashboard());
+    return NextResponse.json(await obterDashboard(), {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
   } catch (error) {
     console.error("Falha no dashboard de prospecção:", error);
     return NextResponse.json(
