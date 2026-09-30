@@ -732,7 +732,10 @@ export async function POST(request: Request) {
     // Antes de gastar uma busca de e-mail e antes de cadastrar no CRM, validamos
     // a aderência usando nome, domínio, categoria, tags e descrição do Enrichment.
     // Limitamos a análise para controlar tempo e consumo de créditos.
-    const limiteAnalise = Math.min(empresas.length, Math.max(quantidade * 3, 30), 50);
+    // Quando a taxa de descarte é alta, 3x a quantidade pode encerrar a rodada
+    // antes de alcançar novos leads. Analisamos uma janela maior, ainda limitada
+    // a 50 candidatos para respeitar o tempo máximo da função e o consumo de API.
+    const limiteAnalise = Math.min(empresas.length, Math.max(quantidade * 5, 40), 50);
     const buscaCondominial = ehBuscaCondominial(segmento);
     const validacoesSite = buscaCondominial
       ? await validarSitesCondominiais(empresas, limiteAnalise)
@@ -820,6 +823,10 @@ export async function POST(request: Request) {
       semEmail,
       descartados,
       analisados,
+      qualificados: resultados.length,
+      candidatosUnicos: empresas.length,
+      limiteAnalise,
+      limiteAnaliseAtingido: analisados >= limiteAnalise && resultados.length < quantidade && empresas.length > limiteAnalise,
       resultados,
       tentativas: descoberta.tentativas,
       estrategia: descoberta.estrategia,
