@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import HunterPanel from "./HunterPanel";
+import { normalizarSegmento } from "@/lib/prospeccao-segmentos";
 
 type StatusContato = "NOVO" | "CONTATADO" | "RESPONDEU" | "VISITA" | "PROPOSTA" | "NEGOCIACAO" | "CLIENTE" | "ARQUIVADO";
 type Contato = {
@@ -244,13 +245,15 @@ export default function EmailCRMClient() {
     }
   }
 
-  const segmentos = Array.from(new Set((dados?.contatos || []).map((c) => c.segmento).filter(Boolean) as string[])).sort();
+  const segmentos = Array.from(new Set(
+    (dados?.contatos || []).map((c) => normalizarSegmento(c.segmento))
+  )).sort((a, b) => a.localeCompare(b, "pt-BR"));
   const cidades = Array.from(new Set((dados?.contatos || []).map((c) => c.cidade).filter(Boolean) as string[])).sort();
 
   const filtrados = (dados?.contatos || []).filter((c) => {
     const texto = `${c.nome} ${c.email || ""} ${c.cidade || ""} ${c.segmento || ""} ${c.telefone || ""} ${c.whatsapp || ""}`.toLowerCase();
     if (!texto.includes(busca.toLowerCase())) return false;
-    if (filtroSegmento && c.segmento !== filtroSegmento) return false;
+    if (filtroSegmento && normalizarSegmento(c.segmento) !== filtroSegmento) return false;
     if (filtroCidade && c.cidade !== filtroCidade) return false;
     if (filtroOrigem && (c.origem || "Manual") !== filtroOrigem) return false;
     if (filtroEmail === "com" && !c.email) return false;
