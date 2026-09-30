@@ -246,12 +246,9 @@ async function validarAtividadeCondominialNoSite(domain: string) {
   const home = await baixarPaginaPublica(base.toString());
   if (!home) return { aprovado: false, evidencias: [] as string[] };
 
-  const paginas = [home];
   const links = linksInternosRelevantes(home, base);
-  for (const link of links) {
-    const html = await baixarPaginaPublica(link);
-    if (html) paginas.push(html);
-  }
+  const internas = await Promise.all(links.map((link) => baixarPaginaPublica(link)));
+  const paginas = [home, ...internas.filter((html): html is string => Boolean(html))];
 
   const texto = htmlParaTexto(paginas.join(" "));
   const frasesFortes = [
@@ -361,7 +358,9 @@ function tokensMarca(nome: string) {
     "administradora", "administracao", "condominio", "condominios", "condominial",
     "gestao", "sindico", "sindicancia", "profissional", "servico", "servicos",
     "empresa", "empresas", "grupo", "brasil", "ltda", "eireli", "limitada",
-    "assessoria", "consultoria", "de", "da", "do", "das", "dos", "e",
+    "assessoria", "consultoria", "escola", "colegio", "educacao", "ensino",
+    "arquitetura", "arquiteto", "arquitetos", "engenharia", "engenheiro", "engenheiros",
+    "clinica", "clinicas", "centro", "saude", "de", "da", "do", "das", "dos", "em", "e",
   ]);
   return normalizar(nome)
     .split(/[^a-z0-9]+/)
@@ -518,9 +517,9 @@ async function descobrirEmpresasFoursquare(
   // Sem site/e-mail corporativo, o Domain Finder retorna até 3 sugestões.
   // perfect_match=false amplia a cobertura; ainda aceitamos somente sugestões
   // cujo nome/domínio mantenha um token de marca da empresa do Foursquare.
-  for (let i = 0; i < semDominio.length; i += 5) {
+  for (let i = 0; i < semDominio.length; i += 8) {
     const lote = await Promise.all(
-      semDominio.slice(i, i + 5).map(async (place) => {
+      semDominio.slice(i, i + 8).map(async (place) => {
         const nome = place.name?.trim();
         if (!nome) return undefined;
         const resolvida = await resolverDominioEmpresa(nome, hunterKey);
@@ -610,7 +609,7 @@ async function descobrirEmpresas(segmento: string, localidade: string, key: stri
 async function validarSitesCondominiais(empresas: EmpresaDescoberta[], limite: number) {
   const mapa = new Map<string, Awaited<ReturnType<typeof validarAtividadeCondominialNoSite>>>();
   const alvos = empresas.slice(0, limite).filter((x) => x.domain);
-  const tamanhoLote = 5;
+  const tamanhoLote = 8;
 
   for (let i = 0; i < alvos.length; i += tamanhoLote) {
     const lote = alvos.slice(i, i + tamanhoLote);
@@ -828,6 +827,7 @@ export async function POST(request: Request) {
       encontradosFoursquare: empresasFoursquare.length,
       fichasFoursquareEncontradas: foursquare.encontrados,
       fichasFoursquareComSite: foursquare.comSite,
+      fichasFoursquareComEmailCorporativo: foursquare.comEmailCorporativo,
       dominiosFoursquareViaHunter: foursquare.resolvidosHunter,
       consultasFoursquare: foursquare.consultas,
       errosFoursquare: foursquare.erros,
