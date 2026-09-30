@@ -422,10 +422,10 @@ async function buscarFoursquarePlaces(segmento: string, localidade: string, apiK
   const termos = termosDoSegmento(segmento);
   const consultas: Array<{ query: string; categoria?: string }> = ehBuscaCondominial(segmento)
     ? [
+        { query: "administração de condomínios", categoria: "63be6904847c3692a84b9b86" },
         { query: "administradora de condomínios" },
         { query: "gestão condominial" },
         { query: "síndico profissional" },
-        { query: "administração de condomínios", categoria: "63be6904847c3692a84b9b86" },
       ]
     : [...new Set([segmento, ...termos.palavras])].slice(0, 4).map((query) => ({ query }));
 
