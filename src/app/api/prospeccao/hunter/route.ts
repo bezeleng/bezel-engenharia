@@ -20,10 +20,10 @@ type EmpresaDescoberta = {
   domain?: string;
   organization?: string;
   emails_count?: { personal?: number; generic?: number; total?: number };
-  telefoneGoogle?: string;
-  siteGoogle?: string;
-  localidadeConfirmadaGoogle?: boolean;
-  origemGoogle?: boolean;
+  telefoneFonte?: string;
+  siteFonte?: string;
+  localidadeConfirmadaFonte?: boolean;
+  origem?: "Foursquare" | "Hunter";
 };
 
 type EmailHunter = {
@@ -50,18 +50,23 @@ type DiscoverPayload = {
   meta?: { results?: number; filters?: Record<string, unknown> };
 };
 
-type GooglePlace = {
-  id?: string;
-  displayName?: { text?: string };
-  formattedAddress?: string;
-  websiteUri?: string;
-  nationalPhoneNumber?: string;
-  internationalPhoneNumber?: string;
+type FoursquarePlace = {
+  fsq_place_id?: string;
+  name?: string;
+  website?: string;
+  tel?: string;
+  location?: {
+    locality?: string;
+    region?: string;
+    country?: string;
+    formatted_address?: string;
+  };
 };
 
-type GooglePlacesPayload = {
-  places?: GooglePlace[];
+type FoursquareSearchPayload = {
+  results?: FoursquarePlace[];
 };
+
 
 const SINONIMOS_SEGMENTO: Array<{ termos: string[]; palavras: string[]; consulta: string; qualificacao: string[] }> = [
   {
@@ -177,6 +182,8 @@ function ehBuscaCondominial(segmento: string) {
 function htmlParaTexto(html: string) {
   return normalizar(
     html
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
       .replace(/<[^>]+>/g, " ")
       .replace(/&nbsp;|&#160;/gi, " ")
       .replace(/&amp;/gi, "&")
@@ -318,86 +325,6 @@ function juntarEmpresas(resultados: Array<{ ok: boolean; payload?: DiscoverPaylo
   return [...porDominio.values()];
 }
 
-async function buscarGooglePlaces(segmento: string, localidade: string, apiKey: string) {
-  const cidade = cidadeDaLocalidade(localidade);
-  const consultas = ehBuscaCondominial(segmento)
-    ? [
-        `administradora de condomínios em ${cidade}, SP`,
-        `gestão condominial em ${cidade}, SP`,
-        `síndico profissional em ${cidade}, SP`,
-      ]
-    : [`${segmento} em ${cidade}, SP`];
-
-  const porIdOuNome = new Map<string, GooglePlace>();
-  const erros: string[] = [];
-
-  // Primeiro fazemos somente a descoberta (campos Pro). Site e telefone são
-  // buscados depois via Place Details. Assim uma falha nos campos Enterprise
-  // não transforma silenciosamente toda a pesquisa do Google em zero.
-  for (const textQuery of consultas) {
-    const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
-      method: "POST",
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress",
-      },
-      body: JSON.stringify({
-        textQuery,
-        languageCode: "pt-BR",
-        regionCode: "BR",
-        pageSize: 20,
-        includePureServiceAreaBusinesses: true,
-      }),
-    });
-
-    if (!r.ok) {
-      const detalhe = await r.text();
-      console.error("Google Places Text Search:", r.status, detalhe.slice(0, 500));
-      erros.push(`Text Search HTTP ${r.status}: ${detalhe.slice(0, 180)}`);
-      continue;
-    }
-
-    const payload = await r.json() as GooglePlacesPayload;
-    for (const place of payload.places || []) {
-      const nome = place.displayName?.text?.trim();
-      const endereco = normalizar(place.formattedAddress || "");
-      // Empresas de área de serviço podem não trazer endereço. Quando há
-      // endereço, ele precisa bater com a cidade pedida.
-      if (!nome || (endereco && !endereco.includes(normalizar(cidade)))) continue;
-      const chave = place.id || normalizar(nome);
-      if (!porIdOuNome.has(chave)) porIdOuNome.set(chave, place);
-    }
-  }
-
-  return { places: [...porIdOuNome.values()], erros };
-}
-
-async function detalharGooglePlace(place: GooglePlace, apiKey: string) {
-  if (!place.id) return { place, erro: "Place sem ID." };
-  const url = new URL(`https://places.googleapis.com/v1/places/${encodeURIComponent(place.id)}`);
-  url.searchParams.set("languageCode", "pt-BR");
-  url.searchParams.set("regionCode", "BR");
-
-  const r = await fetch(url.toString(), {
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": "id,displayName,formattedAddress,websiteUri,nationalPhoneNumber,internationalPhoneNumber",
-    },
-  });
-
-  if (!r.ok) {
-    const detalhe = await r.text();
-    console.error("Google Place Details:", r.status, detalhe.slice(0, 500));
-    return { place, erro: `Place Details HTTP ${r.status}: ${detalhe.slice(0, 180)}` };
-  }
-
-  return { place: await r.json() as GooglePlace };
-}
-
 function dominioDoSite(site?: string) {
   if (!site) return undefined;
   try {
@@ -427,47 +354,89 @@ async function resolverDominioEmpresa(nome: string, key: string): Promise<Empres
   };
 }
 
-async function descobrirEmpresasGoogle(
+async function buscarFoursquarePlaces(segmento: string, localidade: string, apiKey: string) {
+  const termos = termosDoSegmento(segmento);
+  const consultas = ehBuscaCondominial(segmento)
+    ? ["administradora de condomínios", "gestão condominial", "síndico profissional"]
+    : [...new Set([segmento, ...termos.palavras])].slice(0, 4);
+
+  const porIdOuNome = new Map<string, FoursquarePlace>();
+  const erros: string[] = [];
+
+  for (const query of consultas) {
+    const url = new URL("https://places-api.foursquare.com/places/search");
+    url.searchParams.set("query", query);
+    url.searchParams.set("near", localidade);
+    url.searchParams.set("limit", "50");
+    url.searchParams.set("sort", "RELEVANCE");
+    url.searchParams.set("tel_format", "E164");
+
+    const r = await fetch(url.toString(), {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${apiKey}`,
+        "X-Places-Api-Version": "2025-06-17",
+      },
+    });
+
+    if (!r.ok) {
+      const detalhe = await r.text();
+      console.error("Foursquare Places Search:", r.status, detalhe.slice(0, 500));
+      erros.push(`Place Search HTTP ${r.status}: ${detalhe.slice(0, 180)}`);
+      continue;
+    }
+
+    const payload = await r.json() as FoursquareSearchPayload;
+    for (const place of payload.results || []) {
+      const nome = place.name?.trim();
+      if (!nome) continue;
+      const pais = normalizar(place.location?.country || "");
+      const cidade = normalizar(place.location?.locality || "");
+      if (pais && !["br", "brazil", "brasil"].includes(pais)) continue;
+      if (cidade && cidade !== normalizar(cidadeDaLocalidade(localidade))) continue;
+      const chave = place.fsq_place_id || `${normalizar(nome)}|${cidade}`;
+      if (!porIdOuNome.has(chave)) porIdOuNome.set(chave, place);
+    }
+  }
+
+  return {
+    places: [...porIdOuNome.values()],
+    consultas: consultas.length,
+    erros: [...new Set(erros)].slice(0, 3),
+  };
+}
+
+async function descobrirEmpresasFoursquare(
   segmento: string,
   localidade: string,
   hunterKey: string,
-  googleKey: string | undefined,
+  foursquareKey: string | undefined,
   quantidade: number
 ) {
-  if (!googleKey) {
+  if (!foursquareKey) {
     return {
       empresas: [] as EmpresaDescoberta[],
       encontrados: 0,
-      detalhados: 0,
       comSite: 0,
       resolvidosHunter: 0,
+      consultas: 0,
       erros: [] as string[],
     };
   }
 
-  const busca = await buscarGooglePlaces(segmento, localidade, googleKey);
-  const limiteDetalhes = Math.min(busca.places.length, Math.max(quantidade * 2, 20), 30);
-  const alvos = busca.places.slice(0, limiteDetalhes);
-  const detalhes: GooglePlace[] = [];
-  const erros = [...busca.erros];
-
-  for (let i = 0; i < alvos.length; i += 5) {
-    const lote = await Promise.all(alvos.slice(i, i + 5).map((p) => detalharGooglePlace(p, googleKey)));
-    for (const item of lote) {
-      detalhes.push(item.place);
-      if (item.erro) erros.push(item.erro);
-    }
-  }
-
+  const busca = await buscarFoursquarePlaces(segmento, localidade, foursquareKey);
+  const limite = Math.min(busca.places.length, Math.max(quantidade * 3, 30), 60);
+  const alvos = busca.places.slice(0, limite);
   const empresas: EmpresaDescoberta[] = [];
-  const semSite: GooglePlace[] = [];
+  const semSite: FoursquarePlace[] = [];
   let comSite = 0;
   let resolvidosHunter = 0;
 
-  for (const place of detalhes) {
-    const nome = place.displayName?.text?.trim();
+  for (const place of alvos) {
+    const nome = place.name?.trim();
     if (!nome) continue;
-    const dominio = dominioDoSite(place.websiteUri);
+    const dominio = dominioDoSite(place.website);
     if (!dominio) {
       semSite.push(place);
       continue;
@@ -476,28 +445,28 @@ async function descobrirEmpresasGoogle(
     empresas.push({
       domain: dominio,
       organization: nome,
-      telefoneGoogle: place.nationalPhoneNumber?.trim() || place.internationalPhoneNumber?.trim(),
-      siteGoogle: place.websiteUri,
-      localidadeConfirmadaGoogle: true,
-      origemGoogle: true,
+      telefoneFonte: place.tel?.trim(),
+      siteFonte: place.website,
+      localidadeConfirmadaFonte: true,
+      origem: "Foursquare",
     });
   }
 
-  // Se o Google encontrou a empresa mas ela não publicou site na ficha,
-  // tentamos resolver o domínio no Hunter. Isso é fallback, não filtro.
+  // Quando a ficha local não tem site, o Hunter tenta resolver o domínio pelo nome.
+  // O Foursquare continua sendo a fonte de descoberta/localidade.
   for (let i = 0; i < semSite.length; i += 5) {
     const lote = await Promise.all(
       semSite.slice(i, i + 5).map(async (place) => {
-        const nome = place.displayName?.text?.trim();
+        const nome = place.name?.trim();
         if (!nome) return undefined;
         const resolvida = await resolverDominioEmpresa(nome, hunterKey);
         if (!resolvida) return undefined;
         return {
           ...resolvida,
           organization: nome,
-          telefoneGoogle: place.nationalPhoneNumber?.trim() || place.internationalPhoneNumber?.trim(),
-          localidadeConfirmadaGoogle: true,
-          origemGoogle: true,
+          telefoneFonte: place.tel?.trim(),
+          localidadeConfirmadaFonte: true,
+          origem: "Foursquare",
         } satisfies EmpresaDescoberta;
       })
     );
@@ -512,11 +481,21 @@ async function descobrirEmpresasGoogle(
   return {
     empresas,
     encontrados: busca.places.length,
-    detalhados: detalhes.length,
     comSite,
     resolvidosHunter,
-    erros: [...new Set(erros)].slice(0, 3),
+    consultas: busca.consultas,
+    erros: busca.erros,
   };
+}
+
+function telefoneCompativelBrasil(telefone?: string) {
+  if (!telefone) return undefined;
+  const valor = telefone.trim();
+  const digitos = valor.replace(/\D/g, "");
+  if (!digitos) return undefined;
+  if (valor.startsWith("+") && !valor.startsWith("+55")) return undefined;
+  if (digitos.startsWith("55")) return digitos.length >= 12 && digitos.length <= 13 ? valor : undefined;
+  return digitos.length >= 10 && digitos.length <= 11 ? valor : undefined;
 }
 
 async function descobrirEmpresas(segmento: string, localidade: string, key: string) {
@@ -621,31 +600,36 @@ export async function POST(request: Request) {
   if (!key) {
     return NextResponse.json({ error: "HUNTER_API_KEY ainda não foi configurada na Vercel." }, { status: 503 });
   }
-  const googlePlacesKey = process.env.GOOGLE_PLACES_API_KEY?.trim();
+  const foursquareKey = process.env.FOURSQUARE_API_KEY?.trim();
 
   const { segmento, localidade, quantidade, buscarEmail, buscarTelefone } = parsed.data;
   const pesquisaHunter = `${segmento} — ${localidade}`;
 
   try {
-    const descoberta = await descobrirEmpresas(segmento, localidade, key);
+    const [descoberta, foursquare] = await Promise.all([
+      descobrirEmpresas(segmento, localidade, key),
+      descobrirEmpresasFoursquare(segmento, localidade, key, foursquareKey, quantidade),
+    ]);
 
-    if (!descoberta.ok) {
+    // O Foursquare é a fonte local principal. Se o Discover do Hunter falhar,
+    // ainda seguimos com as empresas locais e usamos o Hunter apenas para
+    // resolver domínio/enriquecer/e-mail.
+    if (!descoberta.ok && !foursquare.empresas.length) {
       return NextResponse.json(
         {
-          error: descoberta.status === 429
-            ? "Limite da conta Hunter.io atingido."
-            : descoberta.status === 403
-              ? "Sua conta Hunter.io não possui acesso ao Discover."
-              : "A busca no Hunter.io falhou. Verifique a chave e o acesso ao Discover.",
+          error: foursquare.erros.length
+            ? `A busca local no Foursquare falhou: ${foursquare.erros[0]}`
+            : descoberta.status === 429
+              ? "Limite da conta Hunter.io atingido e o Foursquare não retornou empresas."
+              : "Nenhuma das fontes de descoberta conseguiu retornar empresas.",
         },
         { status: 502 }
       );
     }
 
-    const google = await descobrirEmpresasGoogle(segmento, localidade, key, googlePlacesKey, quantidade);
-    const empresasGoogle = google.empresas;
+    const empresasFoursquare = foursquare.empresas;
     const empresas = juntarEmpresas([
-      { ok: true, payload: { data: empresasGoogle } },
+      { ok: true, payload: { data: empresasFoursquare } },
       { ok: true, payload: { data: descoberta.empresas } },
     ]);
 
@@ -659,13 +643,13 @@ export async function POST(request: Request) {
         resultados: [],
         tentativas: descoberta.tentativas,
         estrategia: descoberta.estrategia,
-        googlePlacesConfigurado: Boolean(googlePlacesKey),
-        encontradosGooglePlaces: empresasGoogle.length,
-        fichasGoogleEncontradas: google.encontrados,
-        fichasGoogleDetalhadas: google.detalhados,
-        fichasGoogleComSite: google.comSite,
-        dominiosGoogleViaHunter: google.resolvidosHunter,
-        errosGooglePlaces: google.erros,
+        foursquareConfigurado: Boolean(foursquareKey),
+        encontradosFoursquare: empresasFoursquare.length,
+        fichasFoursquareEncontradas: foursquare.encontrados,
+        fichasFoursquareComSite: foursquare.comSite,
+        dominiosFoursquareViaHunter: foursquare.resolvidosHunter,
+        consultasFoursquare: foursquare.consultas,
+        errosFoursquare: foursquare.erros,
         nenhumResultado: true,
         mensagem: `Nenhuma empresa encontrada para “${segmento}” em ${cidadeDaLocalidade(localidade)} após ${descoberta.tentativas} estratégias de busca. Tente um segmento relacionado ou uma cidade próxima.`,
       });
@@ -705,7 +689,7 @@ export async function POST(request: Request) {
 
       const enriquecida = await enriquecerEmpresa(dominio, key);
       const aderencia = avaliarAderencia(segmento, empresa, enriquecida);
-      const localOk = empresa.localidadeConfirmadaGoogle || cidadeCompativel(localidade, enriquecida);
+      const localOk = empresa.localidadeConfirmadaFonte || cidadeCompativel(localidade, enriquecida);
       const atividadeOk = buscaCondominial ? Boolean(validacaoSite?.aprovado) : aderencia.aprovado;
 
       if (!atividadeOk || !localOk) {
@@ -720,11 +704,13 @@ export async function POST(request: Request) {
 
       const nome = empresa.organization?.trim() || enriquecida?.name?.trim() || dominio;
       const telefone = buscarTelefone
-        ? (empresa.telefoneGoogle || enriquecida?.site?.phoneNumbers?.find(Boolean) || enriquecida?.phone || undefined)
+        ? telefoneCompativelBrasil(
+            empresa.telefoneFonte || enriquecida?.site?.phoneNumbers?.find(Boolean) || enriquecida?.phone || undefined
+          )
         : undefined;
       const handleInstagram = enriquecida?.instagram?.handle?.replace(/^@/, "");
       const instagram = handleInstagram ? `https://www.instagram.com/${handleInstagram}/` : undefined;
-      const site = empresa.siteGoogle || `https://${dominio}`;
+      const site = empresa.siteFonte || `https://${dominio}`;
 
       const salvo = await salvarContatoHunter({
         dominio,
@@ -735,7 +721,8 @@ export async function POST(request: Request) {
         telefone,
         site,
         instagram,
-        fonteUrl: empresa.origemGoogle ? "Google Places + Hunter.io" : "Hunter.io API",
+        origem: empresa.origem === "Foursquare" ? "Foursquare + Hunter" : "Hunter",
+        fonteUrl: empresa.origem === "Foursquare" ? "Foursquare Places + Hunter.io" : "Hunter.io API",
         pesquisaHunter,
       });
 
@@ -767,13 +754,13 @@ export async function POST(request: Request) {
       resultados,
       tentativas: descoberta.tentativas,
       estrategia: descoberta.estrategia,
-      googlePlacesConfigurado: Boolean(googlePlacesKey),
-      encontradosGooglePlaces: empresasGoogle.length,
-      fichasGoogleEncontradas: google.encontrados,
-      fichasGoogleDetalhadas: google.detalhados,
-      fichasGoogleComSite: google.comSite,
-      dominiosGoogleViaHunter: google.resolvidosHunter,
-      errosGooglePlaces: google.erros,
+      foursquareConfigurado: Boolean(foursquareKey),
+      encontradosFoursquare: empresasFoursquare.length,
+      fichasFoursquareEncontradas: foursquare.encontrados,
+      fichasFoursquareComSite: foursquare.comSite,
+      dominiosFoursquareViaHunter: foursquare.resolvidosHunter,
+      consultasFoursquare: foursquare.consultas,
+      errosFoursquare: foursquare.erros,
       nenhumResultado,
       mensagem: nenhumResultado
         ? `Nenhuma empresa qualificada para “${segmento}” em ${cidadeDaLocalidade(localidade)}. ${descartados} resultado(s) foram descartados por baixa aderência ao segmento ou localidade.`
