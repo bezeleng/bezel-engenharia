@@ -493,19 +493,25 @@ function candidatoDominioCompativel(
   return marca.length > 0 && marca.some((token) => alvo.includes(token));
 }
 
-async function resolverDominioEmpresa(nome: string, key: string): Promise<EmpresaDescoberta | undefined> {
+async function resolverDominioEmpresa(nome: string, key: string): Promise<{
+  empresa?: EmpresaDescoberta;
+  status: number;
+}> {
   const url = new URL("https://api.hunter.io/v2/domain-finder");
   url.searchParams.set("company", nome);
   url.searchParams.set("limit", "3");
   url.searchParams.set("perfect_match", "false");
   const r = await hunterFetch(url.toString(), key);
-  if (!r.ok) return undefined;
+  if (!r.ok) return { status: r.status };
   const json = await r.json() as { data?: Array<{ domain?: string; company_name?: string }> };
   const item = (json.data || []).find((candidato) => candidatoDominioCompativel(nome, candidato));
-  if (!item?.domain) return undefined;
+  if (!item?.domain) return { status: r.status };
   return {
-    domain: item.domain.trim().toLowerCase(),
-    organization: nome,
+    status: r.status,
+    empresa: {
+      domain: item.domain.trim().toLowerCase(),
+      organization: nome,
+    },
   };
 }
 
@@ -590,6 +596,7 @@ async function descobrirEmpresasFoursquare(
       comSite: 0,
       comEmailCorporativo: 0,
       resolvidosHunter: 0,
+      falhasDomainFinder: [] as Array<{ status: number; quantidade: number }>,
       consultas: 0,
       erros: [] as string[],
     };
@@ -603,6 +610,7 @@ async function descobrirEmpresasFoursquare(
   let comSite = 0;
   let comEmailCorporativo = 0;
   let resolvidosHunter = 0;
+  const falhasDomainFinder = new Map<number, number>();
 
   for (const place of alvos) {
     const nome = place.name?.trim();
@@ -643,10 +651,15 @@ async function descobrirEmpresasFoursquare(
       semDominio.slice(i, i + 8).map(async (place) => {
         const nome = place.name?.trim();
         if (!nome) return undefined;
-        const resolvida = await resolverDominioEmpresa(nome, hunterKey);
-        if (!resolvida) return undefined;
+        const resolucao = await resolverDominioEmpresa(nome, hunterKey);
+        if (!resolucao.empresa) {
+          if (resolucao.status !== 200) {
+            falhasDomainFinder.set(resolucao.status, (falhasDomainFinder.get(resolucao.status) || 0) + 1);
+          }
+          return undefined;
+        }
         return {
-          ...resolvida,
+          ...resolucao.empresa,
           organization: nome,
           telefoneFonte: place.tel?.trim(),
           emailFonte: undefined,
@@ -669,6 +682,7 @@ async function descobrirEmpresasFoursquare(
     comSite,
     comEmailCorporativo,
     resolvidosHunter,
+    falhasDomainFinder: [...falhasDomainFinder.entries()].map(([status, quantidade]) => ({ status, quantidade })),
     consultas: busca.consultas,
     erros: busca.erros,
   };
@@ -1005,6 +1019,7 @@ export async function POST(request: Request) {
       fichasFoursquareComSite: foursquare.comSite,
       fichasFoursquareComEmailCorporativo: foursquare.comEmailCorporativo,
       dominiosFoursquareViaHunter: foursquare.resolvidosHunter,
+      falhasDomainFinder: foursquare.falhasDomainFinder,
       consultasFoursquare: foursquare.consultas,
       errosFoursquare: foursquare.erros,
       nenhumResultado,
