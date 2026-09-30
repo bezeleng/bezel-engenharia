@@ -86,7 +86,7 @@ HUNTER_API_KEY=<chave privada da API Hunter.io>
 
 As duas chaves devem existir apenas no servidor, sem prefixo `NEXT_PUBLIC_`. A integração usa a Places API atual do Foursquare com autenticação Bearer e versão `2025-06-17`.
 
-O fluxo consulta o Foursquare por atividade + cidade, deduplica empresas pelo domínio, valida a atividade antes do cadastro e usa o Hunter para e-mail/enriquecimento. Em administração condominial, o próprio site da empresa precisa comprovar a atividade; resultados apenas relacionados a condomínios são descartados.
+O fluxo consulta o Foursquare por atividade + cidade e aproveita site, telefone e e-mail disponíveis na ficha. Quando não há site, um e-mail corporativo pode fornecer o domínio. Se ainda não houver domínio, o Domain Finder do Hunter consulta até 3 sugestões sem exigir `perfect_match` e aceita somente candidatos compatíveis com a marca/nome da empresa. Depois o sistema deduplica, valida a atividade e usa o Hunter para enriquecimento/e-mail. Em administração condominial, o próprio site da empresa precisa comprovar a atividade; resultados apenas relacionados a condomínios são descartados.
 
 O CRM prioriza e-mails genéricos/profissionais quando disponíveis. Telefone é armazenado como telefone; números internacionais incompatíveis com Brasil são descartados e o sistema não presume que um número seja WhatsApp. O campo WhatsApp permanece separado para confirmação explícita.
 

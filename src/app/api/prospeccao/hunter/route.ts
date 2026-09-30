@@ -22,6 +22,7 @@ type EmpresaDescoberta = {
   emails_count?: { personal?: number; generic?: number; total?: number };
   telefoneFonte?: string;
   siteFonte?: string;
+  emailFonte?: string;
   localidadeConfirmadaFonte?: boolean;
   origem?: "Foursquare" | "Hunter";
 };
@@ -55,6 +56,7 @@ type FoursquarePlace = {
   name?: string;
   website?: string;
   tel?: string;
+  email?: string;
   location?: {
     locality?: string;
     region?: string;
@@ -244,12 +246,9 @@ async function validarAtividadeCondominialNoSite(domain: string) {
   const home = await baixarPaginaPublica(base.toString());
   if (!home) return { aprovado: false, evidencias: [] as string[] };
 
-  const paginas = [home];
   const links = linksInternosRelevantes(home, base);
-  for (const link of links) {
-    const html = await baixarPaginaPublica(link);
-    if (html) paginas.push(html);
-  }
+  const internas = await Promise.all(links.map((link) => baixarPaginaPublica(link)));
+  const paginas = [home, ...internas.filter((html): html is string => Boolean(html))];
 
   const texto = htmlParaTexto(paginas.join(" "));
   const frasesFortes = [
@@ -338,19 +337,67 @@ function dominioDoSite(site?: string) {
   }
 }
 
+const DOMINIOS_EMAIL_PUBLICO = new Set([
+  "gmail.com", "googlemail.com", "hotmail.com", "hotmail.com.br", "outlook.com",
+  "live.com", "yahoo.com", "yahoo.com.br", "icloud.com", "uol.com.br",
+  "bol.com.br", "terra.com.br", "proton.me", "protonmail.com",
+]);
+
+function dominioDoEmailCorporativo(email?: string) {
+  if (!email) return undefined;
+  const valor = email.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(valor)) return undefined;
+  const dominio = valor.split("@")[1]?.replace(/^www\./, "");
+  if (!dominio || DOMINIOS_EMAIL_PUBLICO.has(dominio)) return undefined;
+  if (!/^[a-z0-9.-]+$/i.test(dominio) || dominio.includes("..")) return undefined;
+  return dominio;
+}
+
+function tokensMarca(nome: string) {
+  const genericos = new Set([
+    "administradora", "administracao", "condominio", "condominios", "condominial",
+    "gestao", "sindico", "sindicancia", "profissional", "servico", "servicos",
+    "empresa", "empresas", "grupo", "brasil", "ltda", "eireli", "limitada",
+    "assessoria", "consultoria", "escola", "colegio", "educacao", "ensino",
+    "arquitetura", "arquiteto", "arquitetos", "engenharia", "engenheiro", "engenheiros",
+    "clinica", "clinicas", "centro", "saude", "de", "da", "do", "das", "dos", "em", "e",
+  ]);
+  return normalizar(nome)
+    .split(/[^a-z0-9]+/)
+    .filter((x) => x.length >= 2 && !genericos.has(x));
+}
+
+function candidatoDominioCompativel(
+  nome: string,
+  candidato: { domain?: string; company_name?: string }
+) {
+  const dominio = candidato.domain?.trim().toLowerCase();
+  if (!dominio || !/^[a-z0-9.-]+$/i.test(dominio) || dominio.includes("..")) return false;
+
+  const alvo = normalizar(`${candidato.company_name || ""} ${dominio.replace(/[.-]/g, " ")}`);
+  const nomeNormalizado = normalizar(nome);
+  const empresaNormalizada = normalizar(candidato.company_name || "");
+  if (empresaNormalizada && (empresaNormalizada.includes(nomeNormalizado) || nomeNormalizado.includes(empresaNormalizada))) {
+    return true;
+  }
+
+  const marca = tokensMarca(nome);
+  return marca.length > 0 && marca.some((token) => alvo.includes(token));
+}
+
 async function resolverDominioEmpresa(nome: string, key: string): Promise<EmpresaDescoberta | undefined> {
   const url = new URL("https://api.hunter.io/v2/domain-finder");
   url.searchParams.set("company", nome);
-  url.searchParams.set("limit", "1");
-  url.searchParams.set("perfect_match", "true");
+  url.searchParams.set("limit", "3");
+  url.searchParams.set("perfect_match", "false");
   const r = await hunterFetch(url.toString(), key);
   if (!r.ok) return undefined;
   const json = await r.json() as { data?: Array<{ domain?: string; company_name?: string }> };
-  const item = json.data?.[0];
+  const item = (json.data || []).find((candidato) => candidatoDominioCompativel(nome, candidato));
   if (!item?.domain) return undefined;
   return {
     domain: item.domain.trim().toLowerCase(),
-    organization: item.company_name?.trim() || nome,
+    organization: nome,
   };
 }
 
@@ -370,6 +417,7 @@ async function buscarFoursquarePlaces(segmento: string, localidade: string, apiK
     url.searchParams.set("limit", "50");
     url.searchParams.set("sort", "RELEVANCE");
     url.searchParams.set("tel_format", "E164");
+    url.searchParams.set("fields", "fsq_place_id,name,website,tel,email,location");
 
     const r = await fetch(url.toString(), {
       cache: "no-store",
@@ -419,6 +467,7 @@ async function descobrirEmpresasFoursquare(
       empresas: [] as EmpresaDescoberta[],
       encontrados: 0,
       comSite: 0,
+      comEmailCorporativo: 0,
       resolvidosHunter: 0,
       consultas: 0,
       erros: [] as string[],
@@ -429,34 +478,48 @@ async function descobrirEmpresasFoursquare(
   const limite = Math.min(busca.places.length, Math.max(quantidade * 3, 30), 60);
   const alvos = busca.places.slice(0, limite);
   const empresas: EmpresaDescoberta[] = [];
-  const semSite: FoursquarePlace[] = [];
+  const semDominio: FoursquarePlace[] = [];
   let comSite = 0;
+  let comEmailCorporativo = 0;
   let resolvidosHunter = 0;
 
   for (const place of alvos) {
     const nome = place.name?.trim();
     if (!nome) continue;
-    const dominio = dominioDoSite(place.website);
+
+    const dominioSite = dominioDoSite(place.website);
+    const dominioEmail = dominioDoEmailCorporativo(place.email);
+    const dominio = dominioSite || dominioEmail;
+
     if (!dominio) {
-      semSite.push(place);
+      semDominio.push(place);
       continue;
     }
-    comSite++;
+
+    if (dominioSite) comSite++;
+    else if (dominioEmail) comEmailCorporativo++;
+
+    const emailFonte = dominioEmail === dominio
+      ? place.email?.trim().toLowerCase()
+      : undefined;
+
     empresas.push({
       domain: dominio,
       organization: nome,
       telefoneFonte: place.tel?.trim(),
-      siteFonte: place.website,
+      siteFonte: place.website || `https://${dominio}`,
+      emailFonte,
       localidadeConfirmadaFonte: true,
       origem: "Foursquare",
     });
   }
 
-  // Quando a ficha local não tem site, o Hunter tenta resolver o domínio pelo nome.
-  // O Foursquare continua sendo a fonte de descoberta/localidade.
-  for (let i = 0; i < semSite.length; i += 5) {
+  // Sem site/e-mail corporativo, o Domain Finder retorna até 3 sugestões.
+  // perfect_match=false amplia a cobertura; ainda aceitamos somente sugestões
+  // cujo nome/domínio mantenha um token de marca da empresa do Foursquare.
+  for (let i = 0; i < semDominio.length; i += 8) {
     const lote = await Promise.all(
-      semSite.slice(i, i + 5).map(async (place) => {
+      semDominio.slice(i, i + 8).map(async (place) => {
         const nome = place.name?.trim();
         if (!nome) return undefined;
         const resolvida = await resolverDominioEmpresa(nome, hunterKey);
@@ -465,6 +528,7 @@ async function descobrirEmpresasFoursquare(
           ...resolvida,
           organization: nome,
           telefoneFonte: place.tel?.trim(),
+          emailFonte: undefined,
           localidadeConfirmadaFonte: true,
           origem: "Foursquare",
         } satisfies EmpresaDescoberta;
@@ -482,6 +546,7 @@ async function descobrirEmpresasFoursquare(
     empresas,
     encontrados: busca.places.length,
     comSite,
+    comEmailCorporativo,
     resolvidosHunter,
     consultas: busca.consultas,
     erros: busca.erros,
@@ -544,7 +609,7 @@ async function descobrirEmpresas(segmento: string, localidade: string, key: stri
 async function validarSitesCondominiais(empresas: EmpresaDescoberta[], limite: number) {
   const mapa = new Map<string, Awaited<ReturnType<typeof validarAtividadeCondominialNoSite>>>();
   const alvos = empresas.slice(0, limite).filter((x) => x.domain);
-  const tamanhoLote = 5;
+  const tamanhoLote = 8;
 
   for (let i = 0; i < alvos.length; i += tamanhoLote) {
     const lote = alvos.slice(i, i + tamanhoLote);
@@ -647,6 +712,7 @@ export async function POST(request: Request) {
         encontradosFoursquare: empresasFoursquare.length,
         fichasFoursquareEncontradas: foursquare.encontrados,
         fichasFoursquareComSite: foursquare.comSite,
+        fichasFoursquareComEmailCorporativo: foursquare.comEmailCorporativo,
         dominiosFoursquareViaHunter: foursquare.resolvidosHunter,
         consultasFoursquare: foursquare.consultas,
         errosFoursquare: foursquare.erros,
@@ -697,7 +763,10 @@ export async function POST(request: Request) {
         continue;
       }
 
-      let email = buscarEmail ? await buscarEmailDominio(dominio, key) : undefined;
+      let email = buscarEmail ? empresa.emailFonte : undefined;
+      if (!email && buscarEmail) {
+        email = await buscarEmailDominio(dominio, key);
+      }
       if (!email && buscarEmail) {
         email = enriquecida?.site?.emailAddresses?.find(Boolean)?.trim().toLowerCase();
       }
@@ -758,6 +827,7 @@ export async function POST(request: Request) {
       encontradosFoursquare: empresasFoursquare.length,
       fichasFoursquareEncontradas: foursquare.encontrados,
       fichasFoursquareComSite: foursquare.comSite,
+      fichasFoursquareComEmailCorporativo: foursquare.comEmailCorporativo,
       dominiosFoursquareViaHunter: foursquare.resolvidosHunter,
       consultasFoursquare: foursquare.consultas,
       errosFoursquare: foursquare.erros,
