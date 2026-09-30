@@ -1,4 +1,5 @@
 import { client } from "@/sanity/lib/client";
+import { LIMITE_DIARIO_PROSPECCAO } from "@/lib/prospeccao-config";
 import { normalizarSegmento } from "@/lib/prospeccao-segmentos";
 
 export type StatusContato = "NOVO" | "CONTATADO" | "RESPONDEU" | "VISITA" | "PROPOSTA" | "NEGOCIACAO" | "CLIENTE" | "ARQUIVADO";
@@ -247,8 +248,8 @@ export async function obterDashboard() {
     metricas: {
       totalContatos: contatos.length,
       enviadosHoje,
-      limiteDiario: 50,
-      restantesHoje: Math.max(0, 50 - enviadosHoje),
+      limiteDiario: LIMITE_DIARIO_PROSPECCAO,
+      restantesHoje: Math.max(0, LIMITE_DIARIO_PROSPECCAO - enviadosHoje),
       optOut: contatos.filter((x) => x.optOut).length,
       followUpsPendentes,
       porStatus,
