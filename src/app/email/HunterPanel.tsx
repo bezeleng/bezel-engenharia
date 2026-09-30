@@ -16,18 +16,28 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
   const [buscando, setBuscando] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [resultados, setResultados] = useState<ResultadoHunter[]>([]);
+  const [continuacao, setContinuacao] = useState({ chave: "", offset: 0 });
 
   async function buscar(e: FormEvent) {
     e.preventDefault();
     setBuscando(true); setMensagem(""); setResultados([]);
+    const chaveBusca = JSON.stringify({
+      segmento: segmento.trim().toLowerCase(),
+      localidade: localidade.trim().toLowerCase(),
+      quantidade,
+      buscarEmail,
+      buscarTelefone,
+    });
+    const offset = continuacao.chave === chaveBusca ? continuacao.offset : 0;
     try {
       const r = await fetch("/api/prospeccao/hunter", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ segmento, localidade, quantidade, buscarEmail, buscarTelefone }),
+        body: JSON.stringify({ segmento, localidade, quantidade, buscarEmail, buscarTelefone, offset }),
       });
       const json = await r.json();
       if (!r.ok) { setMensagem(json.error || "Não foi possível executar a busca."); return; }
       setResultados(json.resultados || []);
+      setContinuacao({ chave: chaveBusca, offset: json.proximoOffset || 0 });
       const foursquare = json.foursquareConfigurado
         ? ` Foursquare encontrou ${json.fichasFoursquareEncontradas || 0} ficha(s): ${json.fichasFoursquareComSite || 0} com site, ${json.fichasFoursquareComEmailCorporativo || 0} via e-mail corporativo e ${json.dominiosFoursquareViaHunter || 0} via Domain Finder. Total: ${json.encontradosFoursquare || 0} candidato(s) com domínio.`
         : " Foursquare ainda não está configurado; a descoberta ficou limitada ao Hunter.";
@@ -46,14 +56,17 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
           ? ` Entre os ${qualificados} qualificado(s), ${json.semEmail} ${json.semEmail === 1 ? "ficou" : "ficaram"} sem e-mail profissional.`
           : "";
         const pool = json.candidatosUnicos > 0
-          ? json.priorizouNaoCadastrados
-            ? ` Pool combinado: ${json.candidatosUnicos} candidato(s) único(s) com domínio — ${json.candidatosNovosNoPool || 0} ainda não cadastrado(s) e ${json.candidatosJaCadastradosNoPool || 0} já no CRM. Os não cadastrados foram priorizados nesta rodada.`
-            : ` Pool combinado: ${json.candidatosUnicos} candidato(s) único(s) com domínio.`
+          ? ` Pool combinado: ${json.candidatosUnicos} candidato(s) único(s) com domínio — ${json.candidatosNovosNoPool || 0} ainda não cadastrado(s) e ${json.candidatosJaCadastradosNoPool || 0} já no CRM.`
           : "";
+        const continuacaoLote = json.continuacaoDisponivel
+          ? ` A próxima busca com estes mesmos filtros continuará a partir do candidato ${json.proximoOffset + 1}, sem voltar ao início do pool.`
+          : json.inicioAnalise > 0
+            ? " O pool chegou ao fim; a próxima busca reiniciará do começo."
+            : "";
         const limite = json.limiteAnaliseAtingido
           ? ` A rodada atingiu o limite seguro de ${json.limiteAnalise} análises antes de completar a quantidade pedida.`
           : "";
-        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s) e ${json.jaExistentes} já existente(s).${semEmail}${funil}${pool}${limite}${detalhe}${foursquare}${erroFoursquare}`);
+        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s) e ${json.jaExistentes} já existente(s).${semEmail}${funil}${pool}${limite}${continuacaoLote}${detalhe}${foursquare}${erroFoursquare}`);
       }
       await onAtualizar();
     } catch {
