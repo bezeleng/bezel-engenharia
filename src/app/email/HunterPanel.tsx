@@ -37,9 +37,21 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
       if (json.nenhumResultado) {
         setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${foursquare}${erroFoursquare}`);
       } else {
+        const qualificados = json.qualificados ?? ((json.cadastrados || 0) + (json.jaExistentes || 0));
         const detalhe = json.tentativas > 1 ? ` Hunter consultado em ${json.tentativas} estratégias.` : "";
-        const descarte = json.descartados > 0 ? ` ${json.descartados} resultado(s) foram descartados por baixa aderência ao segmento ou localidade.` : "";
-        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s), ${json.jaExistentes} já existente(s) e ${json.semEmail} sem e-mail encontrado.${descarte}${detalhe}${foursquare}${erroFoursquare}`);
+        const funil = json.analisados > 0
+          ? ` Foram analisados ${json.analisados} candidato(s): ${qualificados} qualificado(s) e ${json.descartados || 0} descartado(s) por baixa aderência ao segmento ou localidade.`
+          : "";
+        const semEmail = json.semEmail > 0
+          ? ` Entre os ${qualificados} qualificado(s), ${json.semEmail} ficou/ficaram sem e-mail profissional.`
+          : "";
+        const pool = json.candidatosUnicos > 0
+          ? ` Pool combinado: ${json.candidatosUnicos} candidato(s) único(s) com domínio.`
+          : "";
+        const limite = json.limiteAnaliseAtingido
+          ? ` A rodada atingiu o limite seguro de ${json.limiteAnalise} análises antes de completar a quantidade pedida.`
+          : "";
+        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s) e ${json.jaExistentes} já existente(s).${semEmail}${funil}${pool}${limite}${detalhe}${foursquare}${erroFoursquare}`);
       }
       await onAtualizar();
     } catch {
