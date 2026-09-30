@@ -28,15 +28,18 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
       const json = await r.json();
       if (!r.ok) { setMensagem(json.error || "Não foi possível executar a busca."); return; }
       setResultados(json.resultados || []);
+      const google = json.googlePlacesConfigurado
+        ? ` Google Places encontrou ${json.fichasGoogleEncontradas || 0} ficha(s), detalhou ${json.fichasGoogleDetalhadas || 0}, encontrou site oficial em ${json.fichasGoogleComSite || 0} e entregou ${json.encontradosGooglePlaces || 0} candidato(s) com domínio.`
+        : " Google Places ainda não está configurado; a descoberta ficou limitada ao Hunter.";
+      const erroGoogle = Array.isArray(json.errosGooglePlaces) && json.errosGooglePlaces.length
+        ? ` Atenção Google Places: ${json.errosGooglePlaces[0]}`
+        : "";
       if (json.nenhumResultado) {
-        setMensagem(json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima.");
+        setMensagem(`${json.mensagem || "Nenhuma empresa encontrada. Tente ampliar o segmento ou usar uma cidade próxima."}${google}${erroGoogle}`);
       } else {
         const detalhe = json.tentativas > 1 ? ` Hunter consultado em ${json.tentativas} estratégias.` : "";
         const descarte = json.descartados > 0 ? ` ${json.descartados} resultado(s) foram descartados por baixa aderência ao segmento ou localidade.` : "";
-        const google = json.googlePlacesConfigurado
-          ? ` Google Places acrescentou ${json.encontradosGooglePlaces || 0} empresa(s) candidata(s) com domínio resolvido.`
-          : " Google Places ainda não está configurado; a descoberta ficou limitada ao Hunter.";
-        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s), ${json.jaExistentes} já existente(s) e ${json.semEmail} sem e-mail encontrado.${descarte}${detalhe}${google}`);
+        setMensagem(`Busca qualificada: ${json.cadastrados} novo(s), ${json.jaExistentes} já existente(s) e ${json.semEmail} sem e-mail encontrado.${descarte}${detalhe}${google}${erroGoogle}`);
       }
       await onAtualizar();
     } catch {
