@@ -205,7 +205,7 @@ function linksInternosRelevantes(html: string, base: URL) {
     try {
       const url = new URL(match[1], base);
       const mesmoHost = url.hostname === base.hostname || url.hostname === `www.${base.hostname}` || `www.${url.hostname}` === base.hostname;
-      if (url.protocol !== "https:" || !mesmoHost) continue;
+      if (!["http:", "https:"].includes(url.protocol) || !mesmoHost) continue;
       const alvo = normalizar(url.pathname);
       if (palavras.some((p) => alvo.includes(p)) && !encontrados.includes(url.toString())) encontrados.push(url.toString());
     } catch {
@@ -243,9 +243,22 @@ async function validarAtividadeCondominialNoSite(domain: string) {
     return { aprovado: false, evidencias: [] as string[], motivo: "dominio_invalido" as const };
   }
 
-  const base = new URL(`https://${domain}/`);
-  const home = await baixarPaginaPublica(base.toString());
-  if (!home) return { aprovado: false, evidencias: [] as string[], motivo: "site_indisponivel" as const };
+  const tentativasBase = [
+    `https://${domain}/`,
+    `https://www.${domain}/`,
+    `http://${domain}/`,
+    `http://www.${domain}/`,
+  ];
+  let base: URL | undefined;
+  let home: string | undefined;
+  for (const tentativa of tentativasBase) {
+    const html = await baixarPaginaPublica(tentativa);
+    if (!html) continue;
+    base = new URL(tentativa);
+    home = html;
+    break;
+  }
+  if (!home || !base) return { aprovado: false, evidencias: [] as string[], motivo: "site_indisponivel" as const };
 
   const links = linksInternosRelevantes(home, base);
   const internas = await Promise.all(links.map((link) => baixarPaginaPublica(link)));
@@ -256,7 +269,9 @@ async function validarAtividadeCondominialNoSite(domain: string) {
     "administracao de condominios", "administracao de condominio", "administracao condominial",
     "administradora de condominios", "administradora condominial", "gestao de condominios",
     "gestao de condominio", "gestao condominial", "gerenciamento de condominios",
-    "gerenciamento condominial", "sindico profissional", "sindicancia profissional",
+    "gerenciamento condominial", "assessoria condominial", "assessoria de condominios",
+    "solucoes condominiais", "gestor condominial", "administramos condominios",
+    "administrar seu condominio", "sindico profissional", "sindicancia profissional",
     "condominium management",
   ];
   const evidenciasFortes = frasesFortes.filter((x) => texto.includes(x));
@@ -267,7 +282,7 @@ async function validarAtividadeCondominialNoSite(domain: string) {
     "condominio residencial", "condominio comercial",
   ].filter((x) => texto.includes(x));
 
-  const aprovado = evidenciasFortes.length > 0 || (texto.includes("condomin") && sinaisOperacionais.length >= 3);
+  const aprovado = evidenciasFortes.length > 0 || (texto.includes("condomin") && sinaisOperacionais.length >= 2);
   return {
     aprovado,
     evidencias: [...new Set([...evidenciasFortes, ...sinaisOperacionais])].slice(0, 6),
@@ -405,16 +420,22 @@ async function resolverDominioEmpresa(nome: string, key: string): Promise<Empres
 
 async function buscarFoursquarePlaces(segmento: string, localidade: string, apiKey: string) {
   const termos = termosDoSegmento(segmento);
-  const consultas = ehBuscaCondominial(segmento)
-    ? ["administradora de condomínios", "gestão condominial", "síndico profissional"]
-    : [...new Set([segmento, ...termos.palavras])].slice(0, 4);
+  const consultas: Array<{ query: string; categoria?: string }> = ehBuscaCondominial(segmento)
+    ? [
+        { query: "administradora de condomínios" },
+        { query: "gestão condominial" },
+        { query: "síndico profissional" },
+        { query: "administração de condomínios", categoria: "63be6904847c3692a84b9b86" },
+      ]
+    : [...new Set([segmento, ...termos.palavras])].slice(0, 4).map((query) => ({ query }));
 
   const porIdOuNome = new Map<string, FoursquarePlace>();
   const erros: string[] = [];
 
-  for (const query of consultas) {
+  for (const consulta of consultas) {
     const url = new URL("https://places-api.foursquare.com/places/search");
-    url.searchParams.set("query", query);
+    url.searchParams.set("query", consulta.query);
+    if (consulta.categoria) url.searchParams.set("fsq_category_ids", consulta.categoria);
     url.searchParams.set("near", localidade);
     url.searchParams.set("limit", "50");
     url.searchParams.set("sort", "RELEVANCE");
@@ -531,7 +552,7 @@ async function descobrirEmpresasFoursquare(
           organization: nome,
           telefoneFonte: place.tel?.trim(),
           emailFonte: undefined,
-          localidadeConfirmadaFonte: true,
+          localidadeConfirmadaFonte: false,
           origem: "Foursquare",
         } satisfies EmpresaDescoberta;
       })
@@ -774,21 +795,23 @@ export async function POST(request: Request) {
       // Em administração condominial, descartamos antes do Enrichment/Domain
       // Search quando o próprio site não comprova a atividade. Isso amplia a
       // descoberta sem desperdiçar créditos do Hunter em falsos positivos.
-      if (buscaCondominial && !validacaoSite?.aprovado) {
+      if (buscaCondominial && !validacaoSite?.aprovado && validacaoSite?.motivo !== "site_indisponivel") {
         descartados++;
-        if (validacaoSite?.motivo === "site_indisponivel") descartadosSiteIndisponivel++;
-        else descartadosSemEvidenciaCondominial++;
+        descartadosSemEvidenciaCondominial++;
         continue;
       }
 
       const enriquecida = await enriquecerEmpresa(dominio, key);
       const aderencia = avaliarAderencia(segmento, empresa, enriquecida);
       const localOk = empresa.localidadeConfirmadaFonte || cidadeCompativel(localidade, enriquecida);
-      const atividadeOk = buscaCondominial ? Boolean(validacaoSite?.aprovado) : aderencia.aprovado;
+      const atividadeOk = buscaCondominial
+        ? Boolean(validacaoSite?.aprovado) || (validacaoSite?.motivo === "site_indisponivel" && aderencia.aprovado)
+        : aderencia.aprovado;
 
       if (!atividadeOk || !localOk) {
         descartados++;
         if (!localOk) descartadosLocalidade++;
+        else if (buscaCondominial && validacaoSite?.motivo === "site_indisponivel") descartadosSiteIndisponivel++;
         else descartadosAderencia++;
         continue;
       }
