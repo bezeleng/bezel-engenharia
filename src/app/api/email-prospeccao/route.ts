@@ -14,6 +14,7 @@ import {
 } from "@/lib/prospeccao-store";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const MAX_DIARIO = 20;
 const MAX_LOTE = 20;
@@ -28,6 +29,7 @@ const payloadSchema = z.object({
   mensagem: z.string().trim().min(10).max(12000),
   contatos: z.array(contatoSchema).min(1).max(MAX_LOTE),
   teste: z.boolean().optional().default(false),
+  emailTeste: z.string().trim().email().max(254).optional(),
   confirmacao: z.literal(true),
 });
 
@@ -74,7 +76,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Dados inválidos.", detalhes: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { assunto, mensagem, contatos, teste } = parsed.data;
+  const { assunto, mensagem, contatos, teste, emailTeste } = parsed.data;
   const smtpUser = process.env.SMTP_USER;
   if (!smtpUser) return NextResponse.json({ error: "E-mail remetente não configurado." }, { status: 500 });
 
@@ -85,18 +87,37 @@ export async function POST(request: Request) {
   if (teste) {
     const texto = personalizar(mensagem, "Contato de teste");
     const assuntoSeguro = personalizar(assunto, "Contato de teste").replace(/[\r\n]+/g, " ").trim();
+    const destinatarioTeste = emailTeste?.toLowerCase() || smtpUser.toLowerCase();
     try {
-      await enviarEmail({
-        destinatario: smtpUser,
+      const info = await enviarEmail({
+        destinatario: destinatarioTeste,
         assunto: `[TESTE] ${assuntoSeguro}`,
         html: montarHtml(texto),
         texto,
         nomeRemetente: "BEZEL Engenharia",
       });
-      return NextResponse.json({ sucesso: true, teste: true, totalEnviados: 1, totalFalhas: 0 });
+      const aceitos = (info.accepted || []).map((item) => String(item).toLowerCase());
+      if (!aceitos.includes(destinatarioTeste)) {
+        return NextResponse.json({
+          error: "O servidor SMTP não confirmou a aceitação do destinatário de teste.",
+          smtpResponse: info.response,
+          rejeitados: (info.rejected || []).map(String),
+        }, { status: 502 });
+      }
+      return NextResponse.json({
+        sucesso: true,
+        teste: true,
+        totalEnviados: 1,
+        totalFalhas: 0,
+        destinatarioTeste,
+        smtpAceito: true,
+        messageId: info.messageId,
+        smtpResponse: info.response,
+      });
     } catch (error) {
       console.error("Falha no teste de prospecção:", error);
-      return NextResponse.json({ error: "Falha no envio do teste pelo SMTP." }, { status: 502 });
+      const detalhe = error instanceof Error ? error.message : "Erro SMTP não identificado.";
+      return NextResponse.json({ error: `Falha no envio do teste pelo SMTP: ${detalhe}` }, { status: 502 });
     }
   }
 
@@ -157,13 +178,21 @@ export async function POST(request: Request) {
       .trim();
 
     try {
-      await enviarEmail({
+      const info = await enviarEmail({
         destinatario: email,
         assunto: assuntoSeguro,
         html: montarHtml(textoPersonalizado),
         texto: textoPersonalizado,
         nomeRemetente: "BEZEL Engenharia",
       });
+      const aceitos = (info.accepted || []).map((item) => String(item).toLowerCase());
+      if (!aceitos.includes(email)) {
+        const rejeitados = (info.rejected || []).map(String).join(", ");
+        throw new Error(
+          `SMTP não confirmou o destinatário. ${rejeitados ? `Rejeitado: ${rejeitados}. ` : ""}${info.response || ""}`.trim()
+        );
+      }
+
       enviados.push(email);
       await registrarEnvio({
         campanhaId: campanha._id,
@@ -171,18 +200,21 @@ export async function POST(request: Request) {
         email,
         assunto: assuntoSeguro,
         status: "ENVIADO",
+        smtpMessageId: info.messageId,
+        smtpResponse: info.response,
       });
       if (!existente || existente.status === "NOVO") await registrarContatoEnviado(salvo._id);
     } catch (error) {
       console.error("Falha no envio de prospecção:", email, error);
-      falhas.push({ email, erro: "Falha no envio pelo servidor SMTP." });
+      const detalhe = error instanceof Error ? error.message.slice(0, 500) : "Falha no envio pelo servidor SMTP.";
+      falhas.push({ email, erro: detalhe });
       await registrarEnvio({
         campanhaId: campanha._id,
         nome: contatoEntrada.nome || existente?.nome || "",
         email,
         assunto: assuntoSeguro,
         status: "FALHA",
-        erro: "Falha no envio pelo servidor SMTP.",
+        erro: detalhe,
       });
     }
   }
