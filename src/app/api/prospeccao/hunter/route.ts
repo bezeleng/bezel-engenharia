@@ -288,43 +288,79 @@ async function executarDiscover(key: string, body: Record<string, unknown>) {
   return { ok: true as const, status: r.status, payload };
 }
 
+function juntarEmpresas(resultados: Array<{ ok: boolean; payload?: DiscoverPayload }>) {
+  const porDominio = new Map<string, EmpresaDescoberta>();
+  for (const resultado of resultados) {
+    if (!resultado.ok) continue;
+    for (const empresa of resultado.payload?.data || []) {
+      const dominio = empresa.domain?.trim().toLowerCase();
+      if (!dominio || porDominio.has(dominio)) continue;
+      porDominio.set(dominio, empresa);
+    }
+  }
+  return [...porDominio.values()];
+}
+
 async function descobrirEmpresas(segmento: string, localidade: string, key: string) {
   const cidade = cidadeDaLocalidade(localidade);
   const termos = termosDoSegmento(segmento);
-  let tentativas = 0;
+  const condominial = ehBuscaCondominial(segmento);
 
-  const estruturada = await executarDiscover(key, {
-    headquarters_location: { include: [{ city: cidade, country: "BR" }] },
-    keywords: { match: "any", include: termos.palavras },
-  });
-  tentativas++;
+  // Em vez de parar na primeira resposta do Discover, executamos consultas
+  // complementares e unimos os domínios. O filtro pelo site continua sendo a
+  // barreira final de qualidade, então ampliar a descoberta não reduz precisão.
+  const consultas: Array<Record<string, unknown>> = [
+    {
+      headquarters_location: { include: [{ city: cidade, country: "BR" }] },
+      keywords: { match: "any", include: termos.palavras },
+    },
+    { query: `${termos.consulta} com sede em ${cidade}, Brasil` },
+    { query: `${segmento} em ${cidade}, SP, Brasil` },
+  ];
 
-  if (!estruturada.ok) return { ...estruturada, empresas: [] as EmpresaDescoberta[], tentativas, estrategia: "estruturada" };
-  let empresas = (estruturada.payload?.data || []).filter((x) => x.domain);
-  if (empresas.length) {
-    return { ok: true as const, status: 200, empresas, tentativas, estrategia: "cidade + palavras-chave" };
+  if (condominial) {
+    consultas.push(
+      { query: `administradora de condomínios em ${cidade}, SP, Brasil` },
+      { query: `gestão condominial e síndico profissional em ${cidade}, SP, Brasil` },
+      { query: `empresa que administra condomínios em ${cidade}, SP, Brasil` },
+    );
   }
 
-  const ampliada = await executarDiscover(key, {
-    query: `${termos.consulta} com sede em ${cidade}, Brasil`,
-  });
-  tentativas++;
+  const resultados = await Promise.all(consultas.map((body) => executarDiscover(key, body)));
+  const sucessos = resultados.filter((x) => x.ok);
+  const empresas = juntarEmpresas(resultados);
 
-  if (!ampliada.ok) return { ...ampliada, empresas: [] as EmpresaDescoberta[], tentativas, estrategia: "ampliada" };
-  empresas = (ampliada.payload?.data || []).filter((x) => x.domain);
-  if (empresas.length) {
-    return { ok: true as const, status: 200, empresas, tentativas, estrategia: "busca ampliada" };
+  if (!sucessos.length) {
+    const status = resultados.find((x) => !x.ok)?.status || 502;
+    return { ok: false as const, status, empresas: [] as EmpresaDescoberta[], tentativas: consultas.length, estrategia: "multiconsulta" };
   }
 
-  const alternativa = await executarDiscover(key, {
-    query: `${segmento}. Empresas localizadas em ${cidade}, Brasil. Inclua negócios relacionados e variações do segmento.`,
-  });
-  tentativas++;
+  return {
+    ok: true as const,
+    status: 200,
+    empresas,
+    tentativas: consultas.length,
+    estrategia: condominial ? "multiconsulta condominial" : "multiconsulta",
+  };
+}
 
-  if (!alternativa.ok) return { ...alternativa, empresas: [] as EmpresaDescoberta[], tentativas, estrategia: "alternativa" };
-  empresas = (alternativa.payload?.data || []).filter((x) => x.domain);
+async function validarSitesCondominiais(empresas: EmpresaDescoberta[], limite: number) {
+  const mapa = new Map<string, Awaited<ReturnType<typeof validarAtividadeCondominialNoSite>>>();
+  const alvos = empresas.slice(0, limite).filter((x) => x.domain);
+  const tamanhoLote = 5;
 
-  return { ok: true as const, status: 200, empresas, tentativas, estrategia: empresas.length ? "busca alternativa" : "sem resultados" };
+  for (let i = 0; i < alvos.length; i += tamanhoLote) {
+    const lote = alvos.slice(i, i + tamanhoLote);
+    const validados = await Promise.all(
+      lote.map(async (empresa) => {
+        const dominio = empresa.domain!.trim().toLowerCase();
+        return [dominio, await validarAtividadeCondominialNoSite(dominio)] as const;
+      })
+    );
+    for (const [dominio, validacao] of validados) mapa.set(dominio, validacao);
+  }
+
+  return mapa;
 }
 
 async function buscarEmailDominio(domain: string, key: string) {
@@ -415,23 +451,32 @@ export async function POST(request: Request) {
     // Antes de gastar uma busca de e-mail e antes de cadastrar no CRM, validamos
     // a aderência usando nome, domínio, categoria, tags e descrição do Enrichment.
     // Limitamos a análise para controlar tempo e consumo de créditos.
-    const limiteAnalise = Math.min(empresas.length, Math.max(quantidade * 2, 25));
+    const limiteAnalise = Math.min(empresas.length, Math.max(quantidade * 3, 30), 50);
+    const buscaCondominial = ehBuscaCondominial(segmento);
+    const validacoesSite = buscaCondominial
+      ? await validarSitesCondominiais(empresas, limiteAnalise)
+      : undefined;
 
     for (const empresa of empresas.slice(0, limiteAnalise)) {
       if (resultados.length >= quantidade) break;
       const dominio = empresa.domain!.trim().toLowerCase();
       analisados++;
 
+      const validacaoSite = buscaCondominial ? validacoesSite?.get(dominio) : undefined;
+
+      // Em administração condominial, descartamos antes do Enrichment/Domain
+      // Search quando o próprio site não comprova a atividade. Isso amplia a
+      // descoberta sem desperdiçar créditos do Hunter em falsos positivos.
+      if (buscaCondominial && !validacaoSite?.aprovado) {
+        descartados++;
+        continue;
+      }
+
       const enriquecida = await enriquecerEmpresa(dominio, key);
       const aderencia = avaliarAderencia(segmento, empresa, enriquecida);
       const localOk = cidadeCompativel(localidade, enriquecida);
-      const validacaoSite = ehBuscaCondominial(segmento)
-        ? await validarAtividadeCondominialNoSite(dominio)
-        : undefined;
+      const atividadeOk = buscaCondominial ? Boolean(validacaoSite?.aprovado) : aderencia.aprovado;
 
-      // Para administração condominial, os metadados do Hunter servem apenas
-      // para descoberta. A aprovação final exige evidência no site da empresa.
-      const atividadeOk = validacaoSite ? validacaoSite.aprovado : aderencia.aprovado;
       if (!atividadeOk || !localOk) {
         descartados++;
         continue;
