@@ -70,7 +70,7 @@ export default function HunterPanel({ onAtualizar }: { onAtualizar: () => Promis
         <button disabled={buscando} className="mt-5 rounded-xl bg-[#193451] px-6 py-3 text-sm font-semibold text-white disabled:opacity-50">
           {buscando ? "Buscando e cadastrando..." : "Buscar e cadastrar"}
         </button>
-        <p className="mt-3 text-xs text-slate-500">A busca combina localização e palavras-chave e pode ampliar a descoberta automaticamente. Antes de cadastrar, o sistema valida a aderência da empresa. Em buscas de administração condominial, a atividade precisa estar comprovada no próprio site da empresa; resultados apenas relacionados a condomínios são descartados. Telefone não é marcado como WhatsApp sem confirmação específica.</p>
+        <p className="mt-3 text-xs text-slate-500">A busca combina várias consultas de descoberta por localização e atividade. Antes de cadastrar, o sistema valida a aderência da empresa. Em buscas de administração condominial, a atividade precisa estar comprovada no próprio site; resultados apenas relacionados a condomínios são descartados. Se houver poucas empresas realmente qualificadas, o sistema retorna menos resultados em vez de completar com leads ruins. Telefone não é marcado como WhatsApp sem confirmação específica.</p>
         {mensagem && <div className="mt-4 rounded-xl bg-[#f5f2ed] p-4 text-sm text-[#193451]">{mensagem}</div>}
       </form>
 
