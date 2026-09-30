@@ -199,7 +199,12 @@ export default function EmailCRMClient() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           assunto, mensagem,
-          contatos: teste ? [{ nome: "Contato de teste", email: emailTeste || "teste@bezel.com.br" }] : contatosDigitados,
+          contatos: teste
+            ? [{
+                nome: contatosDigitados[0]?.nome || "",
+                email: emailTeste || contatosDigitados[0]?.email || "teste@bezel.com.br",
+              }]
+            : contatosDigitados,
           teste,
           emailTeste: teste && emailTeste.trim() ? emailTeste.trim() : undefined,
           confirmacao,
@@ -378,6 +383,11 @@ export default function EmailCRMClient() {
               </div>
               <textarea value={destinatarios} onChange={(e) => setDestinatarios(e.target.value)} rows={7}
                 className="mt-3 w-full rounded-xl border border-slate-300 px-4 py-3 font-mono text-sm outline-none focus:border-[#c3a06a]" />
+              {contatosDigitados.length > 0 && (
+                <div className="mt-3 rounded-lg bg-[#f5f2ed] px-4 py-3 text-xs text-[#193451]">
+                  Prévia do primeiro destinatário: <strong>{contatosDigitados[0].nome ? `Olá, ${contatosDigitados[0].nome}.` : "Olá."}</strong>
+                </div>
+              )}
             </section>
             <section className="rounded-2xl bg-white p-6 shadow-sm">
               <label className="text-sm font-semibold text-[#193451]">Modelo de mensagem</label>
