@@ -226,9 +226,9 @@ function linksInternosRelevantes(html: string, base: URL) {
   return encontrados;
 }
 
-async function baixarPaginaPublica(url: string) {
+async function baixarPaginaPublica(url: string, timeoutMs = 4500) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 4500);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const r = await fetch(url, {
       cache: "no-store",
@@ -245,6 +245,86 @@ async function baixarPaginaPublica(url: string) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function extrairEmailsPublicos(html: string, domain: string) {
+  const decodificado = html
+    .replace(/&#64;|&#x40;/gi, "@")
+    .replace(/&#46;|&#x2e;/gi, ".")
+    .replace(/&commat;/gi, "@");
+  const encontrados = decodificado.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi) || [];
+  const invalidos = ["example.com", "sentry.io", "wixpress.com"];
+  const unicos = [...new Set(encontrados.map((email) => email.toLowerCase()))]
+    .filter((email) => !invalidos.some((x) => email.endsWith(`@${x}`)))
+    .filter((email) => !/^(noreply|no-reply|donotreply|naoresponda)@/.test(email));
+
+  const dominio = domain.replace(/^www\./, "").toLowerCase();
+  const prioridade = (email: string) => {
+    const host = email.split("@")[1] || "";
+    const mesmoDominio = host === dominio || host.endsWith(`.${dominio}`);
+    const caixaGenerica = /^(contato|comercial|atendimento|vendas|imobiliaria|administracao|recepcao|info)@/.test(email);
+    return (mesmoDominio ? 100 : 0) + (caixaGenerica ? 20 : 0);
+  };
+  return unicos.sort((a, b) => prioridade(b) - prioridade(a));
+}
+
+function linksDeContato(html: string, base: URL) {
+  const encontrados: string[] = [];
+  const re = /href=["']([^"'#]+)["']/gi;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(html)) && encontrados.length < 2) {
+    try {
+      const url = new URL(match[1], base);
+      const mesmoHost = url.hostname === base.hostname || url.hostname === `www.${base.hostname}` || `www.${url.hostname}` === base.hostname;
+      if (!["http:", "https:"].includes(url.protocol) || !mesmoHost) continue;
+      const alvo = normalizar(`${url.pathname} ${url.search}`);
+      if (["contato", "contact", "fale-conosco", "faleconosco", "atendimento"].some((p) => alvo.includes(p))) {
+        if (!encontrados.includes(url.toString())) encontrados.push(url.toString());
+      }
+    } catch {
+      // link inválido: ignora
+    }
+  }
+  return encontrados;
+}
+
+async function buscarEmailPublicadoNoSite(domain: string, siteFonte?: string) {
+  const dominio = domain.trim().toLowerCase().replace(/^www\./, "");
+  if (
+    !/^[a-z0-9.-]+$/i.test(dominio) ||
+    dominio.includes("..") ||
+    dominio === "localhost" ||
+    dominio.endsWith(".local") ||
+    dominio.endsWith(".internal") ||
+    /^\d{1,3}(?:\.\d{1,3}){3}$/.test(dominio)
+  ) return undefined;
+
+  const candidatos = [
+    siteFonte,
+    `https://${dominio}/`,
+    `https://www.${dominio}/`,
+    `http://${dominio}/`,
+    `http://www.${dominio}/`,
+  ].filter((url, indice, todos): url is string => Boolean(url) && todos.indexOf(url) === indice);
+
+  for (const url of candidatos) {
+    const home = await baixarPaginaPublica(url, 2500);
+    if (!home) continue;
+    const emailsHome = extrairEmailsPublicos(home, dominio);
+    if (emailsHome.length) return emailsHome[0];
+
+    const base = new URL(url);
+    const paginasContato = await Promise.all(
+      linksDeContato(home, base).map((link) => baixarPaginaPublica(link, 2500))
+    );
+    for (const pagina of paginasContato) {
+      if (!pagina) continue;
+      const emails = extrairEmailsPublicos(pagina, dominio);
+      if (emails.length) return emails[0];
+    }
+    return undefined;
+  }
+  return undefined;
 }
 
 async function validarAtividadeCondominialNoSite(domain: string) {
@@ -846,6 +926,9 @@ export async function POST(request: Request) {
       }
       if (!email && buscarEmail) {
         email = enriquecida?.site?.emailAddresses?.find(Boolean)?.trim().toLowerCase();
+      }
+      if (!email && buscarEmail) {
+        email = await buscarEmailPublicadoNoSite(dominio, empresa.siteFonte);
       }
 
       const nome = empresa.organization?.trim() || enriquecida?.name?.trim() || dominio;
