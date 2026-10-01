@@ -3,6 +3,7 @@ const ALIASES_SEGMENTO: Array<{ nome: string; termos: string[] }> = [
     nome: "Imobiliárias",
     termos: [
       "imobiliaria", "imobiliarias", "corretora de imoveis", "corretoras de imoveis",
+      "corretor de imoveis", "corretores de imoveis", "corretor imobiliario", "corretores imobiliarios",
       "corretagem imobiliaria", "administracao de imoveis", "real estate", "realty",
     ],
   },
