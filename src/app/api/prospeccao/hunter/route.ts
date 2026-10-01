@@ -79,10 +79,18 @@ const SINONIMOS_SEGMENTO: Array<{ termos: string[]; palavras: string[]; consulta
     qualificacao: ["condominio", "condominios", "condominial", "sindico", "sindicos", "gestao condominial", "administracao condominial", "property management"],
   },
   {
-    termos: ["imobiliária", "imobiliaria", "imobiliárias", "imobiliarias", "corretora de imóveis", "corretora de imoveis"],
-    palavras: ["imobiliária", "imóveis", "corretora de imóveis", "administração de imóveis", "real estate"],
-    consulta: "imobiliárias, corretoras e empresas de administração de imóveis",
-    qualificacao: ["imobiliaria", "imoveis", "corretora de imoveis", "corretagem imobiliaria", "administracao de imoveis", "real estate", "realty"],
+    termos: [
+      "imobiliária", "imobiliaria", "imobiliárias", "imobiliarias",
+      "corretora de imóveis", "corretora de imoveis", "corretoras de imóveis", "corretoras de imoveis",
+      "corretor de imóveis", "corretor de imoveis", "corretores de imóveis", "corretores de imoveis",
+      "corretor imobiliário", "corretor imobiliario", "corretores imobiliários", "corretores imobiliarios",
+    ],
+    palavras: ["imobiliária", "imóveis", "corretora de imóveis", "corretor de imóveis", "administração de imóveis", "real estate"],
+    consulta: "imobiliárias, corretores e corretoras de imóveis",
+    qualificacao: [
+      "imobiliaria", "imoveis", "corretora de imoveis", "corretor de imoveis",
+      "corretagem imobiliaria", "corretor imobiliario", "administracao de imoveis", "real estate", "realty",
+    ],
   },
   {
     termos: ["arquiteto", "arquitetos", "arquitetura"],
@@ -168,6 +176,26 @@ function avaliarAderencia(segmento: string, empresa: EmpresaDescoberta, enriquec
     };
   }
 
+  // "Corretor(es) de imóveis" precisa ser tratado como busca imobiliária,
+  // nunca como o termo genérico "corretor". Bloqueamos explicitamente
+  // corretoras de seguros quando não há evidência imobiliária real.
+  if (ehBuscaImobiliaria(segmento)) {
+    const textoCompleto = `${nomeDominio} ${contexto}`;
+    const evidenciaImobiliaria = [
+      "imobiliaria", "imoveis", "corretora de imoveis", "corretor de imoveis",
+      "corretagem imobiliaria", "corretor imobiliario", "administracao de imoveis",
+      "real estate", "realty",
+    ].some((termo) => textoCompleto.includes(termo));
+    const evidenciaSeguros = [
+      "corretora de seguros", "corretor de seguros", "corretores de seguros",
+      "seguros", "insurance broker", "insurance brokerage",
+    ].some((termo) => textoCompleto.includes(termo));
+
+    if (evidenciaSeguros && !evidenciaImobiliaria) {
+      return { aprovado: false, pontuacao: 0, evidencias: ["atividade de seguros"] };
+    }
+  }
+
   // Para os demais segmentos, nome/domínio é evidência forte. Quando a
   // evidência aparece apenas no perfil da empresa, exigimos mais de um sinal
   // para evitar que uma menção incidental classifique o lead no segmento.
@@ -190,7 +218,15 @@ function ehBuscaCondominial(segmento: string) {
 
 function ehBuscaImobiliaria(segmento: string) {
   const alvo = normalizar(segmento);
-  return ["imobiliaria", "corretora de imoveis", "corretagem imobiliaria"].some((x) => alvo.includes(x));
+  return [
+    "imobiliaria",
+    "corretora de imoveis",
+    "corretor de imoveis",
+    "corretores de imoveis",
+    "corretagem imobiliaria",
+    "corretor imobiliario",
+    "corretores imobiliarios",
+  ].some((x) => alvo.includes(x));
 }
 
 function htmlParaTexto(html: string) {
@@ -529,7 +565,7 @@ async function buscarFoursquarePlaces(segmento: string, localidade: string, apiK
           { query: "imobiliária", categoria: "5032885091d4c4b30a586d66" },
           { query: "imobiliária" },
           { query: "corretora de imóveis" },
-          { query: "administração de imóveis" },
+          { query: "corretor de imóveis" },
         ]
       : [...new Set([segmento, ...termos.palavras])].slice(0, 4).map((query) => ({ query }));
 
