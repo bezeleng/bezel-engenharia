@@ -69,7 +69,16 @@ type PaginaSistema = {
   } | null;
 };
 
-const DEFAULTS = {
+const DEFAULTS: {
+  heroDestaques: ItemTexto[];
+  belPilares: ItemTexto[];
+  belPerguntas: string[];
+  modulos: Modulo[];
+  fluxo: string[];
+  diferenciais: ItemTexto[];
+  planos: Plano[];
+  faqs: Faq[];
+} = {
   heroDestaques: [
     { titulo: "Integrado", descricao: "Dados por obra" },
     { titulo: "Multiempresa", descricao: "Acessos por contexto" },
