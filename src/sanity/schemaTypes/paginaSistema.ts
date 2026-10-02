@@ -18,13 +18,13 @@ export const paginaSistema = defineType({
     badgeHero: "BEZEL Gestão · Software para gestão de obras",
     tituloHero: "A obra gera dados todos os dias. Transforme isso em gestão.",
     subtituloHero:
-      "Planejamento, execução, compras, financeiro, documentos e comercial em um ambiente criado para quem vive a obra — com a BEL, a gestora inteligente do BEZEL, evoluindo junto à operação.",
-    textoCtaPrimario: "Conhecer o BEZEL",
+      "Planejamento, execução, compras, financeiro, documentos e comercial em um ambiente criado para quem vive a obra — com a BEL, a gestora inteligente da BEZEL, evoluindo junto à operação.",
+    textoCtaPrimario: "Conhecer a BEZEL",
     linkCtaPrimario: "#como-funciona",
     textoCtaSecundario: "Falar com a equipe",
     linkCtaSecundario: "/contato",
     belTitulo: "Prazer, eu sou a BEL.",
-    belSubtitulo: "A gestora inteligente do BEZEL Gestão.",
+    belSubtitulo: "A gestora inteligente da BEZEL Gestão.",
     belDescricao:
       "A BEL foi criada para trabalhar com o contexto real da operação — fatos do sistema, histórico da obra e conhecimento técnico estruturado — ajudando a transformar informação espalhada em sinais mais úteis para gestão.",
     belStatus: "Em evolução",
@@ -32,13 +32,13 @@ export const paginaSistema = defineType({
       "A BEL está em evolução. Recursos do Radar e outras experiências inteligentes só são apresentados como disponíveis quando estiverem efetivamente liberados no produto.",
     tituloProblema: "É quando cada parte da obra vive em um lugar diferente.",
     textoProblema:
-      "Mensagens no WhatsApp, planilhas isoladas, papel, arquivos espalhados, compras sem histórico e decisões financeiras sem a mesma visão da execução. O BEZEL foi desenhado para aproximar essas informações sem transformar a rotina em burocracia.",
-    tituloModulos: "O BEZEL acompanha a obra antes, durante e depois da execução.",
+      "Mensagens no WhatsApp, planilhas isoladas, papel, arquivos espalhados, compras sem histórico e decisões financeiras sem a mesma visão da execução. A BEZEL foi desenhada para aproximar essas informações sem transformar a rotina em burocracia.",
+    tituloModulos: "A BEZEL acompanha a obra antes, durante e depois da execução.",
     textoModulos:
       "Em vez de criar ilhas de informação, o produto organiza módulos diferentes ao redor da mesma operação.",
     tituloFluxo: "A informação acompanha a obra. Não fica presa em um módulo.",
     textoFluxo:
-      "O valor do BEZEL está menos em ter muitas telas e mais em organizar etapas diferentes dentro de uma mesma operação, preservando contexto e histórico.",
+      "O valor da BEZEL está menos em ter muitas telas e mais em organizar etapas diferentes dentro de uma mesma operação, preservando contexto e histórico.",
     tituloDiferenciais:
       "Tecnologia suficiente para organizar. Sem transformar a obra em ERP antigo.",
     tituloMobile: "BEZEL onde a obra acontece.",
@@ -50,10 +50,10 @@ export const paginaSistema = defineType({
       "START, PRO e BUSINESS já fazem parte da estrutura comercial do produto. Preços, limites e composição final de recursos ainda serão publicados.",
     tituloFaq: "Entenda o produto antes de levar mais um sistema para a obra.",
     tituloCtaFinal:
-      "Sua obra já produz dados todos os dias. O BEZEL organiza esses dados para você enxergar melhor a operação.",
+      "Sua obra já produz dados todos os dias. A BEZEL organiza esses dados para você enxergar melhor a operação.",
     textoCtaFinal:
-      "Conheça o produto, acompanhe a evolução da BEL e converse com a equipe sobre a entrada do BEZEL na sua rotina.",
-    textoBotaoCtaFinal: "Falar sobre o BEZEL Gestão",
+      "Conheça o produto, acompanhe a evolução da BEL e converse com a equipe sobre a entrada da BEZEL na sua rotina.",
+    textoBotaoCtaFinal: "Falar sobre a BEZEL Gestão",
     linkBotaoCtaFinal: "/contato",
   },
   fields: [
