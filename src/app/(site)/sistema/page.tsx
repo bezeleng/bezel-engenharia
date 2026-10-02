@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { SistemaProductMockup } from "@/components/sistema/SistemaProductMockup";
@@ -161,12 +160,13 @@ export default function SistemaPage() {
           <div className="relative mx-auto w-full max-w-[430px]">
             <div className="absolute inset-x-8 bottom-5 h-20 rounded-full bg-navy/10 blur-3xl" aria-hidden="true" />
             <div className="relative overflow-hidden rounded-[32px] border border-gold/30 bg-white shadow-[0_30px_80px_rgba(24,52,81,0.13)]">
-              <Image
+              <img
                 src="/bel/bel-mascote.webp"
                 alt="BEL, gestora inteligente do BEZEL Gestão"
-                width={640}
-                height={960}
-                sizes="(max-width: 1024px) 80vw, 430px"
+                width="640"
+                height="960"
+                loading="eager"
+                decoding="async"
                 className="h-auto w-full"
               />
             </div>
