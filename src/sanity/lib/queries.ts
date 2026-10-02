@@ -8,6 +8,10 @@ export const paginaInicialQuery = defineQuery(
   `*[_type == "paginaInicial"][0]`
 );
 
+export const paginaSistemaQuery = defineQuery(
+  `*[_type == "paginaSistema"][0]`
+);
+
 export const servicosQuery = defineQuery(
   `*[_type == "servico"] | order(ordem asc)`
 );
