@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { SistemaProductMockup } from "@/components/sistema/SistemaProductMockup";
@@ -102,7 +103,7 @@ export default function SistemaPage() {
               A obra gera dados todos os dias. Transforme isso em gestão.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-navy/70 sm:text-lg">
-              Planejamento, execução, compras, financeiro, documentos, comercial e acompanhamento em um ambiente criado para quem vive a obra — com a BEL evoluindo como camada inteligente do produto.
+              Planejamento, execução, compras, financeiro, documentos e comercial em um ambiente criado para quem vive a obra — com a BEL, a gestora inteligente do BEZEL, evoluindo junto à operação.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="#como-funciona" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gold px-7 py-3 text-sm font-semibold text-navy transition hover:bg-gold/90">
@@ -116,7 +117,7 @@ export default function SistemaPage() {
               {[
                 ["Integrado", "Dados por obra"],
                 ["Multiempresa", "Acessos por contexto"],
-                ["Responsivo", "Desktop + mobile web"],
+                ["BEL", "Inteligência com contexto"],
               ].map(([titulo, descricao]) => (
                 <div key={titulo}>
                   <p className="text-sm font-semibold text-navy">{titulo}</p>
@@ -143,6 +144,92 @@ export default function SistemaPage() {
                 <p className="mt-1 text-sm text-white/60">{descricao}</p>
               </div>
             ))}
+          </div>
+        </Container>
+      </section>
+
+      <section id="bel" className="relative overflow-hidden border-b border-navy/10 bg-white">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-70"
+          aria-hidden="true"
+          style={{
+            background:
+              "radial-gradient(circle at 22% 55%, rgba(195,160,106,.18), transparent 28%), radial-gradient(circle at 82% 22%, rgba(91,71,108,.12), transparent 30%)",
+          }}
+        />
+        <Container className="relative grid gap-10 py-16 sm:py-20 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:py-24">
+          <div className="relative mx-auto w-full max-w-[430px]">
+            <div className="absolute inset-x-8 bottom-5 h-20 rounded-full bg-navy/10 blur-3xl" aria-hidden="true" />
+            <div className="relative overflow-hidden rounded-[32px] border border-gold/30 bg-white shadow-[0_30px_80px_rgba(24,52,81,0.13)]">
+              <Image
+                src="/bel/bel-mascote.webp"
+                alt="BEL, gestora inteligente do BEZEL Gestão"
+                width={640}
+                height={960}
+                sizes="(max-width: 1024px) 80vw, 430px"
+                className="h-auto w-full"
+              />
+            </div>
+            <div className="absolute -bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#6F5A86]/20 bg-white px-4 py-2 shadow-lg">
+              <span className="h-2 w-2 rounded-full bg-[#7C6592]" />
+              <span className="whitespace-nowrap text-xs font-semibold text-[#5F4975]">BEL · Em evolução</span>
+            </div>
+          </div>
+
+          <div className="max-w-2xl">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-xs font-semibold uppercase tracking-[0.22em] text-gold-text">
+                Conheça a BEL
+              </span>
+              <span className="rounded-full bg-[#EEE9F5] px-3 py-1 text-xs font-semibold text-[#604A79]">
+                Inteligência do BEZEL
+              </span>
+            </div>
+            <h2 className="mt-5 font-display text-4xl leading-[1.08] text-navy sm:text-5xl">
+              Prazer, eu sou a BEL.
+            </h2>
+            <p className="mt-3 text-xl font-medium text-navy/80">
+              A gestora inteligente do BEZEL Gestão.
+            </p>
+            <p className="mt-6 max-w-xl text-base leading-7 text-navy/65">
+              A BEL foi criada para trabalhar com o contexto real da operação — fatos do sistema, histórico da obra e conhecimento técnico estruturado — ajudando a transformar informação espalhada em sinais mais úteis para gestão.
+            </p>
+
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              {[
+                ["Contexto operacional", "Obras, cronograma, diário e outros dados do sistema."],
+                ["Conhecimento técnico", "Base dedicada para apoiar análises com referência."],
+                ["Radar e sinais", "Interpretações derivadas com origem e nível de confiança."],
+                ["Evolução contínua", "Novas experiências são liberadas somente quando estiverem validadas."],
+              ].map(([titulo, descricao]) => (
+                <div key={titulo} className="rounded-2xl border border-navy/10 bg-[#F8F7F4] p-4">
+                  <p className="text-sm font-semibold text-navy">{titulo}</p>
+                  <p className="mt-1.5 text-xs leading-5 text-navy/55">{descricao}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-7 rounded-[24px] border border-[#6F5A86]/15 bg-[#F7F4FA] p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6A547D]">
+                O tipo de pergunta que guia a experiência
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[
+                  "Bel, como está a obra?",
+                  "O que precisa da minha atenção hoje?",
+                  "Existe alguma etapa atrasada?",
+                  "O que o Diário registrou ontem?",
+                ].map((pergunta) => (
+                  <span key={pergunta} className="rounded-full border border-[#6F5A86]/15 bg-white px-3 py-2 text-xs text-[#4E3D60]">
+                    “{pergunta}”
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <p className="mt-5 max-w-xl text-xs leading-5 text-navy/45">
+              A BEL está em evolução. Recursos do Radar e outras experiências inteligentes só são apresentados como disponíveis quando estiverem efetivamente liberados no produto.
+            </p>
           </div>
         </Container>
       </section>
@@ -213,47 +300,6 @@ export default function SistemaPage() {
                     <span className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-sm text-white/85">{item}</span>
                     {index < fluxo.length - 1 && <span className="text-gold/70" aria-hidden="true">→</span>}
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      <section className="bg-white py-20 sm:py-24">
-        <Container>
-          <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="max-w-xl">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-text">BEL</span>
-                <span className="rounded-full bg-[#EEE9F5] px-3 py-1 text-xs font-semibold text-[#604A79]">Em evolução</span>
-              </div>
-              <h2 className="mt-4 font-display text-3xl leading-tight text-navy sm:text-4xl">
-                Mais que responder perguntas: entender o que a operação está mostrando.
-              </h2>
-              <p className="mt-5 leading-7 text-navy/65">
-                A BEL é a camada inteligente do BEZEL. Ela está sendo construída para trabalhar sobre fatos operacionais do sistema, conhecimento técnico estruturado e análises derivadas com origem identificada.
-              </p>
-              <p className="mt-4 text-sm leading-6 text-navy/50">
-                Algumas experiências da BEL e do Radar ainda estão em desenvolvimento e não são apresentadas como automações disponíveis para todos os usuários.
-              </p>
-            </div>
-            <div className="rounded-[28px] border border-[#6F5A86]/20 bg-[#F7F4FA] p-6 sm:p-8">
-              <div className="flex items-center justify-between gap-4 border-b border-[#6F5A86]/15 pb-5">
-                <div>
-                  <p className="text-sm font-semibold text-[#5F4975]">BEL</p>
-                  <p className="mt-1 text-xs text-[#5F4975]/60">Experiência inteligente em construção</p>
-                </div>
-                <span className="h-2.5 w-2.5 rounded-full bg-[#7C6592]" />
-              </div>
-              <div className="mt-6 space-y-3">
-                {[
-                  "Bel, como está a obra?",
-                  "O que precisa da minha atenção hoje?",
-                  "Existe alguma etapa atrasada?",
-                  "O que o Diário registrou ontem?",
-                ].map((pergunta) => (
-                  <div key={pergunta} className="rounded-2xl border border-[#6F5A86]/12 bg-white px-4 py-3 text-sm text-[#4E3D60]">“{pergunta}”</div>
                 ))}
               </div>
             </div>
