@@ -4,6 +4,7 @@ const SINGLETON_TYPES = new Set([
   'configuracaoSite',
   'paginaInicial',
   'paginaSobre',
+  'paginaSistema',
   'politicaPrivacidade',
 ])
 
@@ -30,6 +31,12 @@ export const structure: StructureResolver = (S) =>
         .id('paginaSobre')
         .child(
           S.document().schemaType('paginaSobre').documentId('paginaSobre')
+        ),
+      S.listItem()
+        .title('Landing BEZEL Gestão')
+        .id('paginaSistema')
+        .child(
+          S.document().schemaType('paginaSistema').documentId('paginaSistema')
         ),
       S.listItem()
         .title('Política de Privacidade')
