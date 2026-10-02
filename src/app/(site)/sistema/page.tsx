@@ -129,7 +129,7 @@ const DEFAULTS: {
     { titulo: "Feito para quem vive obra", descricao: "A organização acompanha o caminho real: orçamento, contrato, planejamento, execução e entrega." },
     { titulo: "Cada pessoa vê o que precisa", descricao: "Organize equipes e acessos sem misturar informações de empresas e obras diferentes." },
     { titulo: "Funciona no escritório e na obra", descricao: "Use pelo navegador no computador ou celular; o aplicativo nativo está em desenvolvimento." },
-    { titulo: "A BEL trabalha com a sua realidade", descricao: "A inteligência parte das informações registradas no BEZEL para ajudar a enxergar o que merece atenção." },
+    { titulo: "A BEL trabalha com a sua realidade", descricao: "A inteligência parte das informações registradas na BEZEL para ajudar a enxergar o que merece atenção." },
   ],
   planos: [
     { nome: "START", publico: "Para operações que estão estruturando a gestão digital de obras.", preco: "Preço em breve", destaque: false, textoBotao: "Quero conhecer", linkBotao: "/contato" },
@@ -138,10 +138,10 @@ const DEFAULTS: {
   ],
   faqs: [
     { pergunta: "Para quem é o BEZEL Gestão?", resposta: "Para construtoras, escritórios, engenheiros, arquitetos e gestores que precisam organizar obras, equipes, documentos, compras, financeiro e decisões em um único ambiente." },
-    { pergunta: "Posso gerenciar várias obras?", resposta: "Sim. O BEZEL foi estruturado para trabalhar com múltiplas obras e com separação de contexto por empresa e por obra." },
+    { pergunta: "Posso gerenciar várias obras?", resposta: "Sim. A BEZEL foi estruturada para trabalhar com múltiplas obras e com separação de contexto por empresa e por obra." },
     { pergunta: "Posso convidar minha equipe?", resposta: "Sim. O sistema possui estrutura de equipe, vínculos por empresa e papéis de acesso relacionados às obras." },
-    { pergunta: "O cliente consegue acompanhar a obra?", resposta: "O BEZEL possui Portal do Cliente e estrutura de compartilhamento de informações e documentos. A disponibilidade depende do que a empresa publica para o cliente." },
-    { pergunta: "O que é a BEL?", resposta: "A BEL é a camada inteligente do BEZEL. Ela está em evolução e foi projetada para interpretar contexto operacional e conhecimento técnico sem ser apenas um chatbot." },
+    { pergunta: "O cliente consegue acompanhar a obra?", resposta: "A BEZEL possui Portal do Cliente e estrutura de compartilhamento de informações e documentos. A disponibilidade depende do que a empresa publica para o cliente." },
+    { pergunta: "O que é a BEL?", resposta: "A BEL é a camada inteligente da BEZEL. Ela está em evolução e foi projetada para interpretar contexto operacional e conhecimento técnico sem ser apenas um chatbot." },
     { pergunta: "Funciona no celular?", resposta: "A versão web é responsiva e pode ser acessada pelo navegador. O aplicativo nativo BEZEL Mobile está em desenvolvimento." },
     { pergunta: "Existe período de teste?", resposta: "A oferta comercial de teste ainda não foi publicada. Quando o formato estiver definido, a página será atualizada." },
     { pergunta: "Meus dados ficam separados de outras empresas?", resposta: "A arquitetura foi construída com isolamento multiempresa e controle de acesso por contexto." },
@@ -242,13 +242,13 @@ export default async function SistemaPage() {
             <p className="mt-6 max-w-xl text-base leading-7 text-navy/85 sm:text-lg">
               {marketingText(
                 pagina?.subtituloHero,
-                "Planejamento, execução, compras, financeiro, documentos e comercial em um ambiente criado para quem vive a obra — com a BEL, a gestora inteligente do BEZEL, evoluindo junto à operação.",
+                "Planejamento, execução, compras, financeiro, documentos e comercial em um ambiente criado para quem vive a obra — com a BEL, a gestora inteligente da BEZEL, evoluindo junto à operação.",
                 "Saiba o que está atrasado, o que foi comprado, quanto já foi gasto, o que aconteceu hoje na obra e o que precisa da sua atenção — sem depender de planilhas, grupos de WhatsApp e informação espalhada.",
               )}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href={pagina?.linkCtaPrimario || "#como-funciona"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gold px-7 py-3 text-sm font-semibold text-navy transition hover:bg-gold/90">
-                {pagina?.textoCtaPrimario || "Conhecer o BEZEL"} <ArrowRight />
+                {pagina?.textoCtaPrimario || "Conhecer a BEZEL"} <ArrowRight />
               </Link>
               <Link href={pagina?.linkCtaSecundario || "/contato"} className="inline-flex min-h-12 items-center justify-center rounded-full border border-navy/20 bg-white px-7 py-3 text-sm font-semibold text-navy transition hover:border-navy/40 hover:bg-navy/[0.03]">
                 {pagina?.textoCtaSecundario || "Falar com a equipe"}
@@ -294,7 +294,7 @@ export default async function SistemaPage() {
               {belImagemUrl ? (
                 <Image
                   src={belImagemUrl}
-                  alt="BEL, gestora inteligente do BEZEL Gestão"
+                  alt="BEL, gestora inteligente da BEZEL Gestão"
                   width={900}
                   height={1350}
                   sizes="(max-width: 1024px) 80vw, 430px"
@@ -321,19 +321,19 @@ export default async function SistemaPage() {
           <div className="max-w-2xl">
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-xs font-semibold uppercase tracking-[0.22em] text-gold-text">Conheça a BEL</span>
-              <span className="rounded-full bg-[#EEE9F5] px-3 py-1 text-xs font-semibold text-[#604A79]">Inteligência do BEZEL</span>
+              <span className="rounded-full bg-[#EEE9F5] px-3 py-1 text-xs font-semibold text-[#604A79]">Inteligência da BEZEL</span>
             </div>
             <h2 className="mt-5 font-display text-4xl leading-[1.08] text-navy sm:text-5xl">
               {marketingText(pagina?.belTitulo, "Prazer, eu sou a BEL.", "Conheça a BEL. A inteligência que ajuda você a enxergar a obra antes do problema crescer.")}
             </h2>
             <p className="mt-3 text-xl font-medium text-navy/80">
-              {marketingText(pagina?.belSubtitulo, "A gestora inteligente do BEZEL Gestão.", "Pergunte. Confira. Decida. A BEL ajuda você a entender o que está acontecendo sem precisar procurar informação em dez lugares.")}
+              {marketingText(pagina?.belSubtitulo, "A gestora inteligente da BEZEL Gestão.", "Pergunte. Confira. Decida. A BEL ajuda você a entender o que está acontecendo sem precisar procurar informação em dez lugares.")}
             </p>
             <p className="mt-6 max-w-xl text-base leading-7 text-navy/80">
               {marketingText(
                 pagina?.belDescricao,
                 "A BEL foi criada para trabalhar com o contexto real da operação — fatos do sistema, histórico da obra e conhecimento técnico estruturado — ajudando a transformar informação espalhada em sinais mais úteis para gestão.",
-                "Ela cruza as informações registradas no BEZEL para ajudar você a entender atrasos, pendências, acontecimentos do dia e pontos que merecem atenção. É como ter alguém acompanhando a operação com você — sem substituir sua decisão.",
+                "Ela cruza as informações registradas na BEZEL para ajudar você a entender atrasos, pendências, acontecimentos do dia e pontos que merecem atenção. É como ter alguém acompanhando a operação com você — sem substituir sua decisão.",
               )}
             </p>
 
@@ -378,8 +378,8 @@ export default async function SistemaPage() {
             <p className="max-w-2xl text-base leading-7 text-navy/80">
               {marketingText(
                 pagina?.textoProblema,
-                "Mensagens no WhatsApp, planilhas isoladas, papel, arquivos espalhados, compras sem histórico e decisões financeiras sem a mesma visão da execução. O BEZEL foi desenhado para aproximar essas informações sem transformar a rotina em burocracia.",
-                "Fotos no celular, orçamento em planilha, nota fiscal no e-mail, pedido no WhatsApp, cronograma desatualizado e cliente cobrando resposta. O BEZEL junta a rotina da obra em um único lugar para você parar de procurar informação e começar a gerenciar.",
+                "Mensagens no WhatsApp, planilhas isoladas, papel, arquivos espalhados, compras sem histórico e decisões financeiras sem a mesma visão da execução. A BEZEL foi desenhada para aproximar essas informações sem transformar a rotina em burocracia.",
+                "Fotos no celular, orçamento em planilha, nota fiscal no e-mail, pedido no WhatsApp, cronograma desatualizado e cliente cobrando resposta. A BEZEL junta a rotina da obra em um único lugar para você parar de procurar informação e começar a gerenciar.",
               )}
             </p>
           </div>
@@ -393,7 +393,7 @@ export default async function SistemaPage() {
             <h2 className="mt-4 font-display text-3xl leading-tight text-navy sm:text-4xl">
               {marketingText(
                 pagina?.tituloModulos,
-                "O BEZEL acompanha a obra antes, durante e depois da execução.",
+                "A BEZEL acompanha a obra antes, durante e depois da execução.",
                 "Do primeiro orçamento à entrega da obra: tudo conversa entre si.",
               )}
             </h2>
@@ -401,7 +401,7 @@ export default async function SistemaPage() {
               {marketingText(
                 pagina?.textoModulos,
                 "Em vez de criar ilhas de informação, o produto organiza módulos diferentes ao redor da mesma operação.",
-                "Você não precisa comprar um sistema para cada problema. O BEZEL reúne planejamento, diário, compras, financeiro, documentos, propostas, contratos, equipe e cliente dentro da mesma obra.",
+                "Você não precisa comprar um sistema para cada problema. A BEZEL reúne planejamento, diário, compras, financeiro, documentos, propostas, contratos, equipe e cliente dentro da mesma obra.",
               )}
             </p>
           </div>
@@ -443,7 +443,7 @@ export default async function SistemaPage() {
                 <p className="mt-5 max-w-xl leading-7 text-white/80">
                   {marketingText(
                   pagina?.textoFluxo,
-                  "O valor do BEZEL está menos em ter muitas telas e mais em organizar etapas diferentes dentro de uma mesma operação, preservando contexto e histórico.",
+                  "O valor da BEZEL está menos em ter muitas telas e mais em organizar etapas diferentes dentro de uma mesma operação, preservando contexto e histórico.",
                   "A oportunidade vira proposta. A proposta vira contrato. O contrato vira planejamento. A execução gera diário, compras e movimentação financeira. Você acompanha o caminho completo sem perder o histórico.",
                 )}
                 </p>
@@ -497,7 +497,7 @@ export default async function SistemaPage() {
                 {marketingText(
                 pagina?.textoMobile,
                 "A experiência web já se adapta a telas menores. O aplicativo nativo está em desenvolvimento e esta seção ficará pronta para receber os links oficiais da Google Play e da App Store quando eles existirem.",
-                "Abra o BEZEL no celular e acompanhe a obra onde ela realmente acontece. A versão web já funciona em telas menores e o aplicativo nativo está em desenvolvimento.",
+                "Acesse a BEZEL no celular e acompanhe a obra onde ela realmente acontece. A versão web já funciona em telas menores e o aplicativo nativo está em desenvolvimento.",
               )}
               </p>
               <span className="mt-6 inline-flex rounded-full border border-navy/10 bg-[#F8F7F4] px-4 py-2 text-xs font-semibold text-navy/75">
@@ -613,20 +613,20 @@ export default async function SistemaPage() {
             <h2 className="mx-auto mt-4 max-w-3xl font-display text-3xl leading-tight text-navy sm:text-5xl">
               {marketingText(
                 pagina?.tituloCtaFinal,
-                "Sua obra já produz dados todos os dias. O BEZEL organiza esses dados para você enxergar melhor a operação.",
+                "Sua obra já produz dados todos os dias. A BEZEL organiza esses dados para você enxergar melhor a operação.",
                 "Você não precisa trabalhar mais para ter controle. Precisa parar de perder informação.",
               )}
             </h2>
             <p className="mx-auto mt-6 max-w-2xl leading-7 text-navy/75">
               {marketingText(
                 pagina?.textoCtaFinal,
-                "Conheça o produto, acompanhe a evolução da BEL e converse com a equipe sobre a entrada do BEZEL na sua rotina.",
+                "Conheça o produto, acompanhe a evolução da BEL e converse com a equipe sobre a entrada da BEZEL na sua rotina.",
                 "Centralize suas obras, acompanhe equipe, compras, custos, documentos e andamento em um só lugar — e deixe a BEL ajudar você a perceber o que merece atenção.",
               )}
             </p>
             <div className="mt-8">
               <Link href={pagina?.linkBotaoCtaFinal || "/contato"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gold px-7 py-3 text-sm font-semibold text-navy transition hover:bg-gold/90">
-                {pagina?.textoBotaoCtaFinal || "Falar sobre o BEZEL Gestão"} <ArrowRight />
+                {pagina?.textoBotaoCtaFinal || "Falar sobre a BEZEL Gestão"} <ArrowRight />
               </Link>
             </div>
           </div>
