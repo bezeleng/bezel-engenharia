@@ -137,7 +137,7 @@ const DEFAULTS: {
     { nome: "BUSINESS", publico: "Para operações com maior escala, múltiplas frentes e necessidades de gestão mais avançadas.", preco: "Preço em breve", destaque: false, textoBotao: "Quero conhecer", linkBotao: "/contato" },
   ],
   faqs: [
-    { pergunta: "Para quem é o BEZEL Gestão?", resposta: "Para construtoras, escritórios, engenheiros, arquitetos e gestores que precisam organizar obras, equipes, documentos, compras, financeiro e decisões em um único ambiente." },
+    { pergunta: "Para quem é a BEZEL Gestão?", resposta: "Para construtoras, escritórios, engenheiros, arquitetos e gestores que precisam organizar obras, equipes, documentos, compras, financeiro e decisões em um único ambiente." },
     { pergunta: "Posso gerenciar várias obras?", resposta: "Sim. A BEZEL foi estruturada para trabalhar com múltiplas obras e com separação de contexto por empresa e por obra." },
     { pergunta: "Posso convidar minha equipe?", resposta: "Sim. O sistema possui estrutura de equipe, vínculos por empresa e papéis de acesso relacionados às obras." },
     { pergunta: "O cliente consegue acompanhar a obra?", resposta: "A BEZEL possui Portal do Cliente e estrutura de compartilhamento de informações e documentos. A disponibilidade depende do que a empresa publica para o cliente." },
@@ -184,12 +184,21 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+function bezelText(value: string | null | undefined, fallback = "") {
+  return (value || fallback)
+    .replaceAll("do BEZEL", "da BEZEL")
+    .replaceAll("no BEZEL", "na BEZEL")
+    .replaceAll("pelo BEZEL", "pela BEZEL")
+    .replaceAll("O BEZEL", "A BEZEL")
+    .replaceAll("o BEZEL", "a BEZEL");
+}
+
 function marketingText(
   value: string | null | undefined,
   legacy: string,
   replacement: string,
 ) {
-  return !value || value === legacy ? replacement : value;
+  return bezelText(!value || value === legacy ? replacement : value);
 }
 
 function ArrowRight() {
@@ -248,17 +257,17 @@ export default async function SistemaPage() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href={pagina?.linkCtaPrimario || "#como-funciona"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gold px-7 py-3 text-sm font-semibold text-navy transition hover:bg-gold/90">
-                {pagina?.textoCtaPrimario || "Conhecer a BEZEL"} <ArrowRight />
+                {bezelText(pagina?.textoCtaPrimario, "Conhecer a BEZEL")} <ArrowRight />
               </Link>
               <Link href={pagina?.linkCtaSecundario || "/contato"} className="inline-flex min-h-12 items-center justify-center rounded-full border border-navy/20 bg-white px-7 py-3 text-sm font-semibold text-navy transition hover:border-navy/40 hover:bg-navy/[0.03]">
-                {pagina?.textoCtaSecundario || "Falar com a equipe"}
+                {bezelText(pagina?.textoCtaSecundario, "Falar com a equipe")}
               </Link>
             </div>
             <div className="mt-9 grid max-w-xl grid-cols-3 gap-3 border-t border-navy/10 pt-6">
               {heroDestaques.slice(0, 3).map((item, index) => (
                 <div key={item._key || item.titulo || index}>
-                  <p className="text-sm font-semibold text-navy">{item.titulo}</p>
-                  <p className="mt-1 text-xs leading-5 text-navy/70">{item.descricao}</p>
+                  <p className="text-sm font-semibold text-navy">{bezelText(item.titulo)}</p>
+                  <p className="mt-1 text-xs leading-5 text-navy/70">{bezelText(item.descricao)}</p>
                 </div>
               ))}
             </div>
@@ -596,10 +605,10 @@ export default async function SistemaPage() {
             {faqs.map((faq, index) => (
               <details key={faq._key || faq.pergunta || index} className="group py-5">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-left font-semibold text-white">
-                  {faq.pergunta}
+                  {bezelText(faq.pergunta)}
                   <span className="text-xl font-light text-gold transition group-open:rotate-45" aria-hidden="true">+</span>
                 </summary>
-                <p className="max-w-2xl pt-4 text-sm leading-7 text-white/80">{faq.resposta}</p>
+                <p className="max-w-2xl pt-4 text-sm leading-7 text-white/80">{bezelText(faq.resposta)}</p>
               </details>
             ))}
           </div>
@@ -626,7 +635,7 @@ export default async function SistemaPage() {
             </p>
             <div className="mt-8">
               <Link href={pagina?.linkBotaoCtaFinal || "/contato"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gold px-7 py-3 text-sm font-semibold text-navy transition hover:bg-gold/90">
-                {pagina?.textoBotaoCtaFinal || "Falar sobre a BEZEL Gestão"} <ArrowRight />
+                {bezelText(pagina?.textoBotaoCtaFinal, "Falar sobre a BEZEL Gestão")} <ArrowRight />
               </Link>
             </div>
           </div>
