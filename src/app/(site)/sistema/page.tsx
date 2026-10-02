@@ -80,15 +80,15 @@ const DEFAULTS: {
   faqs: Faq[];
 } = {
   heroDestaques: [
-    { titulo: "Integrado", descricao: "Dados por obra" },
-    { titulo: "Multiempresa", descricao: "Acessos por contexto" },
-    { titulo: "BEL", descricao: "Inteligência com contexto" },
+    { titulo: "Tudo em um lugar", descricao: "Obra, equipe, compras e custos" },
+    { titulo: "Menos improviso", descricao: "Histórico e responsabilidades claras" },
+    { titulo: "BEL", descricao: "Ajuda a encontrar o que exige atenção" },
   ],
   belPilares: [
-    { titulo: "Contexto operacional", descricao: "Obras, cronograma, diário e outros dados do sistema." },
-    { titulo: "Conhecimento técnico", descricao: "Base dedicada para apoiar análises com referência." },
-    { titulo: "Radar e sinais", descricao: "Interpretações derivadas com origem e nível de confiança." },
-    { titulo: "Evolução contínua", descricao: "Novas experiências são liberadas somente quando estiverem validadas." },
+    { titulo: "O que está acontecendo?", descricao: "A BEL usa os registros da própria obra para ajudar você a entender a situação." },
+    { titulo: "O que merece atenção?", descricao: "Ela ajuda a reunir sinais e informações relevantes antes que virem surpresa." },
+    { titulo: "Onde procurar primeiro?", descricao: "Em vez de vasculhar telas, você começa pelo que parece mais importante." },
+    { titulo: "Cada vez mais útil", descricao: "A BEL continua evoluindo conforme novas funções são validadas no produto." },
   ],
   belPerguntas: [
     "Bel, como está a obra?",
@@ -99,37 +99,37 @@ const DEFAULTS: {
   modulos: [
     {
       numero: "01",
-      titulo: "Planejamento e execução",
-      descricao: "Obras, cronograma e Diário de Obra conectados para acompanhar o planejado, o realizado e o que precisa de atenção.",
+      titulo: "Saiba se a obra está andando",
+      descricao: "Organize tarefas, responsáveis, prazos e registros do dia. Veja o planejado e o que realmente aconteceu.",
       itens: ["Obras", "Cronograma", "Diário de Obra"],
     },
     {
       numero: "02",
-      titulo: "Compras e financeiro",
-      descricao: "Solicitações, cotações, aprovações, pedidos, recebimentos e visão financeira organizados dentro do contexto de cada obra.",
+      titulo: "Pare de perder dinheiro no caminho",
+      descricao: "Acompanhe solicitações, cotações, compras, recebimentos e movimentações financeiras vinculadas à obra.",
       itens: ["Compras", "Cotações", "Financeiro"],
     },
     {
       numero: "03",
-      titulo: "Comercial e viabilidade",
-      descricao: "Da oportunidade ao contrato: EVF, cenários, proposta comercial e formalização sem perder o histórico da decisão.",
+      titulo: "Venda a obra com mais segurança",
+      descricao: "Organize oportunidades, estudos de viabilidade, propostas e contratos antes de a execução começar.",
       itens: ["Comercial", "EVF", "Propostas", "Contratos"],
     },
     {
       numero: "04",
-      titulo: "Equipe, documentos e cliente",
-      descricao: "Acessos por empresa e obra, biblioteca de documentos, compartilhamentos controlados e acompanhamento do cliente.",
+      titulo: "Todo mundo sabe onde encontrar",
+      descricao: "Equipe, documentos e informações do cliente ficam organizados na obra certa, com acesso conforme a necessidade.",
       itens: ["Equipe", "Documentos", "Portal do Cliente"],
     },
   ],
   fluxo: ["Oportunidade", "EVF", "Proposta", "Contrato", "Planejamento", "Execução", "Diário", "Compras", "Financeiro", "Pós-obra"],
   diferenciais: [
-    { titulo: "Tudo nasce dentro da obra", descricao: "Dados, decisões e históricos permanecem contextualizados por empresa e por obra." },
-    { titulo: "Rastreabilidade para decidir melhor", descricao: "Cronograma, diário, compras, financeiro, documentos e comercial preservam histórico e contexto." },
-    { titulo: "Construído para a construção", descricao: "A lógica parte do fluxo real: oportunidade, viabilidade, contratação, execução, acompanhamento e pós-obra." },
-    { titulo: "Multiempresa por arquitetura", descricao: "Empresas, usuários, papéis e acessos são separados por contexto operacional." },
-    { titulo: "Web hoje. Mobile no caminho.", descricao: "A experiência web é responsiva; o aplicativo nativo está em desenvolvimento." },
-    { titulo: "Inteligência com contexto", descricao: "A BEL está sendo construída sobre dados do próprio BEZEL e uma base técnica dedicada." },
+    { titulo: "Você sabe onde está a informação", descricao: "Cada registro fica ligado à obra certa, em vez de espalhado em mensagens, pastas e planilhas." },
+    { titulo: "Você entende o que aconteceu", descricao: "Cronograma, diário, compras, financeiro e documentos mantêm o histórico para reduzir dúvida e retrabalho." },
+    { titulo: "Feito para quem vive obra", descricao: "A organização acompanha o caminho real: orçamento, contrato, planejamento, execução e entrega." },
+    { titulo: "Cada pessoa vê o que precisa", descricao: "Organize equipes e acessos sem misturar informações de empresas e obras diferentes." },
+    { titulo: "Funciona no escritório e na obra", descricao: "Use pelo navegador no computador ou celular; o aplicativo nativo está em desenvolvimento." },
+    { titulo: "A BEL trabalha com a sua realidade", descricao: "A inteligência parte das informações registradas no BEZEL para ajudar a enxergar o que merece atenção." },
   ],
   planos: [
     { nome: "START", publico: "Para operações que estão estruturando a gestão digital de obras.", preco: "Preço em breve", destaque: false, textoBotao: "Quero conhecer", linkBotao: "/contato" },
@@ -184,6 +184,14 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+function marketingText(
+  value: string | null | undefined,
+  legacy: string,
+  replacement: string,
+) {
+  return !value || value === legacy ? replacement : value;
+}
+
 function ArrowRight() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -225,10 +233,18 @@ export default async function SistemaPage() {
               {pagina?.badgeHero || "BEZEL Gestão · Software para gestão de obras"}
             </div>
             <h1 className="max-w-xl font-display text-4xl leading-[1.08] text-navy sm:text-5xl lg:text-6xl">
-              {pagina?.tituloHero || "A obra gera dados todos os dias. Transforme isso em gestão."}
+              {marketingText(
+                pagina?.tituloHero,
+                "A obra gera dados todos os dias. Transforme isso em gestão.",
+                "Pare de apagar incêndios na obra. Tenha tudo sob controle em um só lugar.",
+              )}
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-navy/70 sm:text-lg">
-              {pagina?.subtituloHero || "Planejamento, execução, compras, financeiro, documentos e comercial em um ambiente criado para quem vive a obra — com a BEL, a gestora inteligente do BEZEL, evoluindo junto à operação."}
+            <p className="mt-6 max-w-xl text-base leading-7 text-navy/85 sm:text-lg">
+              {marketingText(
+                pagina?.subtituloHero,
+                "Planejamento, execução, compras, financeiro, documentos e comercial em um ambiente criado para quem vive a obra — com a BEL, a gestora inteligente do BEZEL, evoluindo junto à operação.",
+                "Saiba o que está atrasado, o que foi comprado, quanto já foi gasto, o que aconteceu hoje na obra e o que precisa da sua atenção — sem depender de planilhas, grupos de WhatsApp e informação espalhada.",
+              )}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href={pagina?.linkCtaPrimario || "#como-funciona"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gold px-7 py-3 text-sm font-semibold text-navy transition hover:bg-gold/90">
@@ -242,7 +258,7 @@ export default async function SistemaPage() {
               {heroDestaques.slice(0, 3).map((item, index) => (
                 <div key={item._key || item.titulo || index}>
                   <p className="text-sm font-semibold text-navy">{item.titulo}</p>
-                  <p className="mt-1 text-xs leading-5 text-navy/55">{item.descricao}</p>
+                  <p className="mt-1 text-xs leading-5 text-navy/70">{item.descricao}</p>
                 </div>
               ))}
             </div>
@@ -262,7 +278,7 @@ export default async function SistemaPage() {
             ].map(([titulo, descricao]) => (
               <div key={titulo} className="border-white/10 sm:border-l sm:pl-5 first:border-l-0 first:pl-0">
                 <p className="font-display text-lg text-gold">{titulo}</p>
-                <p className="mt-1 text-sm text-white/60">{descricao}</p>
+                <p className="mt-1 text-sm text-white/80">{descricao}</p>
               </div>
             ))}
           </div>
@@ -288,7 +304,7 @@ export default async function SistemaPage() {
               ) : (
                 <div className="px-8 text-center">
                   <p className="font-display text-5xl text-gold">BEL</p>
-                  <p className="mt-4 text-sm leading-6 text-navy/55">
+                  <p className="mt-4 text-sm leading-6 text-navy/70">
                     Adicione a foto da BEL em Studio → Landing BEZEL Gestão → BEL.
                   </p>
                 </div>
@@ -308,20 +324,24 @@ export default async function SistemaPage() {
               <span className="rounded-full bg-[#EEE9F5] px-3 py-1 text-xs font-semibold text-[#604A79]">Inteligência do BEZEL</span>
             </div>
             <h2 className="mt-5 font-display text-4xl leading-[1.08] text-navy sm:text-5xl">
-              {pagina?.belTitulo || "Prazer, eu sou a BEL."}
+              {marketingText(pagina?.belTitulo, "Prazer, eu sou a BEL.", "Conheça a BEL. A inteligência que ajuda você a enxergar a obra antes do problema crescer.")}
             </h2>
             <p className="mt-3 text-xl font-medium text-navy/80">
-              {pagina?.belSubtitulo || "A gestora inteligente do BEZEL Gestão."}
+              {marketingText(pagina?.belSubtitulo, "A gestora inteligente do BEZEL Gestão.", "Pergunte. Confira. Decida. A BEL ajuda você a entender o que está acontecendo sem precisar procurar informação em dez lugares.")}
             </p>
-            <p className="mt-6 max-w-xl text-base leading-7 text-navy/65">
-              {pagina?.belDescricao || "A BEL foi criada para trabalhar com o contexto real da operação — fatos do sistema, histórico da obra e conhecimento técnico estruturado — ajudando a transformar informação espalhada em sinais mais úteis para gestão."}
+            <p className="mt-6 max-w-xl text-base leading-7 text-navy/80">
+              {marketingText(
+                pagina?.belDescricao,
+                "A BEL foi criada para trabalhar com o contexto real da operação — fatos do sistema, histórico da obra e conhecimento técnico estruturado — ajudando a transformar informação espalhada em sinais mais úteis para gestão.",
+                "Ela cruza as informações registradas no BEZEL para ajudar você a entender atrasos, pendências, acontecimentos do dia e pontos que merecem atenção. É como ter alguém acompanhando a operação com você — sem substituir sua decisão.",
+              )}
             </p>
 
             <div className="mt-7 grid gap-3 sm:grid-cols-2">
               {belPilares.map((item, index) => (
                 <div key={item._key || item.titulo || index} className="rounded-2xl border border-navy/10 bg-[#F8F7F4] p-4">
                   <p className="text-sm font-semibold text-navy">{item.titulo}</p>
-                  <p className="mt-1.5 text-xs leading-5 text-navy/55">{item.descricao}</p>
+                  <p className="mt-1.5 text-xs leading-5 text-navy/70">{item.descricao}</p>
                 </div>
               ))}
             </div>
@@ -335,7 +355,7 @@ export default async function SistemaPage() {
               </div>
             </div>
 
-            <p className="mt-5 max-w-xl text-xs leading-5 text-navy/45">
+            <p className="mt-5 max-w-xl text-xs leading-5 text-navy/60">
               {pagina?.belAviso || "A BEL está em evolução. Recursos do Radar e outras experiências inteligentes só são apresentados como disponíveis quando estiverem efetivamente liberados no produto."}
             </p>
           </div>
@@ -348,11 +368,19 @@ export default async function SistemaPage() {
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-text">O problema não é falta de informação</span>
               <h2 className="mt-4 max-w-xl font-display text-3xl leading-tight text-navy sm:text-4xl">
-                {pagina?.tituloProblema || "É quando cada parte da obra vive em um lugar diferente."}
+                {marketingText(
+                  pagina?.tituloProblema,
+                  "É quando cada parte da obra vive em um lugar diferente.",
+                  "Se você precisa perguntar em cinco grupos diferentes para descobrir como está a obra, você já perdeu o controle.",
+                )}
               </h2>
             </div>
-            <p className="max-w-2xl text-base leading-7 text-navy/65">
-              {pagina?.textoProblema || "Mensagens no WhatsApp, planilhas isoladas, papel, arquivos espalhados, compras sem histórico e decisões financeiras sem a mesma visão da execução. O BEZEL foi desenhado para aproximar essas informações sem transformar a rotina em burocracia."}
+            <p className="max-w-2xl text-base leading-7 text-navy/80">
+              {marketingText(
+                pagina?.textoProblema,
+                "Mensagens no WhatsApp, planilhas isoladas, papel, arquivos espalhados, compras sem histórico e decisões financeiras sem a mesma visão da execução. O BEZEL foi desenhado para aproximar essas informações sem transformar a rotina em burocracia.",
+                "Fotos no celular, orçamento em planilha, nota fiscal no e-mail, pedido no WhatsApp, cronograma desatualizado e cliente cobrando resposta. O BEZEL junta a rotina da obra em um único lugar para você parar de procurar informação e começar a gerenciar.",
+              )}
             </p>
           </div>
         </Container>
@@ -363,10 +391,18 @@ export default async function SistemaPage() {
           <div className="max-w-3xl">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-text">Um sistema. Várias etapas. O mesmo contexto.</span>
             <h2 className="mt-4 font-display text-3xl leading-tight text-navy sm:text-4xl">
-              {pagina?.tituloModulos || "O BEZEL acompanha a obra antes, durante e depois da execução."}
+              {marketingText(
+                pagina?.tituloModulos,
+                "O BEZEL acompanha a obra antes, durante e depois da execução.",
+                "Do primeiro orçamento à entrega da obra: tudo conversa entre si.",
+              )}
             </h2>
-            <p className="mt-5 text-base leading-7 text-navy/65">
-              {pagina?.textoModulos || "Em vez de criar ilhas de informação, o produto organiza módulos diferentes ao redor da mesma operação."}
+            <p className="mt-5 text-base leading-7 text-navy/80">
+              {marketingText(
+                pagina?.textoModulos,
+                "Em vez de criar ilhas de informação, o produto organiza módulos diferentes ao redor da mesma operação.",
+                "Você não precisa comprar um sistema para cada problema. O BEZEL reúne planejamento, diário, compras, financeiro, documentos, propostas, contratos, equipe e cliente dentro da mesma obra.",
+              )}
             </p>
           </div>
           <div className="mt-12 grid gap-5 md:grid-cols-2">
@@ -377,11 +413,11 @@ export default async function SistemaPage() {
                   <div className="h-px flex-1 translate-y-4 bg-navy/10" />
                 </div>
                 <h3 className="mt-7 font-display text-2xl text-navy">{modulo.titulo}</h3>
-                <p className="mt-3 leading-7 text-navy/60">{modulo.descricao}</p>
+                <p className="mt-3 leading-7 text-navy/75">{modulo.descricao}</p>
                 {!!modulo.itens?.length && (
                   <div className="mt-6 flex flex-wrap gap-2">
                     {modulo.itens.filter(Boolean).map((item) => (
-                      <span key={item as string} className="rounded-full border border-navy/10 bg-white px-3 py-1.5 text-xs font-medium text-navy/70">{item}</span>
+                      <span key={item as string} className="rounded-full border border-navy/10 bg-white px-3 py-1.5 text-xs font-medium text-navy/85">{item}</span>
                     ))}
                   </div>
                 )}
@@ -398,10 +434,18 @@ export default async function SistemaPage() {
               <div>
                 <span className="inline-flex rounded-full border border-gold/35 bg-gold/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-gold">Fluxo conectado</span>
                 <h2 className="mt-5 max-w-xl font-display text-3xl leading-tight sm:text-4xl">
-                  {pagina?.tituloFluxo || "A informação acompanha a obra. Não fica presa em um módulo."}
+                  {marketingText(
+                  pagina?.tituloFluxo,
+                  "A informação acompanha a obra. Não fica presa em um módulo.",
+                  "A obra deixa de ser um monte de informações soltas e vira uma sequência que você consegue acompanhar.",
+                )}
                 </h2>
-                <p className="mt-5 max-w-xl leading-7 text-white/65">
-                  {pagina?.textoFluxo || "O valor do BEZEL está menos em ter muitas telas e mais em organizar etapas diferentes dentro de uma mesma operação, preservando contexto e histórico."}
+                <p className="mt-5 max-w-xl leading-7 text-white/80">
+                  {marketingText(
+                  pagina?.textoFluxo,
+                  "O valor do BEZEL está menos em ter muitas telas e mais em organizar etapas diferentes dentro de uma mesma operação, preservando contexto e histórico.",
+                  "A oportunidade vira proposta. A proposta vira contrato. O contrato vira planejamento. A execução gera diário, compras e movimentação financeira. Você acompanha o caminho completo sem perder o histórico.",
+                )}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -422,7 +466,11 @@ export default async function SistemaPage() {
           <div className="max-w-3xl">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-text">Diferenciais</span>
             <h2 className="mt-4 font-display text-3xl leading-tight text-navy sm:text-4xl">
-              {pagina?.tituloDiferenciais || "Tecnologia suficiente para organizar. Sem transformar a obra em ERP antigo."}
+              {marketingText(
+                pagina?.tituloDiferenciais,
+                "Tecnologia suficiente para organizar. Sem transformar a obra em ERP antigo.",
+                "Menos surpresa no fim do mês. Menos cobrança sem resposta. Mais controle durante a obra.",
+              )}
             </h2>
           </div>
           <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -430,7 +478,7 @@ export default async function SistemaPage() {
               <article key={item._key || item.titulo || index} className="rounded-[24px] border border-navy/10 bg-white p-6 shadow-[0_14px_40px_rgba(24,52,81,0.04)]">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/15 text-gold-text">✓</div>
                 <h3 className="mt-5 text-lg font-semibold text-navy">{item.titulo}</h3>
-                <p className="mt-3 text-sm leading-6 text-navy/60">{item.descricao}</p>
+                <p className="mt-3 text-sm leading-6 text-navy/75">{item.descricao}</p>
               </article>
             ))}
           </div>
@@ -443,12 +491,16 @@ export default async function SistemaPage() {
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-text">BEZEL Mobile</span>
               <h2 className="mt-4 font-display text-3xl leading-tight text-navy sm:text-4xl">
-                {pagina?.tituloMobile || "BEZEL onde a obra acontece."}
+                {marketingText(pagina?.tituloMobile, "BEZEL onde a obra acontece.", "A gestão não pode ficar presa no computador do escritório.")}
               </h2>
-              <p className="mt-5 max-w-xl leading-7 text-navy/65">
-                {pagina?.textoMobile || "A experiência web já se adapta a telas menores. O aplicativo nativo está em desenvolvimento e esta seção ficará pronta para receber os links oficiais da Google Play e da App Store quando eles existirem."}
+              <p className="mt-5 max-w-xl leading-7 text-navy/80">
+                {marketingText(
+                pagina?.textoMobile,
+                "A experiência web já se adapta a telas menores. O aplicativo nativo está em desenvolvimento e esta seção ficará pronta para receber os links oficiais da Google Play e da App Store quando eles existirem.",
+                "Abra o BEZEL no celular e acompanhe a obra onde ela realmente acontece. A versão web já funciona em telas menores e o aplicativo nativo está em desenvolvimento.",
+              )}
               </p>
-              <span className="mt-6 inline-flex rounded-full border border-navy/10 bg-[#F8F7F4] px-4 py-2 text-xs font-semibold text-navy/60">
+              <span className="mt-6 inline-flex rounded-full border border-navy/10 bg-[#F8F7F4] px-4 py-2 text-xs font-semibold text-navy/75">
                 {pagina?.statusMobile || "Aplicativo em desenvolvimento"}
               </span>
               {(pagina?.googlePlayUrl || pagina?.appStoreUrl) && (
@@ -489,10 +541,18 @@ export default async function SistemaPage() {
           <div className="mx-auto max-w-3xl text-center">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-text">Planos</span>
             <h2 className="mt-4 font-display text-3xl leading-tight text-navy sm:text-4xl">
-              {pagina?.tituloPlanos || "Uma estrutura preparada para crescer com a operação."}
+              {marketingText(
+                pagina?.tituloPlanos,
+                "Uma estrutura preparada para crescer com a operação.",
+                "Comece com o que sua operação precisa hoje. Evolua quando suas obras crescerem.",
+              )}
             </h2>
-            <p className="mt-5 leading-7 text-navy/65">
-              {pagina?.textoPlanos || "START, PRO e BUSINESS já fazem parte da estrutura comercial do produto. Preços, limites e composição final de recursos ainda serão publicados."}
+            <p className="mt-5 leading-7 text-navy/80">
+              {marketingText(
+                pagina?.textoPlanos,
+                "START, PRO e BUSINESS já fazem parte da estrutura comercial do produto. Preços, limites e composição final de recursos ainda serão publicados.",
+                "Escolha o plano que combina com o tamanho da sua operação. Você pode administrar os valores e recursos desta seção diretamente pelo Studio.",
+              )}
             </p>
           </div>
           <div className="mt-12 grid gap-5 lg:grid-cols-3">
@@ -501,15 +561,15 @@ export default async function SistemaPage() {
                 {plano.destaque && <span className="absolute right-6 top-6 rounded-full bg-gold px-3 py-1 text-xs font-semibold text-navy">Destaque</span>}
                 <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${plano.destaque ? "text-gold" : "text-gold-text"}`}>Plano</p>
                 <h3 className="mt-3 font-display text-3xl">{plano.nome}</h3>
-                <p className={`mt-5 text-sm leading-6 ${plano.destaque ? "text-white/65" : "text-navy/60"}`}>{plano.publico}</p>
+                <p className={`mt-5 text-sm leading-6 ${plano.destaque ? "text-white/80" : "text-navy/75"}`}>{plano.publico}</p>
                 {!!plano.recursos?.length && (
-                  <ul className={`mt-6 space-y-2 text-sm ${plano.destaque ? "text-white/75" : "text-navy/65"}`}>
+                  <ul className={`mt-6 space-y-2 text-sm ${plano.destaque ? "text-white/90" : "text-navy/80"}`}>
                     {plano.recursos.filter(Boolean).map((recurso) => <li key={recurso as string}>✓ {recurso}</li>)}
                   </ul>
                 )}
                 <div className="mt-auto pt-8">
                   <p className={`text-xl font-semibold ${plano.destaque ? "text-gold" : "text-navy"}`}>{plano.preco || "Preço em breve"}</p>
-                  {plano.observacaoPreco && <p className={`mt-1 text-xs ${plano.destaque ? "text-white/50" : "text-navy/45"}`}>{plano.observacaoPreco}</p>}
+                  {plano.observacaoPreco && <p className={`mt-1 text-xs ${plano.destaque ? "text-white/70" : "text-navy/60"}`}>{plano.observacaoPreco}</p>}
                   <Link href={plano.linkBotao || "/contato"} className={`mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition ${plano.destaque ? "bg-gold text-navy hover:bg-gold/90" : "border border-navy/20 text-navy hover:bg-navy hover:text-white"}`}>
                     {plano.textoBotao || "Quero conhecer"}
                   </Link>
@@ -525,7 +585,11 @@ export default async function SistemaPage() {
           <div className="mx-auto max-w-3xl text-center">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Perguntas frequentes</span>
             <h2 className="mt-4 font-display text-3xl sm:text-4xl">
-              {pagina?.tituloFaq || "Entenda o produto antes de levar mais um sistema para a obra."}
+              {marketingText(
+                pagina?.tituloFaq,
+                "Entenda o produto antes de levar mais um sistema para a obra.",
+                "Antes de assinar, tire as dúvidas que realmente importam.",
+              )}
             </h2>
           </div>
           <div className="mx-auto mt-12 max-w-3xl divide-y divide-white/10 border-y border-white/10">
@@ -535,7 +599,7 @@ export default async function SistemaPage() {
                   {faq.pergunta}
                   <span className="text-xl font-light text-gold transition group-open:rotate-45" aria-hidden="true">+</span>
                 </summary>
-                <p className="max-w-2xl pt-4 text-sm leading-7 text-white/60">{faq.resposta}</p>
+                <p className="max-w-2xl pt-4 text-sm leading-7 text-white/80">{faq.resposta}</p>
               </details>
             ))}
           </div>
@@ -547,10 +611,18 @@ export default async function SistemaPage() {
           <div className="rounded-[32px] border border-gold/30 bg-white px-6 py-10 text-center shadow-[0_24px_70px_rgba(24,52,81,0.07)] sm:px-10 sm:py-14">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-text">Menos fragmentação. Mais gestão.</span>
             <h2 className="mx-auto mt-4 max-w-3xl font-display text-3xl leading-tight text-navy sm:text-5xl">
-              {pagina?.tituloCtaFinal || "Sua obra já produz dados todos os dias. O BEZEL organiza esses dados para você enxergar melhor a operação."}
+              {marketingText(
+                pagina?.tituloCtaFinal,
+                "Sua obra já produz dados todos os dias. O BEZEL organiza esses dados para você enxergar melhor a operação.",
+                "Você não precisa trabalhar mais para ter controle. Precisa parar de perder informação.",
+              )}
             </h2>
-            <p className="mx-auto mt-6 max-w-2xl leading-7 text-navy/60">
-              {pagina?.textoCtaFinal || "Conheça o produto, acompanhe a evolução da BEL e converse com a equipe sobre a entrada do BEZEL na sua rotina."}
+            <p className="mx-auto mt-6 max-w-2xl leading-7 text-navy/75">
+              {marketingText(
+                pagina?.textoCtaFinal,
+                "Conheça o produto, acompanhe a evolução da BEL e converse com a equipe sobre a entrada do BEZEL na sua rotina.",
+                "Centralize suas obras, acompanhe equipe, compras, custos, documentos e andamento em um só lugar — e deixe a BEL ajudar você a perceber o que merece atenção.",
+              )}
             </p>
             <div className="mt-8">
               <Link href={pagina?.linkBotaoCtaFinal || "/contato"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gold px-7 py-3 text-sm font-semibold text-navy transition hover:bg-gold/90">
