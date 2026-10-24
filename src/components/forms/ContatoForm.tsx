@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { contatoSchema, type ContatoFormData } from "@/lib/validations/contato";
 import { Button } from "@/components/ui/Button";
+import { trackMarketingEvent } from "@/lib/analytics-events";
 
 export function ContatoForm() {
   const [status, setStatus] = useState<"idle" | "enviando" | "sucesso" | "erro">(
@@ -32,6 +33,7 @@ export function ContatoForm() {
 
       if (!resposta.ok) throw new Error("Falha no envio.");
 
+      trackMarketingEvent("bezel_form_success", { form_type: "contato" });
       setStatus("sucesso");
       reset();
     } catch {
