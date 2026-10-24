@@ -10,11 +10,18 @@ import { AvaliacoesGoogle } from "@/components/sections/AvaliacoesGoogle";
 import { Button } from "@/components/ui/Button";
 
 export const metadata: Metadata = {
-  title: "Contato",
+  title: "Contato da Construtora no Vale do Paraíba",
   description:
-    "Entre em contato com a BEZEL Engenharia em Jacareí, atendendo Jacareí, São José dos Campos e o Vale do Paraíba.",
+    "Fale com a BEZEL em Jacareí para projetos, construção e gerenciamento de obras em São José dos Campos e todo o Vale do Paraíba.",
   alternates: {
     canonical: "/contato",
+  },
+  openGraph: {
+    title: "Contato | BEZEL Construtora no Vale do Paraíba",
+    description:
+      "Entre em contato com a BEZEL para projetos, construção e gerenciamento de obras no Vale do Paraíba.",
+    url: "https://bezel.com.br/contato",
+    type: "website",
   },
 };
 

@@ -6,10 +6,18 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { ProjetoCard } from "@/components/sections/ProjetoCard";
 
 export const metadata: Metadata = {
-  title: "Projetos",
-  description: "Confira nosso portfólio de projetos de arquitetura e engenharia.",
+  title: "Projetos de Arquitetura e Engenharia no Vale do Paraíba",
+  description:
+    "Portfólio de projetos de arquitetura e engenharia da BEZEL para Jacareí, São José dos Campos e demais cidades do Vale do Paraíba.",
   alternates: {
     canonical: "/projetos",
+  },
+  openGraph: {
+    title: "Projetos de Arquitetura e Engenharia | BEZEL",
+    description:
+      "Conheça projetos desenvolvidos pela BEZEL no Vale do Paraíba, unindo técnica, funcionalidade e viabilidade de execução.",
+    url: "https://bezel.com.br/projetos",
+    type: "website",
   },
 };
 
