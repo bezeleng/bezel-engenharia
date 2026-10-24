@@ -2,7 +2,8 @@
 export function GoogleTagManagerNoScript() {
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
 
-  if (!gtmId) return null;
+  // Keep preview/local environments out of GA4.
+  if (!gtmId || process.env.VERCEL_ENV !== "production") return null;
 
   return (
     <noscript>
