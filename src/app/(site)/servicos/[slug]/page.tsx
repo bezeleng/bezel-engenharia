@@ -11,6 +11,7 @@ import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import { Container } from "@/components/ui/Container";
 import { PortableTextContent } from "@/components/ui/PortableTextContent";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export async function generateStaticParams() {
   const slugs = await client.fetch(servicoSlugsQuery);
@@ -32,9 +33,21 @@ export async function generateMetadata({
 
   if (!servico) return {};
 
+  const title = servico.seo?.metaTitulo || servico.titulo;
+  const description = servico.seo?.metaDescricao || servico.descricaoCurta;
+  const imagem = servico.seo?.imagemOg || servico.imagemDestaque;
+  const imageUrl = imagem ? urlFor(imagem).width(1200).height(630).url() : undefined;
+
   return {
-    title: servico.seo?.metaTitulo || servico.titulo,
-    description: servico.seo?.metaDescricao || servico.descricaoCurta,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `https://bezel.com.br/servicos/${slug}`,
+      type: "website",
+      ...(imageUrl ? { images: [{ url: imageUrl }] } : {}),
+    },
     alternates: {
       canonical: `/servicos/${slug}`,
     },
@@ -54,8 +67,19 @@ export default async function ServicoPage({ params }: ServicoPageProps) {
     ? urlFor(servico.imagemDestaque).width(1400).height(800).fit("crop").url()
     : null;
 
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": `https://bezel.com.br/servicos/${slug}#service`,
+    name: servico.titulo,
+    description: servico.descricaoCurta,
+    url: `https://bezel.com.br/servicos/${slug}`,
+    provider: { "@id": "https://bezel.com.br/#organization" },
+  };
+
   return (
     <section className="py-20">
+      <JsonLd data={serviceSchema} />
       <Container className="max-w-5xl">
         <h1 className="font-display text-3xl text-navy sm:text-4xl">
           {servico.titulo}
