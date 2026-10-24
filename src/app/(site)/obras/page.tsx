@@ -6,10 +6,18 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { ObraCard } from "@/components/sections/ObraCard";
 
 export const metadata: Metadata = {
-  title: "Obras",
-  description: "Acompanhe as obras executadas e em andamento pela BEZEL.",
+  title: "Obras e Construção no Vale do Paraíba",
+  description:
+    "Conheça obras executadas e gerenciadas pela BEZEL em Jacareí, São José dos Campos e demais cidades do Vale do Paraíba.",
   alternates: {
     canonical: "/obras",
+  },
+  openGraph: {
+    title: "Obras e Construção no Vale do Paraíba | BEZEL",
+    description:
+      "Acompanhe obras da BEZEL do planejamento à execução em Jacareí, São José dos Campos e região.",
+    url: "https://bezel.com.br/obras",
+    type: "website",
   },
 };
 
