@@ -29,21 +29,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "politica-de-privacidade",
   ].map((rota) => ({
     url: `${BASE_URL}/${rota}`,
+    lastModified: new Date(),
   }));
 
-  const paginasServicos: MetadataRoute.Sitemap = (servicos as Array<{ slug: string; _updatedAt?: string }>).map(({ slug, _updatedAt }) => ({
+  const paginasServicos: MetadataRoute.Sitemap = servicos.map(({ slug }) => ({
     url: `${BASE_URL}/servicos/${slug}`,
-    lastModified: _updatedAt ? new Date(_updatedAt) : undefined,
+    lastModified: new Date(),
   }));
 
-  const paginasProjetos: MetadataRoute.Sitemap = (projetos as Array<{ slug: string; _updatedAt?: string }>).map(({ slug, _updatedAt }) => ({
+  const paginasProjetos: MetadataRoute.Sitemap = projetos.map(({ slug }) => ({
     url: `${BASE_URL}/projetos/${slug}`,
-    lastModified: _updatedAt ? new Date(_updatedAt) : undefined,
+    lastModified: new Date(),
   }));
 
-  const paginasObras: MetadataRoute.Sitemap = (obras as Array<{ slug: string; _updatedAt?: string }>).map(({ slug, _updatedAt }) => ({
+  const paginasObras: MetadataRoute.Sitemap = obras.map(({ slug }) => ({
     url: `${BASE_URL}/obras/${slug}`,
-    lastModified: _updatedAt ? new Date(_updatedAt) : undefined,
+    lastModified: new Date(),
   }));
 
   return [
