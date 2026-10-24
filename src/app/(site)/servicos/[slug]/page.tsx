@@ -64,6 +64,29 @@ export default async function ServicoPage({ params }: ServicoPageProps) {
   if (!servico) notFound();
 
   const serviceUrl = `https://bezel.com.br/servicos/${slug}`;
+  const serviceSearchText = `${servico.titulo ?? ""} ${slug}`.toLowerCase();
+  const isSteelFrame =
+    serviceSearchText.includes("steel") && serviceSearchText.includes("frame");
+  const isBlocoK =
+    serviceSearchText.includes("blocok") || serviceSearchText.includes("bloco-k");
+
+  const alternateName = isSteelFrame
+    ? ["Steel Frame", "Light Steel Frame", "Construção em Steel Frame"]
+    : isBlocoK
+      ? ["BlocoK", "Sistema construtivo BlocoK", "Construção com BlocoK"]
+      : undefined;
+
+  const areaServed = [
+    { "@type": "AdministrativeArea", name: "Vale do Paraíba, SP" },
+    { "@type": "City", name: "Jacareí, SP" },
+    { "@type": "City", name: "São José dos Campos, SP" },
+    { "@type": "City", name: "Taubaté, SP" },
+    { "@type": "City", name: "Caçapava, SP" },
+    { "@type": "City", name: "Pindamonhangaba, SP" },
+    { "@type": "City", name: "Guaratinguetá, SP" },
+    { "@type": "City", name: "Campos do Jordão, SP" },
+  ];
+
   const imagemDestaqueUrl = servico.imagemDestaque
     ? urlFor(servico.imagemDestaque).width(1400).height(800).fit("crop").url()
     : null;
@@ -73,8 +96,10 @@ export default async function ServicoPage({ params }: ServicoPageProps) {
     "@type": "Service",
     "@id": `${serviceUrl}#service`,
     name: servico.titulo,
+    alternateName,
     serviceType: servico.titulo,
     description: servico.descricaoCurta,
+    areaServed,
     url: serviceUrl,
     mainEntityOfPage: serviceUrl,
     provider: { "@id": "https://bezel.com.br/#organization" },
