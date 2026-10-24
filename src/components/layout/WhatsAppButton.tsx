@@ -21,7 +21,7 @@ export function WhatsAppButton({ whatsapp, mensagem }: WhatsAppButtonProps) {
   return (
     <a
       href={link}
-      onClick={() => trackMarketingEvent("bezel_whatsapp_click", { placement: "floating_button" })
+      onClick={() => trackMarketingEvent("bezel_whatsapp_click", { placement: "floating_button" })}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Conversar no WhatsApp"
