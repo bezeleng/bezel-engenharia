@@ -1,5 +1,8 @@
+"use client";
+
 // src/components/layout/WhatsAppButton.tsx
 import { WhatsAppIcon } from "@/components/ui/SocialIcons";
+import { trackMarketingEvent } from "@/lib/analytics-events";
 
 interface WhatsAppButtonProps {
   whatsapp?: string | null;
@@ -18,6 +21,7 @@ export function WhatsAppButton({ whatsapp, mensagem }: WhatsAppButtonProps) {
   return (
     <a
       href={link}
+      onClick={() => trackMarketingEvent("bezel_whatsapp_click", { placement: "floating_button" })
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Conversar no WhatsApp"
