@@ -28,16 +28,30 @@ export function getOrganizationSchema(config: ConfiguracaoSiteData | null) {
     config.youtubeUrl,
   ].filter((url): url is string => Boolean(url));
 
+  const areasAtendimento = Array.from(
+    new Set(["Vale do Paraíba, SP", ...(config.regiaoAtendimento ?? [])])
+  );
+
   return {
     "@context": "https://schema.org",
     "@type": "GeneralContractor",
     "@id": "https://bezel.com.br/#organization",
     name: config.nomeEmpresa,
     url: "https://bezel.com.br",
+    description:
+      "Construtora com atuação em Jacareí e no Vale do Paraíba, especializada em projetos, execução, gerenciamento de obras, Steel Frame, Light Steel Frame e BlocoK.",
     telephone: config.telefone,
     email: config.email,
     taxID: config.cnpj ?? undefined,
     sameAs: perfisSociais.length > 0 ? perfisSociais : undefined,
+    knowsAbout: [
+      "Construção civil",
+      "Projetos de arquitetura e engenharia",
+      "Gerenciamento de obras",
+      "Steel Frame",
+      "Light Steel Frame",
+      "BlocoK",
+    ],
     address: temEnderecoEstruturado
       ? {
           "@type": "PostalAddress",
@@ -53,9 +67,6 @@ export function getOrganizationSchema(config: ConfiguracaoSiteData | null) {
             streetAddress: config.endereco,
           }
         : undefined,
-    areaServed:
-      config.regiaoAtendimento && config.regiaoAtendimento.length > 0
-        ? config.regiaoAtendimento
-        : undefined,
+    areaServed: areasAtendimento,
   };
 }
