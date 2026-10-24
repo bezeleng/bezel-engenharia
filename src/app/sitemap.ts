@@ -29,22 +29,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "politica-de-privacidade",
   ].map((rota) => ({
     url: `${BASE_URL}/${rota}`,
-    lastModified: new Date(),
   }));
 
-  const paginasServicos: MetadataRoute.Sitemap = servicos.map(({ slug }) => ({
+  const paginasServicos: MetadataRoute.Sitemap = servicos.map(({ slug, _updatedAt }) => ({
     url: `${BASE_URL}/servicos/${slug}`,
-    lastModified: new Date(),
+    lastModified: _updatedAt ? new Date(_updatedAt) : undefined,
   }));
 
-  const paginasProjetos: MetadataRoute.Sitemap = projetos.map(({ slug }) => ({
+  const paginasProjetos: MetadataRoute.Sitemap = projetos.map(({ slug, _updatedAt }) => ({
     url: `${BASE_URL}/projetos/${slug}`,
-    lastModified: new Date(),
+    lastModified: _updatedAt ? new Date(_updatedAt) : undefined,
   }));
 
-  const paginasObras: MetadataRoute.Sitemap = obras.map(({ slug }) => ({
+  const paginasObras: MetadataRoute.Sitemap = obras.map(({ slug, _updatedAt }) => ({
     url: `${BASE_URL}/obras/${slug}`,
-    lastModified: new Date(),
+    lastModified: _updatedAt ? new Date(_updatedAt) : undefined,
   }));
 
   return [
