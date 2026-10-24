@@ -10,6 +10,9 @@ interface ConfiguracaoSiteData {
   cep?: string | null;
   cnpj?: string | null;
   regiaoAtendimento?: string[] | null;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
+  youtubeUrl?: string | null;
 }
 
 export function getOrganizationSchema(config: ConfiguracaoSiteData | null) {
@@ -19,14 +22,22 @@ export function getOrganizationSchema(config: ConfiguracaoSiteData | null) {
     config.logradouro && config.cidade && config.estado
   );
 
+  const perfisSociais = [
+    config.instagramUrl,
+    config.facebookUrl,
+    config.youtubeUrl,
+  ].filter((url): url is string => Boolean(url));
+
   return {
     "@context": "https://schema.org",
     "@type": "GeneralContractor",
+    "@id": "https://bezel.com.br/#organization",
     name: config.nomeEmpresa,
     url: "https://bezel.com.br",
     telephone: config.telefone,
     email: config.email,
     taxID: config.cnpj ?? undefined,
+    sameAs: perfisSociais.length > 0 ? perfisSociais : undefined,
     address: temEnderecoEstruturado
       ? {
           "@type": "PostalAddress",
