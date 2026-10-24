@@ -12,6 +12,7 @@ import { Container } from "@/components/ui/Container";
 import { PortableTextContent } from "@/components/ui/PortableTextContent";
 import { FichaTecnica } from "@/components/sections/FichaTecnica";
 import { Galeria } from "@/components/sections/Galeria";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export async function generateStaticParams() {
   const slugs = await client.fetch(projetoSlugsQuery);
@@ -33,11 +34,31 @@ export async function generateMetadata({
 
   if (!projeto) return {};
 
+  const title = projeto.seo?.metaTitulo || projeto.titulo;
+  const description =
+    projeto.seo?.metaDescricao ||
+    [projeto.titulo, projeto.categoria?.nome, projeto.localizacao]
+      .filter(Boolean)
+      .join(" — ") ||
+    "Projeto de arquitetura e engenharia desenvolvido pela BEZEL no Vale do Paraíba.";
+
+  const imagem = projeto.seo?.imagemOg || projeto.capa;
+  const imageUrl = imagem
+    ? urlFor(imagem).width(1200).height(630).fit("crop").url()
+    : undefined;
+
   return {
-    title: projeto.seo?.metaTitulo || projeto.titulo,
-    description: projeto.seo?.metaDescricao,
+    title,
+    description,
     alternates: {
       canonical: `/projetos/${slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `https://bezel.com.br/projetos/${slug}`,
+      type: "website",
+      ...(imageUrl ? { images: [{ url: imageUrl }] } : {}),
     },
   };
 }
@@ -52,11 +73,38 @@ export default async function ProjetoPage({ params }: ProjetoPageProps) {
   if (!projeto) notFound();
 
   const capaUrl = projeto.capa
-  ? urlFor(projeto.capa).width(1600).height(900).url()
-  : null;
+    ? urlFor(projeto.capa).width(1600).height(900).url()
+    : null;
+
+  const pageUrl = `https://bezel.com.br/projetos/${slug}`;
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Início",
+        item: "https://bezel.com.br/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Projetos",
+        item: "https://bezel.com.br/projetos",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: projeto.titulo,
+        item: pageUrl,
+      },
+    ],
+  };
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema} />
       <section className="py-16">
         <Container className="flex flex-col gap-8">
           <div>
