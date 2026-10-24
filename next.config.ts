@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         destination: "https://bezel.com.br/:path*",
         permanent: true,
       },
+      {
+        source: "/ola-mundo",
+        destination: "https://bezel.com.br/",
+        permanent: true,
+      },
     ];
   },
   images: {
