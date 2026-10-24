@@ -9,6 +9,7 @@ import {
   type OrcamentoFormData,
 } from "@/lib/validations/orcamento";
 import { Button } from "@/components/ui/Button";
+import { trackMarketingEvent } from "@/lib/analytics-events";
 
 const tiposObra = [
   { value: "residencial", label: "Residencial" },
@@ -49,6 +50,7 @@ export function OrcamentoForm() {
 
       if (!resposta.ok) throw new Error("Falha no envio.");
 
+      trackMarketingEvent("bezel_form_success", { form_type: "orcamento" });
       setStatus("sucesso");
       reset();
     } catch {
