@@ -36,7 +36,7 @@ export const servicoBySlugQuery = defineQuery(
 );
 
 export const servicoSlugsQuery = defineQuery(
-  `*[_type == "servico"]{ "slug": slug.current }`
+  `*[_type == "servico"]{ "slug": slug.current, _updatedAt }`
 );
 export const projetosQuery = defineQuery(
   `*[_type == "projeto"] | order(_createdAt desc){
@@ -52,7 +52,7 @@ export const projetoBySlugQuery = defineQuery(
 );
 
 export const projetoSlugsQuery = defineQuery(
-  `*[_type == "projeto"]{ "slug": slug.current }`
+  `*[_type == "projeto"]{ "slug": slug.current, _updatedAt }`
 );
 
 export const obrasQuery = defineQuery(
@@ -69,7 +69,7 @@ export const obraBySlugQuery = defineQuery(
 );
 
 export const obraSlugsQuery = defineQuery(
-  `*[_type == "obra"]{ "slug": slug.current }`
+  `*[_type == "obra"]{ "slug": slug.current, _updatedAt }`
 );
 export const videosQuery = defineQuery(
   `*[_type == "video"] | order(
