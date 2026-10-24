@@ -46,7 +46,7 @@ export async function generateMetadata({
       : servico.seo?.metaTitulo || servico.titulo;
 
   const description = isSteelFrame
-    ? "Construção em Steel Frame e Light Steel Frame no Vale do Paraíba, com projetos e execução pela BEZEL em Jacareí, São José dos Campos e região."
+    ? "Construção em Steel Frame e Light Steel Frame no Vale do Paraíba, com projetos e execução pela BEZEL e parceria com a Espaço Smart de São José dos Campos."
     : isBlocoK
       ? "Construção com sistema BlocoK no Vale do Paraíba, com planejamento e execução pela BEZEL em Jacareí, São José dos Campos e região."
       : servico.seo?.metaDescricao || servico.descricaoCurta;
@@ -152,14 +152,97 @@ export default async function ServicoPage({ params }: ServicoPageProps) {
       <JsonLd data={breadcrumbSchema} />
       <Container className="max-w-5xl">
         <h1 className="font-display text-3xl text-navy sm:text-4xl">
-          {servico.titulo}
+          {isSteelFrame
+            ? "Construção em Steel Frame no Vale do Paraíba"
+            : isBlocoK
+              ? "Construção com BlocoK no Vale do Paraíba"
+              : servico.titulo}
         </h1>
 
-        {servico.descricaoLonga && (
+        {isSteelFrame ? (
+          <div className="mt-8 max-w-3xl space-y-6 text-foreground/80">
+            <p>
+              A BEZEL realiza projetos e obras em Steel Frame, também conhecido
+              como Light Steel Frame, em todo o Vale do Paraíba. É um sistema
+              construtivo industrializado que utiliza perfis de aço galvanizado
+              e permite uma obra mais organizada, limpa e previsível.
+            </p>
+
+            <p>
+              Atuamos desde o planejamento até a execução, compatibilizando
+              projetos, etapas e fornecedores para que o sistema seja aplicado
+              corretamente em cada obra.
+            </p>
+
+            <div>
+              <h2 className="font-display text-2xl text-navy">
+                Por que construir em Steel Frame?
+              </h2>
+              <p className="mt-3">
+                O sistema favorece precisão de execução, menor geração de
+                resíduos, rapidez de montagem, planejamento das instalações e
+                maior controle das etapas da obra. O desempenho final depende de
+                um projeto bem desenvolvido e de uma execução correta.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="font-display text-2xl text-navy">
+                Parceria com a Espaço Smart em São José dos Campos
+              </h2>
+              <p className="mt-3">
+                Para obras em Steel Frame, a BEZEL conta com parceria com a
+                Espaço Smart de São José dos Campos, referência em soluções e
+                materiais para construção a seco. Essa proximidade fortalece o
+                acesso a sistemas, componentes e suporte especializado para
+                projetos em Light Steel Frame na região.
+              </p>
+            </div>
+
+            <p>
+              Atendemos Jacareí, São José dos Campos, Taubaté, Caçapava,
+              Pindamonhangaba, Guaratinguetá, Campos do Jordão e demais cidades
+              do Vale do Paraíba.
+            </p>
+          </div>
+        ) : isBlocoK ? (
+          <div className="mt-8 max-w-3xl space-y-6 text-foreground/80">
+            <p>
+              A BEZEL executa obras com o sistema construtivo BlocoK, uma
+              solução de paredes industrializadas que reduz etapas tradicionais
+              da alvenaria e permite uma execução mais racionalizada da obra.
+            </p>
+
+            <p>
+              O sistema pode ser aplicado em diferentes tipos de construção,
+              sempre respeitando o projeto estrutural, o projeto arquitetônico
+              e as necessidades específicas de cada obra.
+            </p>
+
+            <div>
+              <h2 className="font-display text-2xl text-navy">
+                Vantagens do sistema BlocoK
+              </h2>
+              <p className="mt-3">
+                O BlocoK favorece a racionalização da execução, a redução de
+                retrabalho e de resíduos, além de facilitar o planejamento das
+                instalações. Quando corretamente especificado e executado,
+                também pode contribuir para o desempenho térmico e acústico da
+                edificação.
+              </p>
+            </div>
+
+            <p>
+              A BEZEL atua desde o planejamento até a execução e gerenciamento
+              da obra, atendendo Jacareí, São José dos Campos, Taubaté, Caçapava
+              e demais cidades do Vale do Paraíba.
+            </p>
+          </div>
+        ) : servico.descricaoLonga ? (
           <div className="mt-8 max-w-3xl">
             <PortableTextContent value={servico.descricaoLonga} />
           </div>
-        )}
+        ) : null}
 
         {imagemDestaqueUrl && (
           <div className="relative mt-10 aspect-[16/9] max-w-3xl overflow-hidden rounded-3xl shadow-lg">
