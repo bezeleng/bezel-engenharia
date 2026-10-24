@@ -11,6 +11,7 @@ import { PortableTextContent } from "@/components/ui/PortableTextContent";
 import { FichaTecnicaObra } from "@/components/sections/FichaTecnicaObra";
 import { GaleriaObra } from "@/components/sections/GaleriaObra";
 import { ListaSimples } from "@/components/sections/ListaSimples";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export async function generateStaticParams() {
   const slugs = await client.fetch(obraSlugsQuery);
@@ -49,11 +50,31 @@ export async function generateMetadata({
 
   if (!obra) return {};
 
+  const title = obra.seo?.metaTitulo || obra.titulo;
+  const description =
+    obra.seo?.metaDescricao ||
+    [obra.titulo, obra.categoria?.nome, obra.localizacao]
+      .filter(Boolean)
+      .join(" — ") ||
+    "Obra executada e gerenciada pela BEZEL no Vale do Paraíba.";
+
+  const imagem = obra.seo?.imagemOg || obra.capa;
+  const imageUrl = imagem
+    ? urlFor(imagem).width(1200).height(630).fit("crop").url()
+    : undefined;
+
   return {
-    title: obra.seo?.metaTitulo || obra.titulo,
-    description: obra.seo?.metaDescricao,
+    title,
+    description,
     alternates: {
       canonical: `/obras/${slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `https://bezel.com.br/obras/${slug}`,
+      type: "website",
+      ...(imageUrl ? { images: [{ url: imageUrl }] } : {}),
     },
   };
 }
@@ -71,8 +92,35 @@ export default async function ObraPage({ params }: ObraPageProps) {
     ? urlFor(obra.capa).width(1600).height(900).url()
     : null;
 
+  const pageUrl = `https://bezel.com.br/obras/${slug}`;
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Início",
+        item: "https://bezel.com.br/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Obras",
+        item: "https://bezel.com.br/obras",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: obra.titulo,
+        item: pageUrl,
+      },
+    ],
+  };
+
   return (
     <>
+      <JsonLd data={breadcrumbSchema} />
       <section className="py-16">
         <Container className="flex flex-col gap-8">
           <div className="flex flex-wrap items-center gap-3">
