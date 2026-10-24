@@ -33,8 +33,24 @@ export async function generateMetadata({
 
   if (!servico) return {};
 
-  const title = servico.seo?.metaTitulo || servico.titulo;
-  const description = servico.seo?.metaDescricao || servico.descricaoCurta;
+  const searchText = `${servico.titulo ?? ""} ${slug}`.toLowerCase();
+  const isSteelFrame =
+    searchText.includes("steel") && searchText.includes("frame");
+  const isBlocoK =
+    searchText.includes("blocok") || searchText.includes("bloco-k");
+
+  const title = isSteelFrame
+    ? "Construtora Steel Frame no Vale do Paraíba | BEZEL"
+    : isBlocoK
+      ? "Construção com BlocoK no Vale do Paraíba | BEZEL"
+      : servico.seo?.metaTitulo || servico.titulo;
+
+  const description = isSteelFrame
+    ? "Construção em Steel Frame e Light Steel Frame no Vale do Paraíba, com projetos e execução pela BEZEL em Jacareí, São José dos Campos e região."
+    : isBlocoK
+      ? "Construção com sistema BlocoK no Vale do Paraíba, com planejamento e execução pela BEZEL em Jacareí, São José dos Campos e região."
+      : servico.seo?.metaDescricao || servico.descricaoCurta;
+
   const imagem = servico.seo?.imagemOg || servico.imagemDestaque;
   const imageUrl = imagem ? urlFor(imagem).width(1200).height(630).url() : undefined;
 
