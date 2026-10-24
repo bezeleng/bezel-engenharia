@@ -6,11 +6,18 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { ServicoCard } from "@/components/sections/ServicoCard";
 
 export const metadata: Metadata = {
-  title: "Serviços",
+  title: "Serviços de Construção no Vale do Paraíba",
   description:
-    "Conheça os serviços da BEZEL em arquitetura, engenharia e construção.",
+    "Projetos, planejamento, execução e gerenciamento de obras no Vale do Paraíba, incluindo Steel Frame, Light Steel Frame e BlocoK.",
   alternates: {
     canonical: "/servicos",
+  },
+  openGraph: {
+    title: "Serviços de Construção no Vale do Paraíba | BEZEL",
+    description:
+      "Soluções da BEZEL para projetar, construir e gerenciar obras em Jacareí, São José dos Campos e todo o Vale do Paraíba.",
+    url: "https://bezel.com.br/servicos",
+    type: "website",
   },
 };
 
