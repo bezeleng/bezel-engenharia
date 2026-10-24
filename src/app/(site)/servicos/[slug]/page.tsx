@@ -63,6 +63,7 @@ export default async function ServicoPage({ params }: ServicoPageProps) {
 
   if (!servico) notFound();
 
+  const serviceUrl = `https://bezel.com.br/servicos/${slug}`;
   const imagemDestaqueUrl = servico.imagemDestaque
     ? urlFor(servico.imagemDestaque).width(1400).height(800).fit("crop").url()
     : null;
@@ -70,16 +71,44 @@ export default async function ServicoPage({ params }: ServicoPageProps) {
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
-    "@id": `https://bezel.com.br/servicos/${slug}#service`,
+    "@id": `${serviceUrl}#service`,
     name: servico.titulo,
+    serviceType: servico.titulo,
     description: servico.descricaoCurta,
-    url: `https://bezel.com.br/servicos/${slug}`,
+    url: serviceUrl,
+    mainEntityOfPage: serviceUrl,
     provider: { "@id": "https://bezel.com.br/#organization" },
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Início",
+        item: "https://bezel.com.br/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Serviços",
+        item: "https://bezel.com.br/servicos",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: servico.titulo,
+        item: serviceUrl,
+      },
+    ],
   };
 
   return (
     <section className="py-20">
       <JsonLd data={serviceSchema} />
+      <JsonLd data={breadcrumbSchema} />
       <Container className="max-w-5xl">
         <h1 className="font-display text-3xl text-navy sm:text-4xl">
           {servico.titulo}
