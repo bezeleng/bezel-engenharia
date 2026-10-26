@@ -9,7 +9,8 @@ export const servico = defineType({
       name: "titulo",
       title: "Título",
       type: "string",
-      validation: (Rule) => Rule.required(),
+      validation: (Rule) =>
+        Rule.required().max(80).warning("Prefira títulos com até 80 caracteres."),
     }),
     defineField({
       name: "slug",
@@ -32,6 +33,13 @@ export const servico = defineType({
         "Imagem principal exibida na página individual do serviço, logo abaixo do título.",
     }),
     defineField({
+      name: "imagemDestaqueAlt",
+      title: "Texto alternativo da imagem de destaque",
+      type: "string",
+      validation: (Rule) =>
+        Rule.max(140).warning("Prefira um texto alternativo curto e objetivo."),
+    }),
+    defineField({
       name: "galeria",
       title: "Galeria de Imagens",
       type: "array",
@@ -46,6 +54,13 @@ export const servico = defineType({
               name: "legenda",
               title: "Legenda",
               type: "string",
+            }),
+            defineField({
+              name: "alt",
+              title: "Texto alternativo",
+              type: "string",
+              validation: (Rule) =>
+                Rule.max(140).warning("Prefira um texto alternativo curto e objetivo."),
             }),
           ],
         },
@@ -73,6 +88,13 @@ export const servico = defineType({
       description: "Menor número aparece primeiro.",
     }),
     defineField({
+      name: "observacoesInternas",
+      title: "Observações internas",
+      type: "text",
+      rows: 3,
+      description: "Uso interno no Studio. Não é exibido publicamente.",
+    }),
+    defineField({
       name: "seo",
       title: "SEO",
       type: "seo",
@@ -85,4 +107,19 @@ export const servico = defineType({
       by: [{ field: "ordem", direction: "asc" }],
     },
   ],
+  preview: {
+    select: {
+      title: "titulo",
+      subtitle: "descricaoCurta",
+      media: "imagemDestaque",
+      ordem: "ordem",
+    },
+    prepare({ title, subtitle, media, ordem }) {
+      return {
+        title,
+        subtitle: typeof ordem === "number" ? `Ordem ${ordem} • ${subtitle || ""}` : subtitle,
+        media,
+      };
+    },
+  },
 });
