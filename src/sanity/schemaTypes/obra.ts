@@ -1,4 +1,3 @@
-// src/sanity/schemaTypes/obra.ts
 import { defineField, defineType } from "sanity";
 
 export const obra = defineType({
@@ -22,7 +21,10 @@ export const obra = defineType({
       name: "titulo",
       title: "Título",
       type: "string",
-      validation: (Rule) => Rule.required(),
+      validation: (Rule) => [
+        Rule.required(),
+        Rule.max(80).warning("Prefira títulos com até 80 caracteres."),
+      ],
     }),
     defineField({
       name: "slug",
@@ -81,14 +83,8 @@ export const obra = defineType({
             title: "Gestão de Compras e Fornecedores",
             value: "gestao_de_compras_e_fornecedores",
           },
-          {
-            title: "Acompanhamento Técnico",
-            value: "acompanhamento_tecnico",
-          },
-          {
-            title: "Projeto Arquitetônico",
-            value: "projeto_arquitetonico",
-          },
+          { title: "Acompanhamento Técnico", value: "acompanhamento_tecnico" },
+          { title: "Projeto Arquitetônico", value: "projeto_arquitetonico" },
           { title: "Projeto de Engenharia", value: "projeto_de_engenharia" },
         ],
         layout: "grid",
@@ -100,6 +96,14 @@ export const obra = defineType({
       type: "image",
       options: { hotspot: true },
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: "capaAlt",
+      title: "Texto alternativo da capa",
+      type: "string",
+      description: "Descrição curta da imagem para acessibilidade.",
+      validation: (Rule) =>
+        Rule.max(140).warning("Prefira um texto alternativo curto e objetivo."),
     }),
     defineField({
       name: "galeria",
@@ -117,6 +121,13 @@ export const obra = defineType({
               type: "image",
               options: { hotspot: true },
               validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: "alt",
+              title: "Texto alternativo",
+              type: "string",
+              validation: (Rule) =>
+                Rule.max(140).warning("Prefira um texto alternativo curto e objetivo."),
             }),
             defineField({
               name: "legenda",
@@ -147,6 +158,21 @@ export const obra = defineType({
               title: "legenda",
               subtitle: "etapa",
               media: "imagem",
+            },
+            prepare({ title, subtitle, media }) {
+              const etapa =
+                subtitle === "antes"
+                  ? "Antes"
+                  : subtitle === "durante"
+                    ? "Durante"
+                    : subtitle === "depois"
+                      ? "Depois"
+                      : "Sem etapa";
+              return {
+                title: title || "Imagem da obra",
+                subtitle: etapa,
+                media,
+              };
             },
           },
         },
@@ -220,12 +246,16 @@ export const obra = defineType({
       title: "Ano",
       type: "number",
       fieldset: "fichaTecnica",
+      validation: (Rule) =>
+        Rule.integer().warning("Use um ano inteiro, por exemplo 2026."),
     }),
     defineField({
       name: "localizacao",
       title: "Localização",
       type: "string",
       fieldset: "fichaTecnica",
+      validation: (Rule) =>
+        Rule.max(120).warning("Prefira uma localização curta e objetiva."),
     }),
     defineField({
       name: "dataInicio",
@@ -255,9 +285,36 @@ export const obra = defineType({
       fieldset: "datas",
     }),
     defineField({
+      name: "observacoesInternas",
+      title: "Observações internas",
+      type: "text",
+      rows: 4,
+      description:
+        "Anotações editoriais internas. Este conteúdo não é exibido publicamente.",
+    }),
+    defineField({
       name: "seo",
       title: "SEO",
       type: "seo",
     }),
   ],
+  preview: {
+    select: {
+      title: "titulo",
+      media: "capa",
+      status: "status",
+      localizacao: "localizacao",
+      ano: "ano",
+    },
+    prepare({ title, media, status, localizacao, ano }) {
+      const statusLabel =
+        status === "concluida"
+          ? "Concluída"
+          : status === "em_andamento"
+            ? "Em andamento"
+            : "Sem status";
+      const detalhes = [statusLabel, localizacao, ano].filter(Boolean).join(" • ");
+      return { title, subtitle: detalhes, media };
+    },
+  },
 });
