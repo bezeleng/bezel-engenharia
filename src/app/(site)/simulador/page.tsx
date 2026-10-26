@@ -1,8 +1,10 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { SimuladorObra } from "@/components/forms/SimuladorObra";
 import { sanityFetch } from "@/sanity/lib/live";
 import { configuracaoSiteQuery } from "@/sanity/lib/queries";
+import { simuladorHeroImageData } from "@/lib/simulador-hero-image";
 
 export const metadata: Metadata = {
   title: "Simulador de Investimento da Obra",
@@ -40,6 +42,22 @@ export default async function SimuladorPage() {
           <p className="mx-auto mt-5 max-w-2xl leading-relaxed text-white/75">
             Informe alguns dados básicos e receba uma faixa preliminar para orientar o planejamento. O resultado não substitui orçamento, projeto, levantamento do terreno ou análise técnica.
           </p>
+        </Container>
+      </section>
+
+      <section className="bg-neutral-50 pt-10 sm:pt-14">
+        <Container>
+          <div className="relative mx-auto aspect-[16/9] max-w-5xl overflow-hidden rounded-3xl border border-black/5 bg-neutral-200 shadow-lg">
+            <Image
+              src={simuladorHeroImageData}
+              alt="Residência contemporânea com piscina ao pôr do sol e plantas de projeto em primeiro plano"
+              fill
+              unoptimized
+              priority
+              sizes="(max-width: 1024px) 100vw, 1024px"
+              className="object-cover"
+            />
+          </div>
         </Container>
       </section>
 
