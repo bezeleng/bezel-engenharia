@@ -16,8 +16,10 @@ export const projeto = defineType({
       name: "titulo",
       title: "Título",
       type: "string",
-      validation: (Rule) =>
-        Rule.required().max(80).warning("Prefira títulos com até 80 caracteres."),
+      validation: (Rule) => [
+        Rule.required(),
+        Rule.max(80).warning("Prefira títulos com até 80 caracteres."),
+      ],
     }),
     defineField({
       name: "slug",
