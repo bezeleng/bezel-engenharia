@@ -1,4 +1,3 @@
-// src/sanity/schemaTypes/categoria.ts
 import { defineField, defineType } from "sanity";
 
 export const categoria = defineType({
@@ -20,4 +19,16 @@ export const categoria = defineType({
       validation: (Rule) => Rule.required(),
     }),
   ],
+  preview: {
+    select: {
+      title: "nome",
+      slug: "slug.current",
+    },
+    prepare({ title, slug }) {
+      return {
+        title,
+        subtitle: slug ? `/${slug}` : "Sem slug",
+      };
+    },
+  },
 });
