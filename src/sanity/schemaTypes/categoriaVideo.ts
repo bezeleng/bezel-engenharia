@@ -1,4 +1,3 @@
-// src/sanity/schemaTypes/categoriaVideo.ts
 import { defineField, defineType } from "sanity";
 
 export const categoriaVideo = defineType({
@@ -20,4 +19,16 @@ export const categoriaVideo = defineType({
       validation: (Rule) => Rule.required(),
     }),
   ],
+  preview: {
+    select: {
+      title: "nome",
+      slug: "slug.current",
+    },
+    prepare({ title, slug }) {
+      return {
+        title,
+        subtitle: slug ? `/${slug}` : "Sem slug",
+      };
+    },
+  },
 });

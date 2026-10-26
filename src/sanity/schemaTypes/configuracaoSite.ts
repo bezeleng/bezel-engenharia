@@ -1,4 +1,3 @@
-// src/sanity/schemaTypes/configuracaoSite.ts
 import { defineField, defineType } from "sanity";
 
 export const configuracaoSite = defineType({
@@ -19,6 +18,14 @@ export const configuracaoSite = defineType({
       options: { hotspot: true },
     }),
     defineField({
+      name: "logoAlt",
+      title: "Texto alternativo do logo",
+      type: "string",
+      description: "Descrição curta do logo para acessibilidade.",
+      validation: (Rule) =>
+        Rule.max(140).warning("Prefira um texto alternativo curto e objetivo."),
+    }),
+    defineField({
       name: "telefone",
       title: "Telefone",
       type: "string",
@@ -28,6 +35,12 @@ export const configuracaoSite = defineType({
       title: "WhatsApp (somente números, com DDI)",
       type: "string",
       description: "Ex: 5511999999999",
+      validation: (Rule) =>
+        Rule.custom((value) =>
+          !value || /^\d+$/.test(value)
+            ? true
+            : "Use somente números, incluindo DDI e DDD."
+        ).warning(),
     }),
     defineField({
       name: "mensagemWhatsapp",
@@ -37,6 +50,8 @@ export const configuracaoSite = defineType({
       initialValue:
         "Olá! Vim pelo site da BEZEL e gostaria de conversar sobre meu projeto.",
       description: "Texto que já vem preenchido ao abrir a conversa.",
+      validation: (Rule) =>
+        Rule.max(240).warning("Prefira uma mensagem inicial curta e direta."),
     }),
     defineField({
       name: "email",
@@ -69,6 +84,8 @@ export const configuracaoSite = defineType({
       title: "Estado (UF)",
       type: "string",
       initialValue: "SP",
+      validation: (Rule) =>
+        Rule.max(2).warning("Use a sigla do estado com 2 letras, por exemplo SP."),
     }),
     defineField({
       name: "cep",
@@ -96,22 +113,39 @@ export const configuracaoSite = defineType({
       name: "instagramUrl",
       title: "Instagram (URL completa)",
       type: "url",
-      validation: (Rule) =>
-        Rule.uri({ scheme: ["http", "https"] }),
+      validation: (Rule) => Rule.uri({ scheme: ["http", "https"] }),
     }),
     defineField({
       name: "facebookUrl",
       title: "Facebook (URL completa)",
       type: "url",
-      validation: (Rule) =>
-        Rule.uri({ scheme: ["http", "https"] }),
+      validation: (Rule) => Rule.uri({ scheme: ["http", "https"] }),
     }),
     defineField({
       name: "youtubeUrl",
       title: "YouTube (URL completa)",
       type: "url",
-      validation: (Rule) =>
-        Rule.uri({ scheme: ["http", "https"] }),
+      validation: (Rule) => Rule.uri({ scheme: ["http", "https"] }),
+    }),
+    defineField({
+      name: "linkedinUrl",
+      title: "LinkedIn (URL completa)",
+      type: "url",
+      validation: (Rule) => Rule.uri({ scheme: ["http", "https"] }),
+    }),
+    defineField({
+      name: "observacoesInternas",
+      title: "Observações internas",
+      type: "text",
+      rows: 3,
+      description: "Uso interno no Studio. Não é exibido publicamente.",
     }),
   ],
+  preview: {
+    select: {
+      title: "nomeEmpresa",
+      subtitle: "cidade",
+      media: "logo",
+    },
+  },
 });

@@ -5,8 +5,18 @@ export const prospeccaoContato = defineType({
   title: "Prospecção — Contato",
   type: "document",
   fields: [
-    defineField({ name: "nome", title: "Nome / Empresa / Instituição", type: "string" }),
-    defineField({ name: "email", title: "E-mail", type: "string" }),
+    defineField({
+      name: "nome",
+      title: "Nome / Empresa / Instituição",
+      type: "string",
+    }),
+    defineField({
+      name: "email",
+      title: "E-mail",
+      type: "string",
+      validation: (Rule) =>
+        Rule.email().warning("Confira se o endereço de e-mail está no formato correto."),
+    }),
     defineField({ name: "cidade", title: "Cidade", type: "string" }),
     defineField({ name: "segmento", title: "Segmento", type: "string" }),
     defineField({ name: "telefone", title: "Telefone", type: "string" }),
@@ -19,18 +29,65 @@ export const prospeccaoContato = defineType({
     defineField({ name: "dominio", title: "Domínio", type: "string" }),
     defineField({ name: "encontradoEm", title: "Encontrado em", type: "datetime" }),
     defineField({
-      name: "status", title: "Status", type: "string", initialValue: "NOVO",
-      options: { list: [
-        { title: "Novo", value: "NOVO" }, { title: "Contatado", value: "CONTATADO" },
-        { title: "Respondeu", value: "RESPONDEU" }, { title: "Visita", value: "VISITA" },
-        { title: "Proposta", value: "PROPOSTA" }, { title: "Negociação", value: "NEGOCIACAO" },
-        { title: "Cliente", value: "CLIENTE" }, { title: "Arquivado", value: "ARQUIVADO" },
-      ]},
+      name: "status",
+      title: "Status",
+      type: "string",
+      initialValue: "NOVO",
+      options: {
+        list: [
+          { title: "Novo", value: "NOVO" },
+          { title: "Contatado", value: "CONTATADO" },
+          { title: "Respondeu", value: "RESPONDEU" },
+          { title: "Visita", value: "VISITA" },
+          { title: "Proposta", value: "PROPOSTA" },
+          { title: "Negociação", value: "NEGOCIACAO" },
+          { title: "Cliente", value: "CLIENTE" },
+          { title: "Arquivado", value: "ARQUIVADO" },
+        ],
+      },
     }),
-    defineField({ name: "optOut", title: "Não enviar novos e-mails", type: "boolean", initialValue: false }),
-    defineField({ name: "ultimoContatoEm", title: "Último contato", type: "datetime" }),
-    defineField({ name: "proximoFollowUpEm", title: "Próximo follow-up", type: "datetime" }),
-    defineField({ name: "observacoes", title: "Observações", type: "text", rows: 4 }),
+    defineField({
+      name: "optOut",
+      title: "Não enviar novos e-mails",
+      type: "boolean",
+      initialValue: false,
+    }),
+    defineField({
+      name: "ultimoContatoEm",
+      title: "Último contato",
+      type: "datetime",
+    }),
+    defineField({
+      name: "proximoFollowUpEm",
+      title: "Próximo follow-up",
+      type: "datetime",
+    }),
+    defineField({
+      name: "observacoes",
+      title: "Observações",
+      type: "text",
+      rows: 4,
+    }),
   ],
-  preview: { select: { title: "nome", subtitle: "email" } },
+  preview: {
+    select: {
+      title: "nome",
+      email: "email",
+      cidade: "cidade",
+      status: "status",
+      optOut: "optOut",
+    },
+    prepare({ title, email, cidade, status, optOut }) {
+      const detalhes = [
+        status || "Sem status",
+        cidade,
+        email,
+        optOut ? "Opt-out" : null,
+      ].filter(Boolean).join(" • ");
+      return {
+        title: title || email || "Contato sem nome",
+        subtitle: detalhes,
+      };
+    },
+  },
 });

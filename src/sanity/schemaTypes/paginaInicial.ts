@@ -1,4 +1,3 @@
-// src/sanity/schemaTypes/paginaInicial.ts
 import { defineField, defineType } from "sanity";
 
 export const paginaInicial = defineType({
@@ -10,13 +9,18 @@ export const paginaInicial = defineType({
       name: "tituloHero",
       title: "Título do Banner",
       type: "string",
-      validation: (Rule) => Rule.required(),
+      validation: (Rule) => [
+        Rule.required(),
+        Rule.max(80).warning("Prefira um título com até 80 caracteres."),
+      ],
     }),
     defineField({
       name: "subtituloHero",
       title: "Subtítulo do Banner",
       type: "text",
       rows: 2,
+      validation: (Rule) =>
+        Rule.max(180).warning("Prefira um subtítulo com até 180 caracteres."),
     }),
     defineField({
       name: "imagemFundo",
@@ -26,10 +30,19 @@ export const paginaInicial = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: "imagemFundoAlt",
+      title: "Texto alternativo da imagem de fundo",
+      type: "string",
+      validation: (Rule) =>
+        Rule.max(140).warning("Prefira um texto alternativo curto e objetivo."),
+    }),
+    defineField({
       name: "textoCta",
       title: "Texto do Botão (CTA)",
       type: "string",
       initialValue: "Solicitar Orçamento",
+      validation: (Rule) =>
+        Rule.max(32).warning("CTAs curtos costumam funcionar melhor."),
     }),
     defineField({
       name: "linkCta",
@@ -42,6 +55,8 @@ export const paginaInicial = defineType({
       title: "Título do CTA Final",
       type: "string",
       initialValue: "Pronto para começar seu projeto?",
+      validation: (Rule) =>
+        Rule.max(80).warning("Prefira um título com até 80 caracteres."),
     }),
     defineField({
       name: "subtituloCtaFinal",
@@ -49,12 +64,16 @@ export const paginaInicial = defineType({
       type: "text",
       rows: 2,
       initialValue: "Entre em contato e transforme sua ideia em realidade.",
+      validation: (Rule) =>
+        Rule.max(180).warning("Prefira um subtítulo com até 180 caracteres."),
     }),
     defineField({
       name: "textoBotaoCtaFinal",
       title: "Texto do Botão (CTA Final)",
       type: "string",
       initialValue: "Fale Conosco",
+      validation: (Rule) =>
+        Rule.max(32).warning("CTAs curtos costumam funcionar melhor."),
     }),
     defineField({
       name: "linkBotaoCtaFinal",
@@ -62,7 +81,7 @@ export const paginaInicial = defineType({
       type: "string",
       initialValue: "/contato",
     }),
-        defineField({
+    defineField({
       name: "galeriaDestaques",
       title: "Galeria de Destaques da Home",
       description:
@@ -87,6 +106,13 @@ export const paginaInicial = defineType({
               options: { hotspot: true },
               validation: (Rule) => Rule.required(),
             }),
+            defineField({
+              name: "alt",
+              title: "Texto alternativo",
+              type: "string",
+              validation: (Rule) =>
+                Rule.max(140).warning("Prefira um texto alternativo curto e objetivo."),
+            }),
           ],
           preview: {
             select: {
@@ -102,6 +128,8 @@ export const paginaInicial = defineType({
       title: "Título da Seção de Gestão Única",
       type: "string",
       initialValue: "Uma obra. Uma única gestão.",
+      validation: (Rule) =>
+        Rule.max(80).warning("Prefira um título com até 80 caracteres."),
     }),
     defineField({
       name: "textoGestao",
@@ -110,6 +138,22 @@ export const paginaInicial = defineType({
       rows: 3,
       initialValue:
         "Da análise inicial à entrega das chaves, a Bezel centraliza planejamento, orçamento, fornecedores, compras, mão de obra, cronograma e acompanhamento da execução.",
+      validation: (Rule) =>
+        Rule.max(320).warning("Prefira um texto mais conciso para esta seção."),
+    }),
+    defineField({
+      name: "observacoesInternas",
+      title: "Observações internas",
+      type: "text",
+      rows: 3,
+      description: "Uso interno no Studio. Não é exibido publicamente.",
     }),
   ],
+  preview: {
+    select: {
+      title: "tituloHero",
+      subtitle: "subtituloHero",
+      media: "imagemFundo",
+    },
+  },
 });
