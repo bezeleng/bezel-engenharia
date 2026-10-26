@@ -1,4 +1,3 @@
-// src/sanity/schemaTypes/membroEquipe.ts
 import { defineField, defineType } from "sanity";
 
 export const membroEquipe = defineType({
@@ -25,10 +24,21 @@ export const membroEquipe = defineType({
       options: { hotspot: true },
     }),
     defineField({
+      name: "fotoAlt",
+      title: "Texto alternativo da foto",
+      type: "string",
+      description:
+        "Descrição curta da foto para acessibilidade e organização editorial.",
+      validation: (Rule) =>
+        Rule.max(140).warning("Prefira um texto alternativo curto e objetivo."),
+    }),
+    defineField({
       name: "bio",
       title: "Bio Curta",
       type: "text",
       rows: 4,
+      validation: (Rule) =>
+        Rule.max(320).warning("Uma bio curta costuma funcionar melhor com até 320 caracteres."),
     }),
     defineField({
       name: "redesSociais",
@@ -63,6 +73,13 @@ export const membroEquipe = defineType({
       title: "Ordem de Exibição",
       type: "number",
     }),
+    defineField({
+      name: "observacoesInternas",
+      title: "Observações internas",
+      type: "text",
+      rows: 3,
+      description: "Uso interno no Studio. Não é exibido publicamente.",
+    }),
   ],
   orderings: [
     {
@@ -71,4 +88,11 @@ export const membroEquipe = defineType({
       by: [{ field: "ordem", direction: "asc" }],
     },
   ],
+  preview: {
+    select: {
+      title: "nome",
+      subtitle: "cargo",
+      media: "foto",
+    },
+  },
 });
