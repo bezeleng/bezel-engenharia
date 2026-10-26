@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
         destination: "https://bezel.com.br/",
         permanent: true,
       },
+      {
+        source: "/email",
+        destination: "https://webmail-seguro.com.br/",
+        permanent: false,
+      },
     ];
   },
   images: {
