@@ -7,6 +7,7 @@ import { structureTool } from 'sanity/structure'
 import { apiVersion, dataset, projectId } from './src/sanity/env'
 import { schema } from './src/sanity/schemaTypes'
 import { structure } from './src/sanity/structure'
+import { PortfolioImportTool } from './src/sanity/components/PortfolioImportTool'
 
 const SINGLETON_TYPES = new Set([
   'configuracaoSite',
@@ -21,6 +22,14 @@ export default defineConfig({
   projectId,
   dataset,
   schema,
+  tools: (prev) => [
+    ...prev,
+    {
+      name: 'importar-portfolio',
+      title: 'Importar portfólio',
+      component: PortfolioImportTool,
+    },
+  ],
   plugins: [
     structureTool({ structure }),
     visionTool({ defaultApiVersion: apiVersion }),

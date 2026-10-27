@@ -9,6 +9,7 @@ const tipoObraLabel: Record<string, string> = {
 const statusLabel: Record<string, string> = {
   em_andamento: "Em Andamento",
   concluida: "Concluída",
+  registro_fotografico: "Registro fotográfico",
 };
 
 interface FichaTecnicaObraProps {

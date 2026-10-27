@@ -61,6 +61,7 @@ export const obra = defineType({
         list: [
           { title: "Em Andamento", value: "em_andamento" },
           { title: "Concluída", value: "concluida" },
+          { title: "Registro fotográfico (status a confirmar)", value: "registro_fotografico" },
         ],
         layout: "radio",
       },
