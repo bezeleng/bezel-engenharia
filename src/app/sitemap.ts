@@ -26,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "depoimentos",
     "contato",
     "orcamento",
+    "sistema",
     "politica-de-privacidade",
   ].map((rota) => ({
     url: `${BASE_URL}/${rota}`,
