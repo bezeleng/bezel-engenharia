@@ -52,7 +52,6 @@ export default async function ObrasPage() {
         url: "https://bezel.com.br/obras",
         description:
           "Portfólio de obras de construção, reformas e gerenciamento da BEZEL no Vale do Paraíba.",
-        isPartOf: { "@id": "https://bezel.com.br/#website" },
         about: { "@id": "https://bezel.com.br/#organization" },
         mainEntity: {
           "@type": "ItemList",
