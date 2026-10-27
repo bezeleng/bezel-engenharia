@@ -641,6 +641,17 @@ export default async function SistemaPage() {
           </div>
         </Container>
       </section>
+
+      <section className="border-t border-navy/10 bg-white py-8">
+        <Container>
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-navy/65">
+            <Link href="/sistema/politica" className="hover:text-gold-text">Política de Privacidade</Link>
+            <Link href="/sistema/termos" className="hover:text-gold-text">Termos de Uso</Link>
+            <Link href="/sistema/suporte" className="hover:text-gold-text">Suporte</Link>
+            <Link href="/sistema/excluir-conta" className="hover:text-gold-text">Exclusão de Conta</Link>
+          </div>
+        </Container>
+      </section>
     </div>
   );
 }
