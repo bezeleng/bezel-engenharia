@@ -6,6 +6,7 @@ import { SistemaProductMockup } from "@/components/sistema/SistemaProductMockup"
 import { sanityFetch } from "@/sanity/lib/live";
 import { paginaSistemaQuery } from "@/sanity/lib/queries";
 import { urlFor } from "@/sanity/lib/image";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 type ItemTexto = { _key?: string; titulo?: string | null; descricao?: string | null };
 type Modulo = ItemTexto & { numero?: string | null; itens?: (string | null)[] | null };
@@ -167,13 +168,38 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title,
     description,
+    applicationName: "BEZEL Gestão",
+    keywords: [
+      "software para gestão de obras",
+      "sistema para gestão de obras",
+      "gestão de obras",
+      "software para construtora",
+      "sistema para construtora",
+      "gerenciamento de obras",
+      "controle de obras",
+      "diário de obra",
+      "cronograma de obra",
+      "compras de obra",
+      "financeiro de obras",
+      "BEZEL Gestão",
+    ],
     alternates: { canonical: "/sistema" },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
+    },
     openGraph: {
       title,
       description,
-      url: "/sistema",
+      url: "https://bezel.com.br/sistema",
+      siteName: "BEZEL",
+      locale: "pt_BR",
       type: "website",
-      images: ogImage ? [{ url: ogImage }] : undefined,
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: "BEZEL Gestão — software para gestão de obras" }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
@@ -225,8 +251,81 @@ export default async function SistemaPage() {
     ? urlFor(pagina.belImagem).width(900).height(1350).fit("max").auto("format").url()
     : null;
 
+  const descricaoSeo =
+    pagina?.seo?.metaDescricao ||
+    "Gestão de obras integrada para construtoras, engenheiros, arquitetos e equipes da construção civil. Planejamento, execução, compras, financeiro, documentos, comercial e inteligência operacional em um só ambiente.";
+
+  const softwareSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "@id": "https://bezel.com.br/sistema#software",
+    name: "BEZEL Gestão",
+    url: "https://bezel.com.br/sistema",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    description: descricaoSeo,
+    publisher: {
+      "@id": "https://bezel.com.br/#organization",
+    },
+    audience: {
+      "@type": "BusinessAudience",
+      audienceType: "Construtoras, engenheiros, arquitetos e gestores de obras",
+    },
+    featureList: [
+      "Gestão de obras",
+      "Cronograma de obra",
+      "Diário de obra",
+      "Compras e cotações",
+      "Financeiro de obras",
+      "Documentos",
+      "Equipe",
+      "Comercial",
+      "Propostas e contratos",
+      "Portal do cliente",
+      "BEL, inteligência aplicada à gestão da obra",
+    ],
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs
+      .filter((faq) => faq.pergunta && faq.resposta)
+      .map((faq) => ({
+        "@type": "Question",
+        name: bezelText(faq.pergunta),
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: bezelText(faq.resposta),
+        },
+      })),
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "BEZEL",
+        item: "https://bezel.com.br/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "BEZEL Gestão",
+        item: "https://bezel.com.br/sistema",
+      },
+    ],
+  };
+
   return (
-    <div className="overflow-hidden bg-[#F8F7F4] text-navy">
+    <>
+      <JsonLd data={softwareSchema} />
+      <JsonLd data={faqSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <div className="overflow-hidden bg-[#F8F7F4] text-navy">
       <section className="relative isolate border-b border-navy/10 bg-white">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[520px] opacity-70"
@@ -652,6 +751,7 @@ export default async function SistemaPage() {
           </div>
         </Container>
       </section>
-    </div>
+      </div>
+    </>
   );
 }
