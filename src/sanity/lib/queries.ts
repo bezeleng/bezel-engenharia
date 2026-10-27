@@ -57,7 +57,8 @@ export const projetoSlugsQuery = defineQuery(
 
 export const obrasQuery = defineQuery(
   `*[_type == "obra"] | order(_createdAt desc){
-    _id, titulo, slug, capa, status, categoria->{nome}
+    _id, titulo, slug, capa, capaAlt, status, tipoObra,
+    localizacao, ano, area, metragemConstruida, categoria->{nome}
   }`
 );
 
